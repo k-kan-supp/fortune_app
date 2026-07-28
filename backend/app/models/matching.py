@@ -81,6 +81,46 @@ class Message(Base):
     match: Mapped["Match"] = relationship(back_populates="messages")
 
 
+class Block(Base):
+    """ユーザーのブロック（blocker が blocked をブロック）。"""
+
+    __tablename__ = "blocks"
+    __table_args__ = (UniqueConstraint("blocker_id", "blocked_id", name="uq_block_pair"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    blocker_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    blocked_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class Report(Base):
+    """ユーザーからの通報。運営が後で確認するために保存する。"""
+
+    __tablename__ = "reports"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    reporter_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    reported_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    reason: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
 class MatchRead(Base):
     """ユーザーごと・マッチごとの既読位置。未読件数の算出に使う。"""
 

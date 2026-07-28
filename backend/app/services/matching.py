@@ -6,11 +6,24 @@ from datetime import date
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.matching import Like, Match
+from app.models.matching import Block, Like, Match, Report
 from app.models.profile import UserProfile
 from app.models.user import User
 from app.schemas.matching import LikeResult, MatchOut, PublicProfile
 from app.services.storage.base import FileStorage
+
+
+async def is_blocked_between(db: AsyncSession, a: uuid.UUID, b: uuid.UUID) -> bool:
+    """a と b の間にどちらか向きのブロックがあるか。"""
+    found = await db.scalar(
+        select(Block.id).where(
+            or_(
+                (Block.blocker_id == a) & (Block.blocked_id == b),
+                (Block.blocker_id == b) & (Block.blocked_id == a),
+            )
+        )
+    )
+    return found is not None
 
 
 def _age(birthday: date | None) -> int | None:
@@ -67,10 +80,17 @@ async def list_candidates(
 ) -> list[PublicProfile]:
     """まだ操作していない他ユーザーを候補として返す（任意の条件で絞り込み）。"""
     acted = select(Like.to_user_id).where(Like.from_user_id == me.id)
+    i_blocked = select(Block.blocked_id).where(Block.blocker_id == me.id)
+    blocked_me = select(Block.blocker_id).where(Block.blocked_id == me.id)
     stmt = (
         select(User, UserProfile)
         .outerjoin(UserProfile, UserProfile.user_id == User.id)
-        .where(User.id != me.id, User.id.not_in(acted))
+        .where(
+            User.id != me.id,
+            User.id.not_in(acted),
+            User.id.not_in(i_blocked),
+            User.id.not_in(blocked_me),
+        )
     )
 
     if gender:
@@ -102,7 +122,7 @@ async def like_user(
         existing.is_like = is_like
 
     matched: Match | None = None
-    if is_like:
+    if is_like and not await is_blocked_between(db, me.id, target_uuid):
         # 相手が既に自分をいいねしているか
         reciprocal = await db.scalar(
             select(Like).where(
@@ -143,6 +163,8 @@ async def list_matches(db: AsyncSession, me: User, storage: FileStorage) -> list
     result: list[MatchOut] = []
     for m in matches:
         other_id = m.user_b_id if m.user_a_id == me.id else m.user_a_id
+        if await is_blocked_between(db, me.id, other_id):
+            continue  # ブロック中の相手とのマッチは一覧から除外
         row = (
             await db.execute(
                 select(User, UserProfile)
@@ -166,14 +188,69 @@ async def list_matches(db: AsyncSession, me: User, storage: FileStorage) -> list
 
 
 async def get_match_or_none(db: AsyncSession, me: User, match_id: str) -> Match | None:
-    """自分が参加しているマッチのみ取得する（他人のマッチは None）。"""
+    """自分が参加しているマッチのみ取得する（他人・ブロック中の相手は None）。"""
     try:
         mid = uuid.UUID(match_id)
     except ValueError:
         return None
-    return await db.scalar(
+    match = await db.scalar(
         select(Match).where(
             Match.id == mid,
             or_(Match.user_a_id == me.id, Match.user_b_id == me.id),
         )
     )
+    if match is None:
+        return None
+    other_id = match.user_b_id if match.user_a_id == me.id else match.user_a_id
+    if await is_blocked_between(db, me.id, other_id):
+        return None  # ブロック関係があればチャット不可
+    return match
+
+
+async def block_user(db: AsyncSession, me: User, target_id: uuid.UUID) -> None:
+    """target をブロックする（冪等）。"""
+    if target_id == me.id:
+        return
+    existing = await db.scalar(
+        select(Block).where(Block.blocker_id == me.id, Block.blocked_id == target_id)
+    )
+    if existing is None:
+        db.add(Block(blocker_id=me.id, blocked_id=target_id))
+        await db.commit()
+
+
+async def unblock_user(db: AsyncSession, me: User, target_id: uuid.UUID) -> None:
+    existing = await db.scalar(
+        select(Block).where(Block.blocker_id == me.id, Block.blocked_id == target_id)
+    )
+    if existing is not None:
+        await db.delete(existing)
+        await db.commit()
+
+
+async def list_blocked(
+    db: AsyncSession, me: User, storage: FileStorage
+) -> list[PublicProfile]:
+    """自分がブロックしているユーザーの一覧。"""
+    rows = (
+        await db.execute(
+            select(User, UserProfile)
+            .join(Block, Block.blocked_id == User.id)
+            .outerjoin(UserProfile, UserProfile.user_id == User.id)
+            .where(Block.blocker_id == me.id)
+            .order_by(Block.created_at.desc())
+        )
+    ).all()
+    return [to_public_profile(user, profile, storage) for user, profile in rows]
+
+
+async def report_user(
+    db: AsyncSession, me: User, target_id: uuid.UUID, reason: str
+) -> None:
+    db.add(Report(reporter_id=me.id, reported_id=target_id, reason=reason))
+    await db.commit()
+
+
+def match_peer_id(match: Match, me_id: uuid.UUID) -> uuid.UUID:
+    """マッチの相手側ユーザーIDを返す。"""
+    return match.user_b_id if match.user_a_id == me_id else match.user_a_id

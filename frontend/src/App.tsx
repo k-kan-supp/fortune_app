@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { RequireAuth } from "@/features/auth/components/RequireAuth";
+import { BlockedPage } from "@/pages/BlockedPage";
 import { ChatPage } from "@/pages/ChatPage";
 import { DiscoverPage } from "@/pages/DiscoverPage";
 import { FortunePage } from "@/pages/FortunePage";
@@ -49,6 +50,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <ProfilePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/blocked"
+            element={
+              <RequireAuth>
+                <BlockedPage />
               </RequireAuth>
             }
           />

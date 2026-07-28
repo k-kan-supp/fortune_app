@@ -53,3 +53,7 @@ class MatchOut(BaseModel):
 
 class UnreadCount(BaseModel):
     count: int
+
+
+class ReportRequest(BaseModel):
+    reason: str = Field("", max_length=1000)

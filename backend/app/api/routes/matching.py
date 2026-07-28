@@ -22,6 +22,7 @@ from app.schemas.matching import (
     MessageIn,
     MessageOut,
     PublicProfile,
+    ReportRequest,
     UnreadCount,
 )
 from app.services.chat import (
@@ -34,10 +35,15 @@ from app.services.chat import (
     total_unread,
 )
 from app.services.matching import (
+    block_user,
     get_match_or_none,
     like_user,
+    list_blocked,
     list_candidates,
     list_matches,
+    match_peer_id,
+    report_user,
+    unblock_user,
 )
 from app.services.realtime import manager
 from app.services.storage import get_file_storage
@@ -147,6 +153,38 @@ async def read_match(match_id: str, user: CurrentUser, db: DbSession) -> None:
     match = await _require_match(db, user, match_id)
     read_at = await mark_read(db, match.id, user.id)
     await manager.notify_read(match.id, user.id, read_at)
+
+
+@router.post("/matches/{match_id}/block", status_code=status.HTTP_204_NO_CONTENT)
+async def block_in_match(match_id: str, user: CurrentUser, db: DbSession) -> None:
+    """このマッチの相手をブロックする（以後、候補・マッチ・チャットから除外）。"""
+    match = await _require_match(db, user, match_id)
+    await block_user(db, user, match_peer_id(match, user.id))
+
+
+@router.post("/matches/{match_id}/report", status_code=status.HTTP_204_NO_CONTENT)
+async def report_in_match(
+    match_id: str, req: ReportRequest, user: CurrentUser, db: DbSession
+) -> None:
+    """このマッチの相手を通報する。"""
+    match = await _require_match(db, user, match_id)
+    await report_user(db, user, match_peer_id(match, user.id), req.reason)
+
+
+@router.get("/blocks", response_model=list[PublicProfile])
+async def blocks(user: CurrentUser, db: DbSession) -> list[PublicProfile]:
+    """自分がブロックしているユーザー一覧。"""
+    return await list_blocked(db, user, get_file_storage())
+
+
+@router.delete("/blocks/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def unblock(user_id: str, user: CurrentUser, db: DbSession) -> None:
+    """ブロックを解除する。"""
+    try:
+        target = uuid.UUID(user_id)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "不正なユーザーIDです。") from e
+    await unblock_user(db, user, target)
 
 
 @router.websocket("/matches/{match_id}/ws")

@@ -24,6 +24,10 @@ export function ProfilePage() {
 
       <ProfileForm profile={profile} onSave={save} />
 
+      <p className="settings-links">
+        <Link to="/blocked">ブロックしたユーザー</Link>
+      </p>
+
       <p className="back-link">
         <Link to="/">← 四柱推命を鑑定する</Link>
       </p>

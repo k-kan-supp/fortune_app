@@ -517,6 +517,85 @@ h1 {
   margin: 0 0 0.5rem;
 }
 
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.chat-menu {
+  position: relative;
+}
+
+.menu-trigger {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b6156;
+  padding: 0.2rem 0.5rem;
+}
+
+.menu-popover {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: #fff;
+  border: 1px solid #e2d9cd;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 9rem;
+  z-index: 20;
+  overflow: hidden;
+}
+
+.menu-popover button {
+  background: transparent;
+  border: none;
+  padding: 0.7rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.menu-popover button:hover {
+  background: #f5efe6;
+}
+
+.menu-popover .danger {
+  color: #b00020;
+}
+
+.report-card {
+  align-items: stretch;
+  text-align: left;
+}
+
+.report-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.report-card select,
+.report-card textarea {
+  padding: 0.5rem;
+  border: 1px solid #cbb8a3;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.settings-links {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
 .chat {
   display: flex;
   flex-direction: column;

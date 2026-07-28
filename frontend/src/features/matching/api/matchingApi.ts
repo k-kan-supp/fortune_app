@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiUpload } from "@/api/client";
+import { apiDelete, apiGet, apiPost, apiUpload } from "@/api/client";
 import type { LikeResult, Match, Message, PublicProfile } from "../types";
 
 export interface CandidateFilters {
@@ -41,3 +41,15 @@ export const markRead = (matchId: string): Promise<void> =>
 
 export const getUnreadCount = (): Promise<{ count: number }> =>
   apiGet<{ count: number }>("/api/matching/unread-count");
+
+export const blockInMatch = (matchId: string): Promise<void> =>
+  apiPost<Record<string, never>, void>(`/api/matching/matches/${matchId}/block`, {});
+
+export const reportInMatch = (matchId: string, reason: string): Promise<void> =>
+  apiPost<{ reason: string }, void>(`/api/matching/matches/${matchId}/report`, { reason });
+
+export const getBlocked = (): Promise<PublicProfile[]> =>
+  apiGet<PublicProfile[]>("/api/matching/blocks");
+
+export const unblockUser = (userId: string): Promise<void> =>
+  apiDelete<void>(`/api/matching/blocks/${userId}`);

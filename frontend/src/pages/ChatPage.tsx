@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { ChatMenu } from "@/features/matching/components/ChatMenu";
 import { ChatWindow } from "@/features/matching/components/ChatWindow";
 
 export function ChatPage() {
@@ -15,9 +16,10 @@ export function ChatPage() {
 
   return (
     <main className="container chat-container">
-      <p className="back-link-top">
+      <div className="chat-header">
         <Link to="/matches">← マッチ一覧</Link>
-      </p>
+        <ChatMenu matchId={matchId} />
+      </div>
       <ChatWindow matchId={matchId} />
     </main>
   );
