@@ -1,0 +1,52 @@
+"""四柱（年・月・日・時）の算出。
+
+干支と節入りの計算は sxtwl（寿星天文暦）に委譲する。
+sxtwl 未インストールでもモジュール自体は import できるよう、遅延 import にしている。
+"""
+
+from app.schemas.fortune import FortuneRequest, FortuneResponse, Pillar
+from app.services.saju.constants import (
+    BRANCH_HIDDEN_STEMS,
+    EARTHLY_BRANCHES,
+    HEAVENLY_STEMS,
+    STEM_ELEMENT,
+)
+from app.services.saju.ten_gods import ten_god
+
+
+def _pillar(stem_idx: int, branch_idx: int, day_master: str | None) -> Pillar:
+    stem = HEAVENLY_STEMS[stem_idx]
+    branch = EARTHLY_BRANCHES[branch_idx]
+    return Pillar(
+        stem=stem,
+        branch=branch,
+        element=STEM_ELEMENT[stem],
+        ten_god=ten_god(day_master, stem) if day_master else None,
+        hidden_stems=BRANCH_HIDDEN_STEMS[branch],
+    )
+
+
+def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
+    """生年月日時から命式を組み立てる。"""
+    import sxtwl
+
+    day = sxtwl.fromSolar(req.year, req.month, req.day)
+
+    # 時柱の天干は日干から導出する（五鼠遁）。時支は2時間刻み。
+    hour_branch_idx = ((req.hour + 1) // 2) % 12
+    day_stem_idx = day.getDayGZ().tg
+    hour_stem_idx = (day_stem_idx % 5 * 2 + hour_branch_idx) % 10
+
+    year_gz = day.getYearGZ()
+    month_gz = day.getMonthGZ()
+    day_gz = day.getDayGZ()
+
+    day_master = HEAVENLY_STEMS[day_gz.tg]
+
+    return FortuneResponse(
+        year_pillar=_pillar(year_gz.tg, year_gz.dz, day_master),
+        month_pillar=_pillar(month_gz.tg, month_gz.dz, day_master),
+        day_pillar=_pillar(day_gz.tg, day_gz.dz, day_master),
+        hour_pillar=_pillar(hour_stem_idx, hour_branch_idx, day_master),
+        day_master=day_master,
+    )
