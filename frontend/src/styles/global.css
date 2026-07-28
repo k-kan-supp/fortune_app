@@ -1,7 +1,47 @@
+/* =========================================================
+   テーマ: 薄紫 / ミステリアス & エキゾチック
+   色は全てここの変数で管理する（濃淡を変えたいときはここだけ触る）
+   ========================================================= */
 :root {
-  font-family: system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif;
-  color: #1a1a1a;
-  background: #faf8f5;
+  /* 背景・面 */
+  --bg-top: #f7f3fd;
+  --bg-mid: #efe7fa;
+  --bg-bottom: #e7dcf6;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-solid: #fdfbff;
+  --surface-veil: #f3ecfc;
+
+  /* 罫線 */
+  --border: #e2d7f4;
+  --border-strong: #cbb8e8;
+
+  /* 文字 */
+  --ink: #2b2340;
+  --ink-muted: #6d6289;
+  --ink-faint: #9b8fb8;
+
+  /* アクセント */
+  --violet: #6f4fa8;
+  --violet-deep: #4a2f77;
+  --violet-soft: #efe7fb;
+  --orchid: #b8578f;
+  --gold: #c4a24a;
+  --danger: #a63a5b;
+  --ok: #3f8f78;
+
+  /* 影・光 */
+  --shadow-sm: 0 2px 10px rgba(74, 47, 119, 0.07);
+  --shadow: 0 10px 30px rgba(74, 47, 119, 0.11);
+  --shadow-pop: 0 14px 36px rgba(74, 47, 119, 0.2);
+  --ring: 0 0 0 3px rgba(111, 79, 168, 0.18);
+
+  /* 書体は 1 ファミリーに統一し、見出しは太さ(700)で差をつける */
+  --font-sans: "Noto Sans JP", "Noto Sans", "Hiragino Sans", system-ui, sans-serif;
+
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--bg-mid);
+  line-height: 1.7;
 }
 
 * {
@@ -10,6 +50,59 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
+  /* 紫のオーロラを重ねた夜明け前の空 */
+  background:
+    radial-gradient(1100px 620px at 12% -12%, rgba(150, 108, 214, 0.3), transparent 62%),
+    radial-gradient(900px 520px at 96% 2%, rgba(200, 133, 190, 0.22), transparent 58%),
+    radial-gradient(860px 640px at 50% 112%, rgba(112, 84, 186, 0.24), transparent 62%),
+    linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bottom) 100%);
+  background-attachment: fixed;
+}
+
+/* 星屑レイヤー（ゆっくり明滅する） */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 72% 62%, rgba(255, 255, 255, 0.75) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 48% 85%, rgba(230, 214, 255, 0.8) 0 1px, transparent 1.8px);
+  background-size: 190px 190px, 270px 270px, 340px 340px;
+  opacity: 0.55;
+  animation: stardust 24s ease-in-out infinite;
+}
+
+@keyframes stardust {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(111, 79, 168, 0.22);
+}
+
+a {
+  color: var(--violet);
+}
+
+:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 2px;
 }
 
 .container {
@@ -20,32 +113,301 @@ body {
 
 h1 {
   text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--violet-deep);
 }
 
-.birth-form {
+/* ページ見出しの下に付く小さな紋章 */
+.container > h1::after {
+  content: "✧ ✦ ✧";
+  display: block;
+  margin-top: 0.6rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.5em;
+  color: var(--gold);
+}
+
+/* --- 入力要素の共通トーン --- */
+input,
+select,
+textarea {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: var(--ring);
+}
+
+button {
+  transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+/* =========================================================
+   鑑定ページの骨格
+   ヒーロー → ステップ 3 枚 → 設問ブロック → 結果、の縦一列構成
+   ========================================================= */
+.wrap-wide {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 1rem 3rem;
+}
+
+.hero {
+  text-align: center;
+  padding: 3.2rem 1rem 0;
+}
+
+/* 円形のシンボル */
+.hero-mark {
+  width: 78px;
+  height: 78px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.9rem;
+  color: #fff;
+  background: linear-gradient(140deg, #8a5fc0, #533a8f);
+  box-shadow: 0 12px 28px rgba(86, 58, 145, 0.32), 0 0 0 10px rgba(255, 255, 255, 0.45);
+}
+
+.hero-title {
+  font-size: clamp(1.8rem, 6vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  margin: 0 0 0.6rem;
+  color: var(--violet-deep);
+}
+
+.hero-sub {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+}
+
+/* ヒーローとカード帯の境目のゆるい波 */
+.hero::after {
+  content: "";
+  display: block;
+  height: 68px;
+  margin-top: 1.8rem;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 68' preserveAspectRatio='none'%3E%3Cpath fill='%23ffffff' fill-opacity='0.55' d='M0,30 C240,64 480,4 720,18 C960,32 1200,66 1440,38 L1440,68 L0,68 Z'/%3E%3C/svg%3E")
+    no-repeat center / 100% 100%;
+}
+
+/* --- ステップカード --- */
+.step-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: -1.5rem;
+}
+
+.step-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.3rem 1.2rem 1.4rem;
+  box-shadow: var(--shadow-sm);
+}
+
+/* カード上端のアクセント線 */
+.step-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--step-accent);
+}
+
+.step-card--1 {
+  --step-accent: linear-gradient(90deg, #7b57b8, #b489e6);
+}
+
+.step-card--2 {
+  --step-accent: linear-gradient(90deg, #b8578f, #e0a0c6);
+}
+
+.step-card--3 {
+  --step-accent: linear-gradient(90deg, #c4a24a, #e8d191);
+}
+
+.step-art {
+  width: 76px;
+  height: 76px;
+  margin: 0.4rem auto 1rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--violet-deep);
+  background: radial-gradient(circle at 30% 25%, #fff, var(--violet-soft));
+  border: 1px solid var(--border);
+}
+
+.step-badge {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: var(--violet-soft);
+  color: var(--violet);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.step-card h2 {
+  margin: 0.7rem 0 0.5rem;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--violet-deep);
+}
+
+.step-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--ink-muted);
+}
+
+/* --- 設問ブロック --- */
+.q-list {
+  margin-top: 2.6rem;
+}
+
+.q-block {
+  padding: 1.7rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.q-block:first-child {
+  border-top: none;
+  padding-top: 0.6rem;
+}
+
+.q-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.q-note {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.q-fields {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.8rem;
   align-items: flex-end;
-  justify-content: center;
-  margin-bottom: 1.5rem;
 }
 
-.birth-form label {
+.q-field {
   display: flex;
   flex-direction: column;
-  font-size: 0.85rem;
-  gap: 0.25rem;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
 }
 
-.birth-form input {
-  width: 5rem;
-  padding: 0.4rem;
+.q-field input {
+  width: 7rem;
+  padding: 0.6rem 0.7rem;
+  font-size: 1.05rem;
 }
 
-.birth-form button {
-  padding: 0.5rem 1.2rem;
+.q-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 1.8rem;
+  border-top: 1px solid var(--border);
+}
+
+.q-submit {
+  padding: 0.85rem 3rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border: none;
+  border-radius: 999px;
   cursor: pointer;
+  background: linear-gradient(135deg, #7b57b8, #563a91);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(86, 58, 145, 0.3);
+}
+
+.q-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 11px 26px rgba(86, 58, 145, 0.36);
+}
+
+.q-submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+  transform: none;
+}
+
+/* --- 結果 --- */
+.result-section {
+  margin-top: 2.8rem;
+}
+
+.result-head {
+  text-align: center;
+  margin-bottom: 1.1rem;
+}
+
+.result-head h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--violet-deep);
+}
+
+@media (max-width: 720px) {
+  .step-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .q-field input {
+    width: 6rem;
+  }
+}
+
+/* --- 命式 --- */
+.meishiki {
+  background: var(--surface);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.2rem;
+  box-shadow: var(--shadow);
+  /* 狭い画面では表だけを横スクロールさせ、ページ全体は横に伸ばさない */
+  overflow-x: auto;
 }
 
 .meishiki table {
@@ -56,20 +418,44 @@ h1 {
 
 .meishiki th,
 .meishiki td {
-  border: 1px solid #d8cfc4;
+  border: 1px solid var(--border);
   padding: 0.6rem;
+}
+
+.meishiki thead th,
+.meishiki tbody th {
+  background: linear-gradient(180deg, var(--violet-soft), #e7dcf6);
+  color: var(--violet-deep);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.meishiki td {
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .day-master {
   text-align: center;
   font-weight: bold;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+  color: var(--violet-deep);
+  margin: 0 0 1rem;
+}
+
+.day-master::before,
+.day-master::after {
+  content: "—";
+  color: var(--gold);
+  margin: 0 0.7rem;
 }
 
 .error {
-  color: #b00020;
+  color: var(--danger);
   text-align: center;
 }
 
+/* --- 認証カード --- */
 .auth-card {
   max-width: 420px;
   margin: 3rem auto;
@@ -77,9 +463,12 @@ h1 {
   flex-direction: column;
   gap: 1rem;
   padding: 2rem;
-  border: 1px solid #e2d9cd;
-  border-radius: 12px;
-  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
   text-align: center;
 }
 
@@ -91,8 +480,6 @@ h1 {
 .auth-card input {
   padding: 0.6rem 0.75rem;
   font-size: 1rem;
-  border: 1px solid #cbb8a3;
-  border-radius: 6px;
 }
 
 .auth-card button {
@@ -100,19 +487,27 @@ h1 {
   font-size: 1rem;
   cursor: pointer;
   border: none;
-  border-radius: 6px;
-  background: #7a5c3e;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7b57b8, #563a91);
   color: #fff;
+  letter-spacing: 0.08em;
+  box-shadow: 0 6px 18px rgba(86, 58, 145, 0.28);
+}
+
+.auth-card button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 9px 22px rgba(86, 58, 145, 0.34);
 }
 
 .auth-card button:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: default;
+  transform: none;
 }
 
 .hint {
   font-size: 0.85rem;
-  color: #6b6156;
+  color: var(--ink-muted);
   margin: 0;
 }
 
@@ -130,22 +525,17 @@ h1 {
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #e2d9cd;
+  border: 2px solid var(--border-strong);
+  box-shadow: 0 0 0 6px rgba(150, 108, 214, 0.1);
 }
 
 .avatar-placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f0e9df;
-  color: #a4988a;
+  background: var(--violet-soft);
+  color: var(--ink-faint);
   font-size: 0.8rem;
-}
-
-.avatar-actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
 }
 
 .profile-form {
@@ -160,16 +550,21 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  border: 1px solid #e2d9cd;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
   padding: 1rem 1.2rem 1.2rem;
+  background: var(--surface);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-sm);
 }
 
 .profile-section legend {
   font-weight: bold;
   font-size: 0.95rem;
-  padding: 0 0.4rem;
-  color: #7a5c3e;
+  padding: 0 0.5rem;
+  letter-spacing: 0.06em;
+  color: var(--violet);
 }
 
 .profile-form label {
@@ -177,6 +572,7 @@ h1 {
   flex-direction: column;
   gap: 0.3rem;
   font-size: 0.9rem;
+  color: var(--ink-muted);
 }
 
 .profile-form input,
@@ -184,8 +580,6 @@ h1 {
 .profile-form textarea {
   padding: 0.5rem;
   font-size: 1rem;
-  border: 1px solid #cbb8a3;
-  border-radius: 6px;
   font-family: inherit;
 }
 
@@ -202,7 +596,7 @@ h1 {
 
 .suffix {
   font-size: 0.85rem;
-  color: #6b6156;
+  color: var(--ink-muted);
 }
 
 .form-footer {
@@ -217,20 +611,45 @@ h1 {
   padding: 0.6rem 1rem;
   cursor: pointer;
   border: none;
-  border-radius: 6px;
-  background: #7a5c3e;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7b57b8, #563a91);
   color: #fff;
   font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  box-shadow: 0 6px 18px rgba(86, 58, 145, 0.24);
 }
 
+.profile-form button:hover:not(:disabled),
+.avatar-actions button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 9px 22px rgba(86, 58, 145, 0.3);
+}
+
+.avatar-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* テキストリンク風ボタン（削除など取り消し系のため既定は警告色） */
 .link-btn {
   background: transparent !important;
-  color: #b00020 !important;
+  color: var(--danger) !important;
   padding: 0.3rem !important;
+  border: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* 絞り込みトグルやモーダルを閉じる用途は中立色に戻す */
+.filter .link-btn,
+.match-modal-card .link-btn {
+  color: var(--violet) !important;
 }
 
 .saved-note {
-  color: #2e7d32;
+  color: var(--ok);
   font-size: 0.85rem;
   text-align: center;
 }
@@ -242,7 +661,7 @@ h1 {
 
 .prefill-note {
   text-align: center;
-  margin-bottom: 1rem;
+  margin: 1.8rem 0 0;
 }
 
 /* --- ナビゲーション --- */
@@ -251,8 +670,11 @@ h1 {
   align-items: center;
   justify-content: space-between;
   padding: 0.6rem 1rem;
-  background: #fff;
-  border-bottom: 1px solid #e2d9cd;
+  background: rgba(253, 251, 255, 0.72);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 4px 18px rgba(74, 47, 119, 0.06);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -265,21 +687,43 @@ h1 {
 
 .navbar-links a {
   text-decoration: none;
-  color: #6b6156;
+  color: var(--ink-muted);
   font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0;
+  transition: color 0.15s ease;
+}
+
+.navbar-links a:hover {
+  color: var(--violet);
 }
 
 .navbar-links a.active {
-  color: #7a5c3e;
+  color: var(--violet-deep);
   font-weight: bold;
+}
+
+.navbar-links a.active .nav-label::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.35rem;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--violet), transparent);
 }
 
 .logout-btn {
   background: transparent;
   border: none;
-  color: #a4988a;
+  color: var(--ink-faint);
   cursor: pointer;
   font-size: 0.85rem;
+}
+
+.logout-btn:hover {
+  color: var(--violet);
 }
 
 .nav-label {
@@ -298,17 +742,22 @@ h1 {
   height: 1.25rem;
   padding: 0 0.35rem;
   border-radius: 999px;
-  background: #d5654f;
+  background: linear-gradient(135deg, #c4629b, #8a4fa8);
   color: #fff;
   font-size: 0.72rem;
   font-weight: bold;
   line-height: 1;
+  box-shadow: 0 2px 8px rgba(138, 79, 168, 0.4);
 }
 
 /* 候補フィルタ */
 .filter {
   text-align: center;
   margin-bottom: 1rem;
+}
+
+.filter .link-btn {
+  color: var(--violet) !important;
 }
 
 .filter-panel {
@@ -318,9 +767,12 @@ h1 {
   max-width: 320px;
   margin: 0.8rem auto 0;
   padding: 1rem;
-  border: 1px solid #e2d9cd;
-  border-radius: 10px;
-  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-sm);
   text-align: left;
 }
 
@@ -329,13 +781,12 @@ h1 {
   flex-direction: column;
   gap: 0.3rem;
   font-size: 0.9rem;
+  color: var(--ink-muted);
 }
 
 .filter-panel select,
 .filter-panel input {
   padding: 0.45rem;
-  border: 1px solid #cbb8a3;
-  border-radius: 6px;
   font-size: 0.95rem;
 }
 
@@ -365,10 +816,13 @@ h1 {
 .candidate-card {
   max-width: 380px;
   margin: 0 auto;
-  border: 1px solid #e2d9cd;
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
   overflow: hidden;
-  background: #fff;
+  background: var(--surface);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
 }
 
 .candidate-photo {
@@ -382,8 +836,8 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f0e9df;
-  color: #a4988a;
+  background: linear-gradient(160deg, var(--violet-soft), #e2d7f4);
+  color: var(--ink-faint);
 }
 
 .candidate-body {
@@ -392,16 +846,19 @@ h1 {
 
 .candidate-body h2 {
   margin: 0 0 0.3rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--violet-deep);
 }
 
 .candidate-meta {
-  color: #6b6156;
+  color: var(--ink-muted);
   margin: 0 0 0.3rem;
 }
 
 .candidate-specs {
   font-size: 0.9rem;
-  color: #8a7d6e;
+  color: var(--ink-faint);
   margin: 0 0 0.6rem;
 }
 
@@ -427,38 +884,62 @@ h1 {
   cursor: pointer;
   text-decoration: none;
   display: inline-block;
+  letter-spacing: 0.08em;
 }
 
 .like-btn {
-  background: #d5654f;
+  background: linear-gradient(135deg, #c4629b, #7b4fb0);
   color: #fff;
+  box-shadow: 0 6px 20px rgba(140, 74, 160, 0.32);
+}
+
+.like-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(140, 74, 160, 0.4);
 }
 
 .pass-btn {
-  background: #ece4d8;
-  color: #6b6156;
+  background: var(--violet-soft);
+  color: var(--ink-muted);
+  border: 1px solid var(--border);
+}
+
+.pass-btn:hover {
+  background: #e7dcf6;
 }
 
 /* --- マッチ成立モーダル --- */
 .match-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(35, 20, 62, 0.55);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
+  z-index: 30;
 }
 
 .match-modal-card {
-  background: #fff;
-  border-radius: 14px;
+  background: var(--surface-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
   padding: 2rem;
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   max-width: 320px;
+  box-shadow: var(--shadow-pop), 0 0 0 1px rgba(196, 162, 74, 0.25);
+}
+
+.match-modal-card h2 {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--violet-deep);
+  margin: 0;
 }
 
 /* --- マッチ一覧 --- */
@@ -472,10 +953,16 @@ h1 {
   display: flex;
   align-items: center;
   gap: 0.9rem;
-  padding: 0.7rem 0.4rem;
-  border-bottom: 1px solid #eee4d8;
+  padding: 0.7rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  border-radius: 10px;
   text-decoration: none;
   color: inherit;
+  transition: background-color 0.15s ease;
+}
+
+.match-row:hover {
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .match-avatar {
@@ -483,8 +970,13 @@ h1 {
   height: 52px;
   border-radius: 50%;
   object-fit: cover;
-  background: #f0e9df;
+  background: var(--violet-soft);
   flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.match-avatar--empty {
+  background: linear-gradient(160deg, var(--violet-soft), #e2d7f4);
 }
 
 .match-info {
@@ -496,11 +988,12 @@ h1 {
 
 .match-name {
   font-weight: bold;
+  color: var(--violet-deep);
 }
 
 .match-last {
   font-size: 0.85rem;
-  color: #8a7d6e;
+  color: var(--ink-faint);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -534,18 +1027,22 @@ h1 {
   font-size: 1.4rem;
   line-height: 1;
   cursor: pointer;
-  color: #6b6156;
+  color: var(--ink-muted);
   padding: 0.2rem 0.5rem;
+}
+
+.menu-trigger:hover {
+  color: var(--violet);
 }
 
 .menu-popover {
   position: absolute;
   right: 0;
   top: 100%;
-  background: #fff;
-  border: 1px solid #e2d9cd;
-  border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-pop);
   display: flex;
   flex-direction: column;
   min-width: 9rem;
@@ -560,14 +1057,15 @@ h1 {
   text-align: left;
   cursor: pointer;
   font-size: 0.9rem;
+  color: var(--ink);
 }
 
 .menu-popover button:hover {
-  background: #f5efe6;
+  background: var(--violet-soft);
 }
 
 .menu-popover .danger {
-  color: #b00020;
+  color: var(--danger);
 }
 
 .report-card {
@@ -580,13 +1078,12 @@ h1 {
   flex-direction: column;
   gap: 0.3rem;
   font-size: 0.9rem;
+  color: var(--ink-muted);
 }
 
 .report-card select,
 .report-card textarea {
   padding: 0.5rem;
-  border: 1px solid #cbb8a3;
-  border-radius: 6px;
   font-size: 0.95rem;
   font-family: inherit;
 }
@@ -610,6 +1107,16 @@ h1 {
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.5rem 0;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
 }
 
 .msg-row {
@@ -621,7 +1128,7 @@ h1 {
 .read-receipt {
   align-self: flex-end;
   font-size: 0.7rem;
-  color: #a4988a;
+  color: var(--ink-faint);
 }
 
 .bubble {
@@ -635,15 +1142,17 @@ h1 {
 
 .bubble--mine {
   align-self: flex-end;
-  background: #d5654f;
+  background: linear-gradient(135deg, #7b57b8, #563a91);
   color: #fff;
   border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 14px rgba(86, 58, 145, 0.24);
 }
 
 .bubble--theirs {
   align-self: flex-start;
-  background: #ece4d8;
-  color: #3a3128;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border);
+  color: var(--ink);
   border-bottom-left-radius: 4px;
 }
 
@@ -658,7 +1167,7 @@ h1 {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #a4988a;
+  background: var(--ink-faint);
   animation: typing-bounce 1.2s infinite ease-in-out;
 }
 
@@ -699,7 +1208,7 @@ h1 {
   display: flex;
   gap: 0.5rem;
   padding-top: 0.5rem;
-  border-top: 1px solid #e2d9cd;
+  border-top: 1px solid var(--border);
   align-items: center;
 }
 
@@ -707,12 +1216,16 @@ h1 {
   flex-shrink: 0;
   width: 2.4rem;
   height: 2.4rem;
-  border: 1px solid #cbb8a3;
+  border: 1px solid var(--border-strong);
   border-radius: 50%;
-  background: #fff;
-  color: #7a5c3e;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--violet);
   font-size: 1.2rem;
   cursor: pointer;
+}
+
+.image-btn:hover:not(:disabled) {
+  background: var(--violet-soft);
 }
 
 .image-btn:disabled {
@@ -723,7 +1236,6 @@ h1 {
 .chat-input input {
   flex: 1;
   padding: 0.6rem 0.75rem;
-  border: 1px solid #cbb8a3;
   border-radius: 999px;
   font-size: 1rem;
 }
@@ -732,12 +1244,30 @@ h1 {
   padding: 0.6rem 1.2rem;
   border: none;
   border-radius: 999px;
-  background: #7a5c3e;
+  background: linear-gradient(135deg, #7b57b8, #563a91);
   color: #fff;
   cursor: pointer;
+  letter-spacing: 0.06em;
+  box-shadow: 0 4px 14px rgba(86, 58, 145, 0.26);
 }
 
 .chat-input button:disabled {
   opacity: 0.5;
   cursor: default;
+  box-shadow: none;
+}
+
+/* 視差に配慮：モーションを抑える設定では装飾アニメを止める */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+
+  .typing-bubble .dot {
+    animation: none;
+  }
+
+  * {
+    transition: none !important;
+  }
 }
