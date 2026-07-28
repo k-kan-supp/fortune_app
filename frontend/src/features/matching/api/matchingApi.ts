@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from "@/api/client";
+import { apiGet, apiPost, apiUpload } from "@/api/client";
 import type { LikeResult, Match, Message, PublicProfile } from "../types";
 
 export interface CandidateFilters {
@@ -32,6 +32,9 @@ export const getMessages = (matchId: string): Promise<Message[]> =>
 
 export const postMessage = (matchId: string, body: string): Promise<Message> =>
   apiPost<{ body: string }, Message>(`/api/matching/matches/${matchId}/messages`, { body });
+
+export const uploadChatImage = (matchId: string, file: File): Promise<Message> =>
+  apiUpload<Message>(`/api/matching/matches/${matchId}/images`, file, "POST");
 
 export const markRead = (matchId: string): Promise<void> =>
   apiPost<Record<string, never>, void>(`/api/matching/matches/${matchId}/read`, {});

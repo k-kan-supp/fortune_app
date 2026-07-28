@@ -592,11 +592,41 @@ h1 {
   }
 }
 
+.chat-image {
+  display: block;
+  max-width: 220px;
+  max-height: 260px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.bubble:has(.chat-image) {
+  padding: 3px;
+}
+
 .chat-input {
   display: flex;
   gap: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px solid #e2d9cd;
+  align-items: center;
+}
+
+.image-btn {
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid #cbb8a3;
+  border-radius: 50%;
+  background: #fff;
+  color: #7a5c3e;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.image-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .chat-input input {

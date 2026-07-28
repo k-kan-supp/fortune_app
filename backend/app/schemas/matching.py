@@ -33,6 +33,7 @@ class MessageOut(BaseModel):
     match_id: str
     sender_id: str
     body: str
+    image_url: str | None = None
     is_mine: bool
     created_at: datetime
 

@@ -52,11 +52,15 @@ export const apiDelete = <TRes>(path: string): Promise<TRes> =>
   jsonRequest<never, TRes>("DELETE", path);
 
 /** multipart/form-data でファイルを送る（Content-Type はブラウザが自動設定）。 */
-export async function apiUpload<TRes>(path: string, file: File): Promise<TRes> {
+export async function apiUpload<TRes>(
+  path: string,
+  file: File,
+  method: "PUT" | "POST" = "PUT",
+): Promise<TRes> {
   const form = new FormData();
   form.append("file", file);
   const res = await fetch(`${BASE_URL}${path}`, {
-    method: "PUT",
+    method,
     headers: authHeaders(),
     body: form,
   });

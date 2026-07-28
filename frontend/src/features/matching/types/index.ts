@@ -21,6 +21,7 @@ export interface Message {
   match_id: string;
   sender_id: string;
   body: string;
+  image_url: string | null;
   is_mine: boolean;
   created_at: string;
 }

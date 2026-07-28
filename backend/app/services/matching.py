@@ -157,7 +157,7 @@ async def list_matches(db: AsyncSession, me: User, storage: FileStorage) -> list
             MatchOut(
                 match_id=str(m.id),
                 user=to_public_profile(user, profile, storage),
-                last_message=await get_last_message(db, m.id, me.id),
+                last_message=await get_last_message(db, m.id, me.id, storage),
                 unread_count=await unread_count(db, m.id, me.id),
                 created_at=m.created_at,
             )

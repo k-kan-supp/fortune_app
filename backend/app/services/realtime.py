@@ -12,6 +12,7 @@ from fastapi import WebSocket
 
 from app.models.matching import Message
 from app.services.chat import to_message_out
+from app.services.storage.base import FileStorage
 
 
 class ConnectionManager:
@@ -31,10 +32,12 @@ class ConnectionManager:
         if not self._rooms[match_id]:
             self._rooms.pop(match_id, None)
 
-    async def broadcast(self, match_id: uuid.UUID, message: Message) -> None:
+    async def broadcast(
+        self, match_id: uuid.UUID, message: Message, storage: FileStorage
+    ) -> None:
         """新着メッセージをルームの全接続へ送る（is_mine は受信者ごとに算出）。"""
         for ws, uid in list(self._rooms.get(match_id, [])):
-            payload = to_message_out(message, uid).model_dump(mode="json")
+            payload = to_message_out(message, uid, storage).model_dump(mode="json")
             await self._safe_send(match_id, ws, {"type": "message", "message": payload})
 
     async def notify_typing(

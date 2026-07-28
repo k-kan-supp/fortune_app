@@ -1,29 +1,39 @@
 """チャット（マッチ内メッセージ）と既読管理のドメインロジック。"""
 
+import io
 import uuid
 from datetime import datetime, timezone
 
+from PIL import Image, UnidentifiedImageError
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.matching import Match, MatchRead, Message
 from app.models.user import User
 from app.schemas.matching import MessageOut
+from app.services.storage.base import FileStorage
+
+_CHAT_IMAGE_MAX_PX = 1280
 
 
-def to_message_out(msg: Message, me_id: uuid.UUID) -> MessageOut:
+class InvalidImageError(Exception):
+    """アップロードされた画像が不正・非対応の場合。"""
+
+
+def to_message_out(msg: Message, me_id: uuid.UUID, storage: FileStorage) -> MessageOut:
     return MessageOut(
         id=str(msg.id),
         match_id=str(msg.match_id),
         sender_id=str(msg.sender_id),
         body=msg.body,
+        image_url=storage.url(msg.image_key) if msg.image_key else None,
         is_mine=msg.sender_id == me_id,
         created_at=msg.created_at,
     )
 
 
 async def list_messages(
-    db: AsyncSession, match: Match, me_id: uuid.UUID, limit: int = 200
+    db: AsyncSession, match: Match, me_id: uuid.UUID, storage: FileStorage, limit: int = 200
 ) -> list[MessageOut]:
     """マッチのメッセージを古い順に返す（直近 ``limit`` 件）。"""
     msgs = (
@@ -34,14 +44,18 @@ async def list_messages(
             .limit(limit)
         )
     ).all()
-    return [to_message_out(m, me_id) for m in reversed(msgs)]
+    return [to_message_out(m, me_id, storage) for m in reversed(msgs)]
 
 
 async def create_message(
-    db: AsyncSession, match: Match, sender_id: uuid.UUID, body: str
+    db: AsyncSession,
+    match: Match,
+    sender_id: uuid.UUID,
+    body: str = "",
+    image_key: str | None = None,
 ) -> Message:
     """メッセージを永続化して ORM オブジェクトを返す（WebSocket 配信で再利用）。"""
-    msg = Message(match_id=match.id, sender_id=sender_id, body=body)
+    msg = Message(match_id=match.id, sender_id=sender_id, body=body, image_key=image_key)
     db.add(msg)
     await db.commit()
     await db.refresh(msg)
@@ -49,14 +63,29 @@ async def create_message(
 
 
 async def send_message(
-    db: AsyncSession, match: Match, sender_id: uuid.UUID, body: str
+    db: AsyncSession, match: Match, sender_id: uuid.UUID, body: str, storage: FileStorage
 ) -> MessageOut:
-    msg = await create_message(db, match, sender_id, body)
-    return to_message_out(msg, sender_id)
+    msg = await create_message(db, match, sender_id, body=body)
+    return to_message_out(msg, sender_id, storage)
+
+
+def process_chat_image(raw: bytes) -> bytes:
+    """チャット画像を検証し、長辺を上限に縮小して WebP バイト列で返す。"""
+    try:
+        Image.open(io.BytesIO(raw)).verify()
+        img = Image.open(io.BytesIO(raw))  # verify 後は再オープンが必要
+    except (UnidentifiedImageError, OSError) as e:
+        raise InvalidImageError("画像として読み込めませんでした。") from e
+
+    img = img.convert("RGB")
+    img.thumbnail((_CHAT_IMAGE_MAX_PX, _CHAT_IMAGE_MAX_PX))  # 縦横比を保って縮小
+    buf = io.BytesIO()
+    img.save(buf, format="WEBP", quality=82)
+    return buf.getvalue()
 
 
 async def get_last_message(
-    db: AsyncSession, match_id: uuid.UUID, me_id: uuid.UUID
+    db: AsyncSession, match_id: uuid.UUID, me_id: uuid.UUID, storage: FileStorage
 ) -> MessageOut | None:
     msg = await db.scalar(
         select(Message)
@@ -64,7 +93,7 @@ async def get_last_message(
         .order_by(Message.created_at.desc())
         .limit(1)
     )
-    return to_message_out(msg, me_id) if msg else None
+    return to_message_out(msg, me_id, storage) if msg else None
 
 
 # --- 既読・未読 ---

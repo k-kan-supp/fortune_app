@@ -71,7 +71,9 @@ class Message(Base):
     sender_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    body: Mapped[str] = mapped_column(Text, nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    # 画像メッセージのストレージキー（例: "chat/xxx.webp"）。テキストのみなら None。
+    image_key: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True, nullable=False
     )

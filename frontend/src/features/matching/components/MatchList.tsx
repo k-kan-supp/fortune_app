@@ -21,7 +21,9 @@ export function MatchList({ matches }: { matches: Match[] }) {
               <span className="match-name">{m.user.display_name ?? "名称未設定"}</span>
               <span className="match-last">
                 {m.last_message
-                  ? `${m.last_message.is_mine ? "自分: " : ""}${m.last_message.body}`
+                  ? `${m.last_message.is_mine ? "自分: " : ""}${
+                      m.last_message.image_url ? "📷 画像" : m.last_message.body
+                    }`
                   : "メッセージを送ってみましょう"}
               </span>
             </div>
