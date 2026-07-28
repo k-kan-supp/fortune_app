@@ -1,0 +1,44 @@
+"""WebSocket 接続の管理とメッセージ配信。
+
+マッチ(match_id)ごとに接続を「ルーム」としてまとめ、新着メッセージを
+そのルームの全接続へ配信する。プロセス内メモリで保持するため単一プロセス前提。
+複数プロセス/スケール時は Redis Pub/Sub 等に置き換える（配信I/Fは同じ）。
+"""
+
+import uuid
+from collections import defaultdict
+
+from fastapi import WebSocket
+
+from app.models.matching import Message
+from app.services.chat import to_message_out
+
+
+class ConnectionManager:
+    def __init__(self) -> None:
+        # match_id -> [(websocket, user_id), ...]
+        self._rooms: dict[uuid.UUID, list[tuple[WebSocket, uuid.UUID]]] = defaultdict(list)
+
+    async def connect(self, match_id: uuid.UUID, ws: WebSocket, user_id: uuid.UUID) -> None:
+        await ws.accept()
+        self._rooms[match_id].append((ws, user_id))
+
+    def disconnect(self, match_id: uuid.UUID, ws: WebSocket) -> None:
+        conns = self._rooms.get(match_id)
+        if not conns:
+            return
+        self._rooms[match_id] = [(w, u) for (w, u) in conns if w is not ws]
+        if not self._rooms[match_id]:
+            self._rooms.pop(match_id, None)
+
+    async def broadcast(self, match_id: uuid.UUID, message: Message) -> None:
+        """新着メッセージをルームの全接続へ送る（is_mine は受信者ごとに算出）。"""
+        for ws, uid in list(self._rooms.get(match_id, [])):
+            payload = to_message_out(message, uid).model_dump(mode="json")
+            try:
+                await ws.send_json(payload)
+            except Exception:  # 切断済み等は掃除して継続
+                self.disconnect(match_id, ws)
+
+
+manager = ConnectionManager()

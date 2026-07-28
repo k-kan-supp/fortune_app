@@ -19,6 +19,10 @@ async function handle<T>(res: Response): Promise<T> {
     }
     throw new Error(detail);
   }
+  // 204 No Content 等、ボディが無いレスポンスは JSON 解釈しない
+  if (res.status === 204 || res.headers.get("content-length") === "0") {
+    return undefined as T;
+  }
   return res.json() as Promise<T>;
 }
 

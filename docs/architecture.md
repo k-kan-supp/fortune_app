@@ -109,6 +109,37 @@ DELETE /api/profile/me/avatar   アイコン削除
 - スキーマは `ProfileOut(ProfileUpdate)` の継承で編集項目を一元管理。
   項目追加はモデル・スキーマ・マイグレーション・フロント定数の4点更新で済む
   （`to_out` は `ProfileUpdate.model_fields` を走査するため変更不要）。
+
+## マッチング & チャット
+
+### マッチング（Like → 相互で Match 成立）
+
+```
+GET  /api/matching/candidates            未操作の候補一覧（公開プロフィール）
+POST /api/matching/likes {target, like}  いいね/スキップ → {matched, match_id?}
+GET  /api/matching/matches               成立済みマッチ一覧（相手・最新メッセージ付き）
+```
+
+- `Like`（from→to, is_like, ペア一意）に操作を記録。相互 `is_like=True` で `Match` 成立。
+- `Match` は `user_a_id < user_b_id` の順で保存し、ペアの重複を防止。
+- 公開プロフィール(`PublicProfile`)は email 等の非公開情報を含めない。年齢は誕生日から算出。
+
+### チャット（マッチ内メッセージ）
+
+```
+GET  /api/matching/matches/{id}/messages   メッセージ取得（フロントが3秒間隔でポーリング）
+POST /api/matching/matches/{id}/messages   送信
+```
+
+- 参加者チェック：`get_match_or_none` で「自分が属するマッチ」のみ許可。
+- 現状はポーリング方式。リアルタイム化する場合は WebSocket エンドポイントを追加し、
+  フロントの `useChat` の取得手段を差し替える（サービス層 `services/chat.py` は再利用可能）。
+
+### フロント（feature: `matching`）
+
+- `useCandidates`（スワイプデッキ）/ `useMatches` / `useChat`（ポーリング）。
+- 画面: `/discover`（さがす）`/matches`（マッチ）`/chat/:matchId`（会話）。
+- ログイン後は `AppLayout` の `NavBar` で画面遷移。`/discover` 等は `RequireAuth` で保護。
 - アイコンは Pillow で検証 → 正方形クロップ → 512px WebP に正規化して保存。
 - ファイル保存は `services/storage/` で抽象化（開発は Local、本番は S3/GCS へ差し替え）。
   ローカル保存分は `/uploads` に StaticFiles でマウントして配信。
