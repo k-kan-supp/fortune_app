@@ -1,0 +1,44 @@
+# 全スタックのデモ用: db + backend + frontend(nginx)
+# 使い方: docker compose up --build   →  http://localhost:8080
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: fortune
+      POSTGRES_PASSWORD: fortune
+      POSTGRES_DB: fortune
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fortune"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+asyncpg://fortune:fortune@db:5432/fortune
+      FRONTEND_URL: http://localhost:8090
+      CORS_ORIGINS: http://localhost:8090
+      SECRET_KEY: demo-secret-change-me-in-production
+      APP_ENV: production
+      EMAIL_BACKEND: console
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads # アイコン・チャット画像を永続化
+    ports:
+      - "8001:8000" # API ドキュメント: http://localhost:8001/docs
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8090:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  uploads:

@@ -16,6 +16,7 @@ dist/
 dist-ssr/
 *.local
 .vite/
+*.tsbuildinfo
 
 # --- Uploads (ローカル保存のアイコン等) ---
 backend/uploads/

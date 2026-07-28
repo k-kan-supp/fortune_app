@@ -84,12 +84,14 @@ async def list_candidates(
     blocked_me = select(Block.blocker_id).where(Block.blocked_id == me.id)
     stmt = (
         select(User, UserProfile)
-        .outerjoin(UserProfile, UserProfile.user_id == User.id)
+        .join(UserProfile, UserProfile.user_id == User.id)
         .where(
             User.id != me.id,
             User.id.not_in(acted),
             User.id.not_in(i_blocked),
             User.id.not_in(blocked_me),
+            # プロフィール（表示名）未設定のユーザーは候補に出さない
+            UserProfile.display_name.isnot(None),
         )
     )
 
