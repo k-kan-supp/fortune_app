@@ -7,6 +7,7 @@
 
 import uuid
 from collections import defaultdict
+from datetime import datetime
 
 from fastapi import WebSocket
 
@@ -47,6 +48,15 @@ class ConnectionManager:
         event = {"type": "typing", "user_id": str(sender_id), "is_typing": is_typing}
         for ws, uid in list(self._rooms.get(match_id, [])):
             if uid != sender_id:
+                await self._safe_send(match_id, ws, event)
+
+    async def notify_read(
+        self, match_id: uuid.UUID, reader_id: uuid.UUID, read_at: datetime
+    ) -> None:
+        """既読を送信者側（reader 以外）へ通知し、相手の「既読」表示を更新させる。"""
+        event = {"type": "read", "user_id": str(reader_id), "read_at": read_at.isoformat()}
+        for ws, uid in list(self._rooms.get(match_id, [])):
+            if uid != reader_id:
                 await self._safe_send(match_id, ws, event)
 
     async def _safe_send(self, match_id: uuid.UUID, ws: WebSocket, data: dict) -> None:

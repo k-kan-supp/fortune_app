@@ -63,18 +63,24 @@ export function ChatWindow({ matchId }: { matchId: string }) {
     }
   }
 
+  // 「既読」を出す位置＝自分の既読メッセージのうち最新の1件
+  const lastReadMineId = [...messages].reverse().find((m) => m.is_mine && m.read)?.id;
+
   return (
     <div className="chat">
       <div className="chat-messages">
         {messages.map((m) => (
-          <div key={m.id} className={`bubble ${m.is_mine ? "bubble--mine" : "bubble--theirs"}`}>
-            {m.image_url ? (
-              <a href={m.image_url} target="_blank" rel="noreferrer">
-                <img src={m.image_url} alt="" className="chat-image" />
-              </a>
-            ) : (
-              m.body
-            )}
+          <div key={m.id} className="msg-row">
+            <div className={`bubble ${m.is_mine ? "bubble--mine" : "bubble--theirs"}`}>
+              {m.image_url ? (
+                <a href={m.image_url} target="_blank" rel="noreferrer">
+                  <img src={m.image_url} alt="" className="chat-image" />
+                </a>
+              ) : (
+                m.body
+              )}
+            </div>
+            {m.id === lastReadMineId && <span className="read-receipt">既読</span>}
           </div>
         ))}
         {othersTyping && (

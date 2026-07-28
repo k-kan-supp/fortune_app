@@ -11,7 +11,8 @@ function wsUrl(matchId: string, token: string): string {
 // サーバから届くイベントの型
 type ServerEvent =
   | { type: "message"; message: Message }
-  | { type: "typing"; user_id: string; is_typing: boolean };
+  | { type: "typing"; user_id: string; is_typing: boolean }
+  | { type: "read"; user_id: string; read_at: string };
 
 const TYPING_TIMEOUT_MS = 4000;
 
@@ -55,6 +56,19 @@ export function useChat(matchId: string) {
         if (data.is_typing) {
           typingOffTimer.current = setTimeout(() => setOthersTyping(false), TYPING_TIMEOUT_MS);
         }
+        return;
+      }
+
+      if (data.type === "read") {
+        // 相手が読んだ時刻以前の自分のメッセージを「既読」にする
+        const readTime = new Date(data.read_at).getTime();
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.is_mine && !m.read && new Date(m.created_at).getTime() <= readTime
+              ? { ...m, read: true }
+              : m,
+          ),
+        );
         return;
       }
 

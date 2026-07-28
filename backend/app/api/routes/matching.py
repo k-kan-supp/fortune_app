@@ -98,7 +98,8 @@ async def get_messages(match_id: str, user: CurrentUser, db: DbSession) -> list[
     """マッチ内のメッセージを取得する。取得時に既読化する。"""
     match = await _require_match(db, user, match_id)
     msgs = await list_messages(db, match, user.id, get_file_storage())
-    await mark_read(db, match.id, user.id)
+    read_at = await mark_read(db, match.id, user.id)
+    await manager.notify_read(match.id, user.id, read_at)
     return msgs
 
 
@@ -144,7 +145,8 @@ async def post_image(
 async def read_match(match_id: str, user: CurrentUser, db: DbSession) -> None:
     """マッチを既読にする。"""
     match = await _require_match(db, user, match_id)
-    await mark_read(db, match.id, user.id)
+    read_at = await mark_read(db, match.id, user.id)
+    await manager.notify_read(match.id, user.id, read_at)
 
 
 @router.websocket("/matches/{match_id}/ws")
@@ -175,7 +177,8 @@ async def chat_ws(
     match_uuid: uuid.UUID = match.id
     storage = get_file_storage()
     await manager.connect(match_uuid, websocket, user.id)
-    await mark_read(db, match_uuid, user.id)
+    read_at = await mark_read(db, match_uuid, user.id)
+    await manager.notify_read(match_uuid, user.id, read_at)
     try:
         while True:
             data = await websocket.receive_json()

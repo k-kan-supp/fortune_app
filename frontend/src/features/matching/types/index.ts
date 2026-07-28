@@ -23,6 +23,7 @@ export interface Message {
   body: string;
   image_url: string | null;
   is_mine: boolean;
+  read: boolean;
   created_at: string;
 }
 

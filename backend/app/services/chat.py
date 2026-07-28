@@ -20,7 +20,18 @@ class InvalidImageError(Exception):
     """アップロードされた画像が不正・非対応の場合。"""
 
 
-def to_message_out(msg: Message, me_id: uuid.UUID, storage: FileStorage) -> MessageOut:
+def to_message_out(
+    msg: Message,
+    me_id: uuid.UUID,
+    storage: FileStorage,
+    peer_read_at: datetime | None = None,
+) -> MessageOut:
+    # 自分の送信で、相手の既読位置がその時刻以降なら「既読」
+    read = bool(
+        msg.sender_id == me_id
+        and peer_read_at is not None
+        and msg.created_at <= peer_read_at
+    )
     return MessageOut(
         id=str(msg.id),
         match_id=str(msg.match_id),
@@ -28,8 +39,22 @@ def to_message_out(msg: Message, me_id: uuid.UUID, storage: FileStorage) -> Mess
         body=msg.body,
         image_url=storage.url(msg.image_key) if msg.image_key else None,
         is_mine=msg.sender_id == me_id,
+        read=read,
         created_at=msg.created_at,
     )
+
+
+async def peer_last_read_at(
+    db: AsyncSession, match: Match, me_id: uuid.UUID
+) -> datetime | None:
+    """相手（マッチのもう一方）の既読時刻を返す。"""
+    peer_id = match.user_b_id if match.user_a_id == me_id else match.user_a_id
+    rec = await db.scalar(
+        select(MatchRead).where(
+            MatchRead.match_id == match.id, MatchRead.user_id == peer_id
+        )
+    )
+    return rec.last_read_at if rec else None
 
 
 async def list_messages(
@@ -44,7 +69,8 @@ async def list_messages(
             .limit(limit)
         )
     ).all()
-    return [to_message_out(m, me_id, storage) for m in reversed(msgs)]
+    peer_read = await peer_last_read_at(db, match, me_id)
+    return [to_message_out(m, me_id, storage, peer_read) for m in reversed(msgs)]
 
 
 async def create_message(
@@ -99,8 +125,10 @@ async def get_last_message(
 # --- 既読・未読 ---
 
 
-async def mark_read(db: AsyncSession, match_id: uuid.UUID, user_id: uuid.UUID) -> None:
-    """このユーザーがマッチを今読んだ、として既読位置を更新する。"""
+async def mark_read(
+    db: AsyncSession, match_id: uuid.UUID, user_id: uuid.UUID
+) -> datetime:
+    """このユーザーがマッチを今読んだ、として既読位置を更新し、その時刻を返す。"""
     rec = await db.scalar(
         select(MatchRead).where(
             MatchRead.match_id == match_id, MatchRead.user_id == user_id
@@ -112,6 +140,7 @@ async def mark_read(db: AsyncSession, match_id: uuid.UUID, user_id: uuid.UUID) -
     else:
         rec.last_read_at = now
     await db.commit()
+    return now
 
 
 async def unread_count(

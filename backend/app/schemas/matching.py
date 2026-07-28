@@ -35,6 +35,7 @@ class MessageOut(BaseModel):
     body: str
     image_url: str | None = None
     is_mine: bool
+    read: bool = False
     created_at: datetime
 
 
