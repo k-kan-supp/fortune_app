@@ -139,7 +139,17 @@ async def chat_ws(
     try:
         while True:
             data = await websocket.receive_json()
-            body = (data.get("body") or "").strip() if isinstance(data, dict) else ""
+            if not isinstance(data, dict):
+                continue
+
+            if data.get("type") == "typing":
+                await manager.notify_typing(
+                    match_uuid, user.id, bool(data.get("is_typing"))
+                )
+                continue
+
+            # 既定はメッセージ送信（type 省略も許容）
+            body = (data.get("body") or "").strip()
             if not body:
                 continue
             msg = await create_message(db, match, user.id, body)

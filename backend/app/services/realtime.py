@@ -35,10 +35,22 @@ class ConnectionManager:
         """新着メッセージをルームの全接続へ送る（is_mine は受信者ごとに算出）。"""
         for ws, uid in list(self._rooms.get(match_id, [])):
             payload = to_message_out(message, uid).model_dump(mode="json")
-            try:
-                await ws.send_json(payload)
-            except Exception:  # 切断済み等は掃除して継続
-                self.disconnect(match_id, ws)
+            await self._safe_send(match_id, ws, {"type": "message", "message": payload})
+
+    async def notify_typing(
+        self, match_id: uuid.UUID, sender_id: uuid.UUID, is_typing: bool
+    ) -> None:
+        """「入力中」を送信者以外の接続へ通知する（永続化しない一時イベント）。"""
+        event = {"type": "typing", "user_id": str(sender_id), "is_typing": is_typing}
+        for ws, uid in list(self._rooms.get(match_id, [])):
+            if uid != sender_id:
+                await self._safe_send(match_id, ws, event)
+
+    async def _safe_send(self, match_id: uuid.UUID, ws: WebSocket, data: dict) -> None:
+        try:
+            await ws.send_json(data)
+        except Exception:  # 切断済み等は掃除して継続
+            self.disconnect(match_id, ws)
 
 
 manager = ConnectionManager()

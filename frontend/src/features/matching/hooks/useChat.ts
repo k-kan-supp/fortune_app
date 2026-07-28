@@ -8,15 +8,24 @@ function wsUrl(matchId: string, token: string): string {
   return `${proto}://${window.location.host}/api/matching/matches/${matchId}/ws?token=${token}`;
 }
 
+// サーバから届くイベントの型
+type ServerEvent =
+  | { type: "message"; message: Message }
+  | { type: "typing"; user_id: string; is_typing: boolean };
+
+const TYPING_TIMEOUT_MS = 4000;
+
 /**
  * マッチ内チャット。
- * 初期履歴は REST で取得し、以降の送受信は WebSocket でリアルタイムに行う。
+ * 初期履歴は REST で取得し、以降の送受信・入力中通知は WebSocket で行う。
  */
 export function useChat(matchId: string) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
+  const [othersTyping, setOthersTyping] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
+  const typingOffTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -37,30 +46,51 @@ export function useChat(matchId: string) {
     ws.onerror = () => active && setError("接続エラーが発生しました。");
     ws.onmessage = (ev) => {
       if (!active) return;
-      const msg = JSON.parse(ev.data) as Message;
+      const data = JSON.parse(ev.data) as ServerEvent;
+
+      if (data.type === "typing") {
+        setOthersTyping(data.is_typing);
+        // 相手の keepalive が途切れても数秒で自動的に消す
+        if (typingOffTimer.current) clearTimeout(typingOffTimer.current);
+        if (data.is_typing) {
+          typingOffTimer.current = setTimeout(() => setOthersTyping(false), TYPING_TIMEOUT_MS);
+        }
+        return;
+      }
+
+      const msg = data.message;
       setMessages((prev) => (prev.some((p) => p.id === msg.id) ? prev : [...prev, msg]));
-      // 相手からの新着は、表示中なので即既読にする（ナビの未読バッジ用）
+      setOthersTyping(false); // メッセージ着信で「入力中」は解除
       if (!msg.is_mine) markRead(matchId).catch(() => {});
     };
 
     return () => {
       active = false;
+      if (typingOffTimer.current) clearTimeout(typingOffTimer.current);
       ws.close();
       socketRef.current = null;
     };
   }, [matchId]);
 
+  function sendEvent(payload: object) {
+    const ws = socketRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(payload));
+  }
+
   function send(body: string) {
     const text = body.trim();
     if (!text) return;
-    const ws = socketRef.current;
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
       setError("接続していません。少し待って再試行してください。");
       return;
     }
     // 送信分はサーバからの配信（echo）で反映されるため、ここでは追加しない
-    ws.send(JSON.stringify({ body: text }));
+    sendEvent({ type: "message", body: text });
   }
 
-  return { messages, error, connected, send };
+  function setTyping(isTyping: boolean) {
+    sendEvent({ type: "typing", is_typing: isTyping });
+  }
+
+  return { messages, error, connected, othersTyping, send, setTyping };
 }
