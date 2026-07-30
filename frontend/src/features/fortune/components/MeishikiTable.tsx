@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useI18n, type MessageKey } from "@/i18n";
+import type { TermRef } from "../glossary";
 import { branchLabel, hiddenStemsLabel, stemLabel, tenGodLabel } from "../terms";
 import type { FortuneResponse, Pillar } from "../types";
+import { TermModal } from "./TermModal";
 
 interface Props {
   result: FortuneResponse;
@@ -16,11 +19,33 @@ const COLUMNS: { labelKey: MessageKey; key: keyof FortuneResponse }[] = [
 /** 命式（四柱）を表形式で表示する。英語では干支に訳語を添える。 */
 export function MeishikiTable({ result }: Props) {
   const { t, lang } = useI18n();
+  // 「日主」と日主の天干は、クリックで意味を出す
+  const [term, setTerm] = useState<TermRef | null>(null);
 
   return (
     <div className="meishiki">
       <p className="day-master">
-        {t("fortune.table.dayMaster")}: {stemLabel(result.day_master, lang)}
+        <button
+          type="button"
+          className="term-link"
+          onClick={() =>
+            setTerm({
+              ns: "table",
+              code: "dayMaster",
+              label: t("fortune.table.dayMaster"),
+            })
+          }
+        >
+          {t("fortune.table.dayMaster")}
+        </button>
+        :{" "}
+        <button
+          type="button"
+          className="term-link"
+          onClick={() => setTerm({ ns: "stem", code: result.day_master })}
+        >
+          {stemLabel(result.day_master, lang)}
+        </button>
       </p>
       <table>
         <thead>
@@ -59,6 +84,8 @@ export function MeishikiTable({ result }: Props) {
           </tr>
         </tbody>
       </table>
+
+      {term && <TermModal term={term} onClose={() => setTerm(null)} />}
     </div>
   );
 }

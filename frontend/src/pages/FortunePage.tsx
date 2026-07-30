@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { isAuthenticated } from "@/features/auth/authStorage";
-import { BirthInputForm } from "@/features/fortune/components/BirthInputForm";
-import { MeishikiTable } from "@/features/fortune/components/MeishikiTable";
+import { BirthInputModal } from "@/features/fortune/components/BirthInputModal";
 import { profileToFortuneDefaults } from "@/features/fortune/fromProfile";
-import { useFortune } from "@/features/fortune/hooks/useFortune";
+import { toFortuneQuery } from "@/features/fortune/query";
 import type { FortuneRequest } from "@/features/fortune/types";
 import { getProfile } from "@/features/profile/api/profileApi";
 import { useI18n } from "@/i18n";
@@ -17,19 +16,13 @@ const STEPS = [
 ] as const;
 
 export function FortunePage() {
-  const { result, loading, error, submit } = useFortune();
   const [defaults, setDefaults] = useState<Partial<FortuneRequest>>();
   const [prefilled, setPrefilled] = useState(false);
-  // 入力フォームは「鑑定する」を押してから表示する
+  // 入力フォームは「鑑定する」を押すとポップアップで開く
   const [formOpen, setFormOpen] = useState(false);
-  const formRef = useRef<HTMLDivElement>(null);
   const loggedIn = isAuthenticated();
+  const navigate = useNavigate();
   const { t } = useI18n();
-
-  // 開いたらフォームの先頭までスクロールし、そのまま入力に移れるようにする
-  useEffect(() => {
-    if (formOpen) formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [formOpen]);
 
   // ログイン済みならプロフィールの生年月日を初期値に反映する
   useEffect(() => {
@@ -46,6 +39,12 @@ export function FortunePage() {
         /* 未ログイン・未設定は無視（手入力で使える） */
       });
   }, [loggedIn]);
+
+  // 鑑定は結果ページで行う。入力値はクエリで渡す。
+  function openResult(req: FortuneRequest) {
+    setFormOpen(false);
+    navigate(`/result?${toFortuneQuery(req)}`);
+  }
 
   return (
     <main>
@@ -67,35 +66,27 @@ export function FortunePage() {
           ))}
         </div>
 
-        {formOpen ? (
-          <div ref={formRef}>
-            {prefilled && (
-              <p className="hint prefill-note">
-                {t("fortune.prefillNote")}
-                <Link to="/profile">{t("fortune.prefillEdit")}</Link>
-              </p>
-            )}
+        <div className="start-cta">
+          <button type="button" className="q-submit" onClick={() => setFormOpen(true)}>
+            {t("fortune.startCta")}
+          </button>
+        </div>
 
-            <BirthInputForm initial={defaults} onSubmit={submit} loading={loading} />
-          </div>
-        ) : (
-          <div className="start-cta">
-            <button type="button" className="q-submit" onClick={() => setFormOpen(true)}>
-              {t("fortune.startCta")}
-            </button>
-          </div>
-        )}
-
-        {error && <p className="error">{error}</p>}
-
-        {result && (
-          <section className="result-section">
-            <div className="result-head">
-              <h2>{t("fortune.resultTitle")}</h2>
-              <p className="hint">{t("fortune.resultHint")}</p>
-            </div>
-            <MeishikiTable result={result} />
-          </section>
+        {formOpen && (
+          <BirthInputModal
+            onClose={() => setFormOpen(false)}
+            onSubmit={openResult}
+            loading={false}
+            initial={defaults}
+            note={
+              prefilled ? (
+                <p className="hint prefill-note">
+                  {t("fortune.prefillNote")}
+                  <Link to="/profile">{t("fortune.prefillEdit")}</Link>
+                </p>
+              ) : undefined
+            }
+          />
         )}
 
         <p className="back-link">

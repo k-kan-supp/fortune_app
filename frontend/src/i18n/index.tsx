@@ -49,6 +49,14 @@ export function translate(lang: Lang, key: MessageKey, params?: Params): string 
   return interpolate(text, params);
 }
 
+/**
+ * 実行時に組み立てたキー（用語解説など）を引く。
+ * 型で保証できないので、無ければ undefined を返して呼び出し側で分岐させる。
+ */
+export function findMessage(lang: Lang, key: string): string | undefined {
+  return lookup(CATALOGS[lang], key) ?? lookup(ja, key);
+}
+
 interface I18nValue {
   lang: Lang;
   setLang: (lang: Lang) => void;

@@ -17,10 +17,24 @@ export interface Pillar {
   hidden_stems: string[];
 }
 
+/** レーダーチャートの一軸。code は表示名の引き当てに使う安定したキー。 */
+export interface RadarAxis {
+  code: string;
+  value: number;
+}
+
+/** レーダーチャート1枚分。値の意味はチャートごとに違うので外周値を持ち回る。 */
+export interface RadarChart {
+  key: string;
+  max_value: number;
+  axes: RadarAxis[];
+}
+
 export interface FortuneResponse {
   year_pillar: Pillar;
   month_pillar: Pillar;
   day_pillar: Pillar;
   hour_pillar: Pillar;
   day_master: string;
+  charts: RadarChart[];
 }

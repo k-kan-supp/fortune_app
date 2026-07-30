@@ -18,7 +18,13 @@ async function handle<T>(res: Response): Promise<T> {
     let detail = `${res.status}`;
     try {
       const data = await res.json();
-      detail = data.detail ?? detail;
+      if (typeof data.detail === "string") {
+        detail = data.detail;
+      } else if (Array.isArray(data.detail)) {
+        // 入力値エラー(422)は {detail: [{msg, loc}, ...]} で届く
+        const msgs = data.detail.map((d: { msg?: string }) => d.msg).filter(Boolean);
+        if (msgs.length > 0) detail = msgs.join(" / ");
+      }
     } catch {
       /* ボディが JSON でない場合は無視 */
     }

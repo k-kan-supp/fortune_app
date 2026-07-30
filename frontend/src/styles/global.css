@@ -387,6 +387,20 @@ button {
   color: var(--violet-deep);
 }
 
+/* --- 鑑定結果ページ（ヒーローが無いぶん上に余白を足す） --- */
+.result-page {
+  padding-top: 2.6rem;
+}
+
+.result-page .result-head h1 {
+  margin: 0 0 0.3rem;
+  font-size: clamp(1.5rem, 4.5vw, 1.9rem);
+}
+
+.result-status {
+  text-align: center;
+}
+
 @media (max-width: 720px) {
   .step-cards {
     grid-template-columns: 1fr;
@@ -453,6 +467,187 @@ button {
 .error {
   color: var(--danger);
   text-align: center;
+}
+
+/* --- 命式のバランス（レーダーチャート） --- */
+.charts-section {
+  margin-top: 2.6rem;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.chart-card {
+  margin: 0;
+  background: var(--surface);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem 1rem 0.7rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-card figcaption h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--violet-deep);
+}
+
+.chart-card figcaption p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+/* チャート本体。ツールチップを重ねるため位置の基準になる */
+.radar {
+  position: relative;
+  margin-top: 0.4rem;
+}
+
+.radar svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* 目盛りと軸は面から一段落とし、データだけが濃く出るようにする */
+.radar-grid polygon {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.radar-grid line {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.radar-tick {
+  fill: var(--ink-faint);
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.radar-area {
+  fill: rgba(111, 79, 168, 0.12);
+  stroke: var(--violet);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.radar-dot {
+  fill: var(--violet);
+  /* 面の色で縁取り、線や隣の点と重なっても粒が読めるようにする */
+  stroke: var(--surface-solid);
+  stroke-width: 2;
+}
+
+.radar-dot.is-active {
+  fill: var(--violet-deep);
+}
+
+.radar-peak {
+  fill: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 字の大きさは軸の本数に応じて RadarChart 側で決める */
+.radar-axis-label text {
+  fill: var(--ink-muted);
+}
+
+.radar-axis-label text.is-active {
+  fill: var(--violet-deep);
+  font-weight: 700;
+}
+
+/* 当たり判定は軸ごとの扇形。値が 0 でも掴めるだけの広さを取る */
+.radar-hit path {
+  fill: transparent;
+  cursor: default;
+}
+
+.radar-tip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 12px));
+  pointer-events: none;
+  white-space: nowrap;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 数値が主役、軸名は添え物 */
+.radar-tip-value {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.radar-tip-label {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+/* チャートと同じ内容の数値表 */
+.chart-table {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.chart-table summary {
+  cursor: pointer;
+  color: var(--violet);
+  padding: 0.3rem 0;
+  list-style-position: inside;
+}
+
+.chart-table table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.3rem;
+}
+
+.chart-table th,
+.chart-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.3rem 0.4rem;
+  text-align: left;
+  font-weight: 400;
+}
+
+.chart-table thead th {
+  color: var(--ink-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.chart-table td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-scale {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.72rem;
+  color: var(--ink-faint);
 }
 
 /* --- 認証カード --- */
@@ -669,6 +864,128 @@ button {
   display: flex;
   justify-content: center;
   padding: 2.6rem 0 0.6rem;
+}
+
+/* --- 生年月日入力のポップアップ --- */
+.birth-modal-card {
+  background: var(--surface-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  box-shadow: var(--shadow-pop), 0 0 0 1px rgba(196, 162, 74, 0.25);
+  padding: 1.4rem 1.8rem 1.8rem;
+  width: min(560px, 100%);
+  /* 縦に長い画面・小さい画面では中身だけスクロールさせる */
+  max-height: min(88vh, 720px);
+  overflow-y: auto;
+}
+
+.birth-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.birth-modal-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--violet-deep);
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--ink-faint);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.3rem;
+}
+
+.modal-close:hover {
+  color: var(--violet);
+}
+
+/* --- 用語解説（クリックで意味を出す） --- */
+/* 説明がある言葉であることを、点線の下線で示す */
+.term-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted var(--border-strong);
+  text-underline-offset: 0.25em;
+}
+
+.term-link:hover {
+  color: var(--violet);
+  text-decoration-color: var(--violet);
+}
+
+.charts-hint {
+  text-align: center;
+  margin: 0 0 1rem;
+}
+
+/* レーダーの当たり判定にカーソルを出す（扇形がそのままボタン） */
+.radar-hit.is-clickable path {
+  cursor: pointer;
+}
+
+.term-modal-card {
+  background: var(--surface-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  box-shadow: var(--shadow-pop), 0 0 0 1px rgba(196, 162, 74, 0.25);
+  padding: 1.2rem 1.6rem 1.6rem;
+  width: min(420px, 100%);
+  max-height: min(80vh, 560px);
+  overflow-y: auto;
+}
+
+.term-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.term-modal-eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+}
+
+.term-modal-card h2 {
+  margin: 0.2rem 0 0.7rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--violet-deep);
+}
+
+.term-modal-body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.9;
+  color: var(--ink-muted);
+}
+
+/* ポップアップ内では設問ブロックの上余白を詰める */
+.birth-modal-card .q-list {
+  margin-top: 0.4rem;
+}
+
+.birth-modal-card .prefill-note {
+  margin: 1rem 0 0;
 }
 
 /* --- ナビゲーション --- */
@@ -959,7 +1276,9 @@ button {
 }
 
 /* --- マッチ成立モーダル --- */
-.match-modal {
+/* モーダルの背景（.match-modal は成立モーダル用の従来名） */
+.match-modal,
+.modal-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(35, 20, 62, 0.55);

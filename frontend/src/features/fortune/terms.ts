@@ -66,3 +66,85 @@ export const hiddenStemsLabel = (stems: string[], lang: Lang): string =>
   lang === "ja"
     ? stems.join("・")
     : stems.map((s) => stemLabel(s, lang)).join(", ");
+
+/**
+ * レーダーチャートの軸ラベル。
+ * 軸に収まる短さが要るので、`stemLabel` のような「漢字＋訳語」の併記はしない。
+ * 十二支・通変星などは既存の訳語辞書をそのまま流用する。
+ */
+const AXIS_EN: Record<string, string> = {
+  // 五行
+  木: "Wood",
+  火: "Fire",
+  土: "Earth",
+  金: "Metal",
+  水: "Water",
+  // 通変星グループ
+  比劫: "Self",
+  食傷: "Output",
+  財星: "Wealth",
+  官殺: "Power",
+  印星: "Resource",
+  // 十二運星
+  長生: "Growth",
+  沐浴: "Bath",
+  冠帯: "Cap",
+  建禄: "Prime",
+  帝旺: "Emperor",
+  衰: "Decline",
+  病: "Illness",
+  死: "Death",
+  墓: "Grave",
+  絶: "Void",
+  胎: "Conception",
+  養: "Nurture",
+  // 官位（旺相休囚死）
+  旺: "Peak",
+  相: "Rising",
+  休: "Resting",
+  囚: "Trapped",
+  // 四柱（十二支の「死」と衝突しないよう、柱は英語コードで届く）
+  year: "Year",
+  month: "Month",
+  day: "Day",
+  hour: "Hour",
+  // 性格特性
+  independence: "Independence",
+  expression: "Expression",
+  sociability: "Sociability",
+  action: "Drive",
+  discipline: "Discipline",
+  curiosity: "Curiosity",
+  // 分野別運勢
+  career: "Career",
+  wealth: "Wealth",
+  love: "Love",
+  health: "Health",
+  relationships: "Relationships",
+  study: "Study",
+};
+
+const AXIS_JA: Record<string, string> = {
+  year: "年柱",
+  month: "月柱",
+  day: "日柱",
+  hour: "時柱",
+  independence: "自立心",
+  expression: "表現力",
+  sociability: "社交性",
+  action: "実行力",
+  discipline: "規律性",
+  curiosity: "探究心",
+  career: "仕事運",
+  wealth: "金運",
+  love: "恋愛運",
+  health: "健康運",
+  relationships: "人間関係運",
+  study: "学習運",
+};
+
+/** 軸コード（"木" / "甲" / "career" など）を表示名に変換する。 */
+export function axisLabel(code: string, lang: Lang): string {
+  if (lang === "ja") return AXIS_JA[code] ?? code;
+  return AXIS_EN[code] ?? BRANCH_EN[code] ?? TEN_GOD_EN[code] ?? STEM_EN[code] ?? code;
+}

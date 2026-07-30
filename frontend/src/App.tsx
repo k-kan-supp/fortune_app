@@ -8,6 +8,7 @@ import { FortunePage } from "@/pages/FortunePage";
 import { MatchesPage } from "@/pages/MatchesPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { RegisterPage } from "@/pages/RegisterPage";
+import { ResultPage } from "@/pages/ResultPage";
 import { VerifyPage } from "@/pages/VerifyPage";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           {/* 公開ページ */}
           <Route path="/" element={<FortunePage />} />
+          <Route path="/result" element={<ResultPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/auth/verify" element={<VerifyPage />} />
 

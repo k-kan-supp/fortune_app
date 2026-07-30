@@ -30,6 +30,7 @@ export const en: Messages = {
     noImage: "No Image",
     notSelected: "Not selected",
     any: "Any",
+    close: "Close",
     metaSeparator: " · ",
   },
 
@@ -61,11 +62,14 @@ export const en: Messages = {
       },
     },
     startCta: "Get my reading",
+    modalTitle: "Enter your birth date",
     prefillNote: "We filled this in from your profile.",
     prefillEdit: "Edit",
     resultTitle: "Your chart",
     resultHint:
       "The stems, branches and hidden stems of the four pillars, centred on your day master.",
+    backToTop: "← Try another birth date",
+    missingParams: "No birth date was given. Please enter one from the top page.",
     toProfile: "Profile settings →",
     toRegister: "Sign up to save your birth date →",
     form: {
@@ -89,6 +93,170 @@ export const en: Messages = {
       stem: "Heavenly stem",
       branch: "Earthly branch",
       hiddenStems: "Hidden stems",
+    },
+    chartsTitle: "Balance of your chart",
+    chartsHint:
+      "Stems and hidden stems are counted with weights, then read ten different ways. The closer to the outer ring, the stronger that element sits in your chart.",
+    charts: {
+      showValues: "Show the numbers",
+      axis: "Axis",
+      value: "Value",
+      scale: "Outer ring = {{max}}.",
+      five_elements: {
+        title: "Five elements",
+        note: "How strong wood, fire, earth, metal and water are, scored across all four pillars.",
+      },
+      ten_stems: {
+        title: "Heavenly stems",
+        note: "The same score split into yin and yang, so the totals match the five elements.",
+      },
+      twelve_branches: {
+        title: "Earthly branches",
+        note: "Which branches your four pillars land on. A repeated branch concentrates its energy.",
+      },
+      ten_gods: {
+        title: "Ten gods",
+        note: "Each of the ten gods seen from your day master. The largest ones shape how you show up.",
+      },
+      ten_god_groups: {
+        title: "Ten god groups",
+        note: "The ten gods folded into five camps: self, output, wealth, power and resource.",
+      },
+      twelve_stages: {
+        title: "Twelve life stages",
+        note: "The vitality your day master takes on in each pillar's branch, across the twelve stages.",
+      },
+      pillar_energy: {
+        title: "Pillar energy",
+        note: "The year, month, day and hour pillars scored 1–12 by their life stage.",
+      },
+      seasonal_states: {
+        title: "Seasonal strength",
+        note: "Where each element stands this season — flourishing, rising, resting, trapped or dormant.",
+      },
+      personality: {
+        title: "Personality",
+        note: "Six traits drawn from the mix of ten god groups, on a 0–100 scale.",
+      },
+      life_areas: {
+        title: "Fortune by area",
+        note: "The same mix read by life area. Health is measured by how even your five elements are.",
+      },
+    },
+  },
+
+  glossary: {
+    heading: "What this means",
+    hint: "Tap an axis name to see what it means.",
+
+    table: {
+      dayMaster:
+        "The heavenly stem of your birth day. It is the main character of the chart — every other stem is read as a ten god relative to it.",
+    },
+
+    element: {
+      木: "Wood: growing plants. Growth, development and kindness. Wood feeds fire and keeps earth in check.",
+      火: "Fire: rising flame. Passion, expression and brightness. Fire feeds earth and keeps metal in check.",
+      土: "Earth: the ground that holds everything. Stability, trust and nurture. Earth feeds metal and keeps water in check.",
+      金: "Metal: forged blade and ore. Decision, discipline and precision. Metal feeds water and keeps wood in check.",
+      水: "Water: a flowing stream. Intellect, flexibility and connection. Water feeds wood and keeps fire in check.",
+    },
+
+    stem: {
+      甲: "Yang wood. A tall tree growing straight up — firm at the core and driven towards a goal.",
+      乙: "Yin wood. Grass and vines — supple, growing by adapting to what is around it.",
+      丙: "Yang fire. The sun — bright, outgoing and warming everyone in sight.",
+      丁: "Yin fire. A lamp — quiet and attentive, warming the people close by.",
+      戊: "Yang earth. A mountain — immovable, supporting everything around it.",
+      己: "Yin earth. Field soil — soft and receptive, made for growing things.",
+      庚: "Yang metal. A blade or raw ore — decisive, cutting a way through.",
+      辛: "Yin metal. A polished jewel — delicate, drawn to beauty and precision.",
+      壬: "Yang water. A great river — large in scale, creating the current others follow.",
+      癸: "Yin water. Rain and dew — quiet and sensitive, seeping in everywhere.",
+    },
+
+    branch: {
+      子: "Rat. Mid-winter (around December), direction north. The still period before anything sprouts.",
+      丑: "Ox. Late winter (around January). The coldest point, storing strength for spring.",
+      寅: "Tiger. Early spring (around February). Things start to move.",
+      卯: "Rabbit. Mid-spring (around March), direction east. A calm season of steady growth.",
+      辰: "Dragon. Late spring (around April). Change and momentum mixed together.",
+      巳: "Snake. Early summer (around May). Heat building up.",
+      午: "Horse. Midsummer (around June), direction south. Fire at its strongest.",
+      未: "Goat. Late summer (around July). Ripening towards the harvest.",
+      申: "Monkey. Early autumn (around August). Fruit begins to firm up.",
+      酉: "Rooster. Mid-autumn (around September), direction west. Harvest and finishing.",
+      戌: "Dog. Late autumn (around October). Tidying up and turning to defence.",
+      亥: "Pig. Early winter (around November). Turning inward and storing energy.",
+    },
+
+    tenGod: {
+      比肩: "Same element and same polarity as your day master. Yourself and your equals — plenty of it means independence and a strong will.",
+      劫財: "Same element, opposite polarity. A rival at your side: drive and boldness, but also spending and friction.",
+      食神: "What your day master produces, same polarity. Easy-going expression and comfort in daily life.",
+      傷官: "What your day master produces, opposite polarity. Sharp talent and a critical eye, expressed outside the mould.",
+      偏財: "What your day master controls, same polarity. Fast-moving money and a wide circle of people.",
+      正財: "What your day master controls, opposite polarity. Steady wealth built up honestly.",
+      偏官: "What controls your day master, same polarity (Seven Killings). Severity, drive and resilience under pressure.",
+      正官: "What controls your day master, opposite polarity. Discipline, trust and social standing.",
+      偏印: "What produces your day master, same polarity. Inspiration and an unconventional way of learning.",
+      印綬: "What produces your day master, opposite polarity. Knowledge, protection and steady study.",
+    },
+
+    tenGodGroup: {
+      比劫: "Friend and Rob Wealth together: the 'self' camp — your own strength and your peers.",
+      食傷: "Eating God and Hurting Officer together: the 'output' camp — expression and creation.",
+      財星: "Indirect and Direct Wealth together: money, tangible results and dealings with people.",
+      官殺: "Seven Killings and Direct Officer together: responsibility, discipline and social role.",
+      印星: "Indirect and Direct Resource together: learning, support and what you receive.",
+    },
+
+    stage: {
+      長生: "Growth: just born. The fresh momentum of a beginning.",
+      沐浴: "Bath: the first wash. Unsteady and easily swayed, but rich in sensitivity.",
+      冠帯: "Cap: coming of age. Confidence forms and you start to step out.",
+      建禄: "Prime: standing on your own and working. Solid, reliable strength.",
+      帝旺: "Emperor: the peak. The strongest push — with a risk of going too far.",
+      衰: "Decline: past the peak and settling down. Steady rather than forceful.",
+      病: "Illness: strength fading. Introspective, with delicate sensitivity.",
+      死: "Death: movement stops. Quiet thinking and depth in one subject.",
+      墓: "Grave: gathering and storing. Collecting, protecting, inheriting.",
+      絶: "Void: cut off before the next turn. Big changes and decisiveness.",
+      胎: "Conception: just conceived. Potential that has not taken shape yet.",
+      養: "Nurture: being raised. Supported by others while quietly building strength.",
+    },
+
+    pillar: {
+      year: "The year pillar. Childhood, family line, and the first impression society has of you.",
+      month: "The month pillar. The centre of the chart: work, social standing and your parents.",
+      day: "The day pillar. Yourself and your partner — the keystone of the chart.",
+      hour: "The hour pillar. Later life, children, and the wishes you keep to yourself.",
+    },
+
+    seasonal: {
+      旺: "The element that rules this season — at its strongest right now.",
+      相: "The element the ruler produces — rising, next in line.",
+      休: "The element that produced the ruler — resting after its work is done.",
+      囚: "The element that tries to control the ruler — trapped and unable to act.",
+      死: "The element the ruler controls — at its weakest.",
+    },
+
+    personality: {
+      independence: "How strongly you decide and act on your own, read from the share of the self camp.",
+      expression: "How readily you give your ideas a form, read from the share of the output camp.",
+      sociability: "How widely you connect with people, read mainly from the wealth camp.",
+      action: "How firmly you push a decision through, read mainly from the power camp.",
+      discipline: "How well you keep to rules and keep going, read from the power and resource camps.",
+      curiosity: "How much you dig into learning, read mainly from the resource camp.",
+    },
+
+    lifeArea: {
+      career: "How readily work develops for you, from the mix of power, resource and wealth.",
+      wealth: "How readily money gathers, from the mix of wealth and output.",
+      love: "The strength of romantic ties — wealth is the key star for men, power for women.",
+      health: "Measured by how even your five elements are: the more balanced, the higher.",
+      relationships: "How smoothly you deal with people, from the self and output camps.",
+      study: "How easily learning sinks in, read mainly from the resource camp.",
     },
   },
 
