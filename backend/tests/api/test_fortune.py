@@ -25,3 +25,10 @@ def test_create_fortune():
     body = res.json()
     assert body["day_master"] in list("甲乙丙丁戊己庚辛壬癸")
     assert body["day_pillar"]["ten_god"] == "比肩"  # 日主自身は比肩
+
+    # レーダーチャート10種が、軸の値が外周を超えない形で返る
+    charts = body["charts"]
+    assert len(charts) == 10
+    for chart in charts:
+        assert chart["axes"], chart["key"]
+        assert all(0 <= a["value"] <= chart["max_value"] for a in chart["axes"]), chart["key"]

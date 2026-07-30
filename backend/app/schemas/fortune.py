@@ -22,6 +22,21 @@ class Pillar(BaseModel):
     hidden_stems: list[str] = Field(default_factory=list, description="蔵干")
 
 
+class RadarAxis(BaseModel):
+    """レーダーチャートの一軸。"""
+
+    code: str = Field(..., description="軸のコード（甲・木・career など。表示名はフロントで解決）")
+    value: float = Field(..., description="この軸の値（0〜max_value）")
+
+
+class RadarChart(BaseModel):
+    """レーダーチャート1枚分のデータ。"""
+
+    key: str = Field(..., description="チャート種別（five_elements など）")
+    max_value: float = Field(..., description="外周にあたる値。軸の値はこれを上限に描く")
+    axes: list[RadarAxis]
+
+
 class FortuneResponse(BaseModel):
     """鑑定結果（命式）。"""
 
@@ -30,3 +45,6 @@ class FortuneResponse(BaseModel):
     day_pillar: Pillar
     hour_pillar: Pillar
     day_master: str = Field(..., description="日主（日柱の天干）")
+    charts: list[RadarChart] = Field(
+        default_factory=list, description="バランス指標（レーダーチャート用）"
+    )

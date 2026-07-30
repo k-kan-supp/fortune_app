@@ -5,6 +5,7 @@ sxtwl 未インストールでもモジュール自体は import できるよう
 """
 
 from app.schemas.fortune import FortuneRequest, FortuneResponse, Pillar
+from app.services.saju.analysis import build_charts
 from app.services.saju.constants import (
     BRANCH_HIDDEN_STEMS,
     EARTHLY_BRANCHES,
@@ -43,10 +44,18 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
 
     day_master = HEAVENLY_STEMS[day_gz.tg]
 
+    pillars = {
+        "year": _pillar(year_gz.tg, year_gz.dz, day_master),
+        "month": _pillar(month_gz.tg, month_gz.dz, day_master),
+        "day": _pillar(day_gz.tg, day_gz.dz, day_master),
+        "hour": _pillar(hour_stem_idx, hour_branch_idx, day_master),
+    }
+
     return FortuneResponse(
-        year_pillar=_pillar(year_gz.tg, year_gz.dz, day_master),
-        month_pillar=_pillar(month_gz.tg, month_gz.dz, day_master),
-        day_pillar=_pillar(day_gz.tg, day_gz.dz, day_master),
-        hour_pillar=_pillar(hour_stem_idx, hour_branch_idx, day_master),
+        year_pillar=pillars["year"],
+        month_pillar=pillars["month"],
+        day_pillar=pillars["day"],
+        hour_pillar=pillars["hour"],
         day_master=day_master,
+        charts=build_charts(pillars, day_master, req.is_male),
     )
