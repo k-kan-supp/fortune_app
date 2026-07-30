@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { isAuthenticated } from "@/features/auth/authStorage";
 import { BirthInputForm } from "@/features/fortune/components/BirthInputForm";
@@ -20,8 +20,16 @@ export function FortunePage() {
   const { result, loading, error, submit } = useFortune();
   const [defaults, setDefaults] = useState<Partial<FortuneRequest>>();
   const [prefilled, setPrefilled] = useState(false);
+  // 入力フォームは「鑑定する」を押してから表示する
+  const [formOpen, setFormOpen] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
   const loggedIn = isAuthenticated();
   const { t } = useI18n();
+
+  // 開いたらフォームの先頭までスクロールし、そのまま入力に移れるようにする
+  useEffect(() => {
+    if (formOpen) formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [formOpen]);
 
   // ログイン済みならプロフィールの生年月日を初期値に反映する
   useEffect(() => {
@@ -59,14 +67,25 @@ export function FortunePage() {
           ))}
         </div>
 
-        {prefilled && (
-          <p className="hint prefill-note">
-            {t("fortune.prefillNote")}
-            <Link to="/profile">{t("fortune.prefillEdit")}</Link>
-          </p>
+        {formOpen ? (
+          <div ref={formRef}>
+            {prefilled && (
+              <p className="hint prefill-note">
+                {t("fortune.prefillNote")}
+                <Link to="/profile">{t("fortune.prefillEdit")}</Link>
+              </p>
+            )}
+
+            <BirthInputForm initial={defaults} onSubmit={submit} loading={loading} />
+          </div>
+        ) : (
+          <div className="start-cta">
+            <button type="button" className="q-submit" onClick={() => setFormOpen(true)}>
+              {t("fortune.startCta")}
+            </button>
+          </div>
         )}
 
-        <BirthInputForm initial={defaults} onSubmit={submit} loading={loading} />
         {error && <p className="error">{error}</p>}
 
         {result && (

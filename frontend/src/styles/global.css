@@ -664,6 +664,13 @@ button {
   margin: 1.8rem 0 0;
 }
 
+/* トップページで入力フォームを開くボタンの置き場 */
+.start-cta {
+  display: flex;
+  justify-content: center;
+  padding: 2.6rem 0 0.6rem;
+}
+
 /* --- ナビゲーション --- */
 .navbar {
   display: flex;

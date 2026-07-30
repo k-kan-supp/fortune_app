@@ -57,6 +57,8 @@ export const ja = {
         body: "プロフィールに生年月日を保存すると、相性の良い相手をさがせます。",
       },
     },
+    /** トップページで入力フォームを開くボタン。 */
+    startCta: "鑑定する",
     prefillNote: "プロフィールの生年月日を反映しました。",
     prefillEdit: "編集する",
     resultTitle: "あなたの命式",

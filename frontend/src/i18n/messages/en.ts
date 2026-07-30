@@ -60,6 +60,7 @@ export const en: Messages = {
         body: "Save your birth date to your profile to find people you are compatible with.",
       },
     },
+    startCta: "Get my reading",
     prefillNote: "We filled this in from your profile.",
     prefillEdit: "Edit",
     resultTitle: "Your chart",
