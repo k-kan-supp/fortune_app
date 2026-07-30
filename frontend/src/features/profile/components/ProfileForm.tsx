@@ -1,4 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useI18n } from "@/i18n";
+import { prefectureLabel } from "@/i18n/prefectures";
 import {
   BLOOD_TYPES,
   BODY_TYPES,
@@ -8,6 +10,7 @@ import {
   MARITAL_STATUSES,
   PREFECTURES,
   SMOKING_STATUSES,
+  toOptions,
 } from "../constants";
 import type { Profile, ProfileUpdate } from "../types";
 import { Section, SelectField, TextField } from "./fields";
@@ -17,12 +20,16 @@ interface Props {
   onSave: (data: ProfileUpdate) => void;
 }
 
-const PREF_OPTIONS = PREFECTURES.map((p) => ({ value: p, label: p }));
-
 /** プロフィール（基本情報 + マッチング項目）を編集するフォーム。 */
 export function ProfileForm({ profile, onSave }: Props) {
   const [form, setForm] = useState<ProfileUpdate>({});
   const [saved, setSaved] = useState(false);
+  const { t, lang } = useI18n();
+
+  const prefOptions = useMemo(
+    () => PREFECTURES.map((p) => ({ value: p, label: prefectureLabel(p, lang) })),
+    [lang],
+  );
 
   // プロフィール読込後にフォーム初期値を反映（HH:MM:SS → HH:MM）
   useEffect(() => {
@@ -47,107 +54,107 @@ export function ProfileForm({ profile, onSave }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="profile-form">
-      <Section title="基本情報">
+      <Section title={t("profile.sections.basic")}>
         <TextField
-          label="表示名"
+          label={t("profile.fields.displayName")}
           value={form.display_name ?? null}
           maxLength={50}
           onChange={(v) => set("display_name", v)}
         />
         <TextField
-          label="生年月日"
+          label={t("profile.fields.birthday")}
           type="date"
           value={form.birthday ?? null}
           onChange={(v) => set("birthday", v)}
         />
         <TextField
-          label="出生時刻"
+          label={t("profile.fields.birthTime")}
           type="time"
           value={form.birth_time ?? null}
           onChange={(v) => set("birth_time", v)}
         />
         <SelectField
-          label="性別"
+          label={t("profile.fields.gender")}
           value={form.gender ?? null}
-          options={GENDERS}
+          options={toOptions(GENDERS, t)}
           onChange={(v) => set("gender", v as Profile["gender"])}
         />
       </Section>
 
-      <Section title="身体・基本スペック">
+      <Section title={t("profile.sections.physical")}>
         <TextField
-          label="身長"
+          label={t("profile.fields.height")}
           type="number"
           suffix="cm"
           value={form.height_cm ?? null}
           onChange={(v) => setNum("height_cm", v)}
         />
         <TextField
-          label="体重"
+          label={t("profile.fields.weight")}
           type="number"
           suffix="kg"
           value={form.weight_kg ?? null}
           onChange={(v) => setNum("weight_kg", v)}
         />
         <SelectField
-          label="体型"
+          label={t("profile.fields.bodyType")}
           value={form.body_type ?? null}
-          options={BODY_TYPES}
+          options={toOptions(BODY_TYPES, t)}
           onChange={(v) => set("body_type", v as Profile["body_type"])}
         />
         <SelectField
-          label="血液型"
+          label={t("profile.fields.bloodType")}
           value={form.blood_type ?? null}
-          options={BLOOD_TYPES}
+          options={toOptions(BLOOD_TYPES, t)}
           onChange={(v) => set("blood_type", v as Profile["blood_type"])}
         />
       </Section>
 
-      <Section title="プロフィール詳細">
+      <Section title={t("profile.sections.details")}>
         <TextField
-          label="職業"
+          label={t("profile.fields.occupation")}
           value={form.occupation ?? null}
           maxLength={50}
           onChange={(v) => set("occupation", v)}
         />
         <SelectField
-          label="学歴"
+          label={t("profile.fields.education")}
           value={form.education ?? null}
-          options={EDUCATIONS}
+          options={toOptions(EDUCATIONS, t)}
           onChange={(v) => set("education", v as Profile["education"])}
         />
         <SelectField
-          label="居住地"
+          label={t("profile.fields.prefecture")}
           value={form.prefecture ?? null}
-          options={PREF_OPTIONS}
+          options={prefOptions}
           onChange={(v) => set("prefecture", v)}
         />
         <SelectField
-          label="婚姻歴"
+          label={t("profile.fields.maritalStatus")}
           value={form.marital_status ?? null}
-          options={MARITAL_STATUSES}
+          options={toOptions(MARITAL_STATUSES, t)}
           onChange={(v) => set("marital_status", v as Profile["marital_status"])}
         />
         <SelectField
-          label="喫煙"
+          label={t("profile.fields.smoking")}
           value={form.smoking ?? null}
-          options={SMOKING_STATUSES}
+          options={toOptions(SMOKING_STATUSES, t)}
           onChange={(v) => set("smoking", v as Profile["smoking"])}
         />
         <SelectField
-          label="飲酒"
+          label={t("profile.fields.drinking")}
           value={form.drinking ?? null}
-          options={DRINKING_STATUSES}
+          options={toOptions(DRINKING_STATUSES, t)}
           onChange={(v) => set("drinking", v as Profile["drinking"])}
         />
       </Section>
 
-      <Section title="自己紹介">
+      <Section title={t("profile.sections.about")}>
         <label>
           <textarea
             rows={5}
             maxLength={1000}
-            placeholder="自己紹介を入力してください（1000文字まで）"
+            placeholder={t("profile.bioPlaceholder")}
             value={form.bio ?? ""}
             onChange={(e) => set("bio", e.target.value || null)}
           />
@@ -155,8 +162,8 @@ export function ProfileForm({ profile, onSave }: Props) {
       </Section>
 
       <div className="form-footer">
-        <button type="submit">保存する</button>
-        {saved && <span className="saved-note">保存しました ✓</span>}
+        <button type="submit">{t("common.save")}</button>
+        {saved && <span className="saved-note">{t("profile.saved")}</span>}
       </div>
     </form>
   );

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { useI18n } from "@/i18n";
 import { requestMagicLink } from "../api/authApi";
 
 type Status = "idle" | "sending" | "sent" | "error";
@@ -8,16 +9,18 @@ export function RegisterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  const { t } = useI18n();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setStatus("sending");
     try {
+      // 完了メッセージはサーバが Accept-Language に合わせて返す
       const res = await requestMagicLink(email);
       setMessage(res.message);
       setStatus("sent");
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "送信に失敗しました。");
+      setMessage(err instanceof Error ? err.message : t("errors.send"));
       setStatus("error");
     }
   }
@@ -26,17 +29,15 @@ export function RegisterForm() {
     return (
       <div className="auth-card">
         <p>{message}</p>
-        <p className="hint">
-          メールが届かない場合は、迷惑メールフォルダをご確認ください。
-        </p>
+        <p className="hint">{t("register.sentHint")}</p>
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="auth-card">
-      <h1>ユーザー登録</h1>
-      <p className="hint">メールアドレスに登録用リンクをお送りします。</p>
+      <h1>{t("register.title")}</h1>
+      <p className="hint">{t("register.hint")}</p>
       <input
         type="email"
         required
@@ -45,7 +46,7 @@ export function RegisterForm() {
         onChange={(e) => setEmail(e.target.value)}
       />
       <button type="submit" disabled={status === "sending"}>
-        {status === "sending" ? "送信中…" : "登録用リンクを送る"}
+        {status === "sending" ? t("register.sending") : t("register.submit")}
       </button>
       {status === "error" && <p className="error">{message}</p>}
     </form>

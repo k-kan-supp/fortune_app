@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useI18n, type MessageKey } from "@/i18n";
 import { blockInMatch, reportInMatch } from "../api/matchingApi";
 
-const REPORT_REASONS = [
-  "不適切なメッセージ",
-  "なりすまし・業者の疑い",
-  "写真と本人が違う",
-  "その他",
+/** 通報理由の選択肢（値はキー、表示は言語ごとの文言）。 */
+const REPORT_REASONS: { key: string; labelKey: MessageKey }[] = [
+  { key: "inappropriate", labelKey: "chatMenu.reasons.inappropriate" },
+  { key: "impersonation", labelKey: "chatMenu.reasons.impersonation" },
+  { key: "photoMismatch", labelKey: "chatMenu.reasons.photoMismatch" },
+  { key: "other", labelKey: "chatMenu.reasons.other" },
 ];
 
 /** チャット画面の右上メニュー（ブロック / 通報）。 */
@@ -14,12 +16,18 @@ export function ChatMenu({ matchId }: { matchId: string }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
-  const [reason, setReason] = useState(REPORT_REASONS[0]);
+  const [reasonKey, setReasonKey] = useState(REPORT_REASONS[0].key);
   const [detail, setDetail] = useState("");
   const [busy, setBusy] = useState(false);
+  const { t } = useI18n();
+
+  function reasonLabel(key: string): string {
+    const found = REPORT_REASONS.find((r) => r.key === key);
+    return found ? t(found.labelKey) : key;
+  }
 
   async function handleBlock() {
-    if (!window.confirm("このユーザーをブロックしますか？ マッチとチャットは表示されなくなります。")) {
+    if (!window.confirm(t("chatMenu.blockConfirm"))) {
       return;
     }
     setBusy(true);
@@ -27,7 +35,7 @@ export function ChatMenu({ matchId }: { matchId: string }) {
       await blockInMatch(matchId);
       navigate("/matches", { replace: true });
     } catch {
-      alert("ブロックに失敗しました。");
+      alert(t("chatMenu.blockFailed"));
       setBusy(false);
     }
   }
@@ -35,12 +43,13 @@ export function ChatMenu({ matchId }: { matchId: string }) {
   async function submitReport() {
     setBusy(true);
     try {
-      const text = reason === "その他" ? detail : `${reason}${detail ? `: ${detail}` : ""}`;
+      const label = reasonLabel(reasonKey);
+      const text = reasonKey === "other" ? detail : `${label}${detail ? `: ${detail}` : ""}`;
       await reportInMatch(matchId, text);
       setReporting(false);
-      alert("通報を受け付けました。ご協力ありがとうございます。");
+      alert(t("chatMenu.reportThanks"));
     } catch {
-      alert("通報に失敗しました。");
+      alert(t("chatMenu.reportFailed"));
     } finally {
       setBusy(false);
     }
@@ -48,15 +57,21 @@ export function ChatMenu({ matchId }: { matchId: string }) {
 
   return (
     <div className="chat-menu">
-      <button className="menu-trigger" onClick={() => setOpen((v) => !v)} aria-label="メニュー">
+      <button
+        className="menu-trigger"
+        onClick={() => setOpen((v) => !v)}
+        aria-label={t("chatMenu.menu")}
+      >
         ⋮
       </button>
 
       {open && (
         <div className="menu-popover" onMouseLeave={() => setOpen(false)}>
-          <button onClick={() => { setOpen(false); setReporting(true); }}>通報する</button>
+          <button onClick={() => { setOpen(false); setReporting(true); }}>
+            {t("chatMenu.report")}
+          </button>
           <button className="danger" disabled={busy} onClick={handleBlock}>
-            ブロックする
+            {t("chatMenu.block")}
           </button>
         </div>
       )}
@@ -64,29 +79,29 @@ export function ChatMenu({ matchId }: { matchId: string }) {
       {reporting && (
         <div className="match-modal" onClick={() => !busy && setReporting(false)}>
           <div className="match-modal-card report-card" onClick={(e) => e.stopPropagation()}>
-            <h2>通報</h2>
+            <h2>{t("chatMenu.reportTitle")}</h2>
             <label>
-              理由
-              <select value={reason} onChange={(e) => setReason(e.target.value)}>
+              {t("chatMenu.reason")}
+              <select value={reasonKey} onChange={(e) => setReasonKey(e.target.value)}>
                 {REPORT_REASONS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
+                  <option key={r.key} value={r.key}>
+                    {t(r.labelKey)}
                   </option>
                 ))}
               </select>
             </label>
             <textarea
               rows={3}
-              placeholder="詳細（任意）"
+              placeholder={t("chatMenu.detail")}
               value={detail}
               onChange={(e) => setDetail(e.target.value)}
             />
             <div className="filter-actions">
               <button className="pass-btn" disabled={busy} onClick={() => setReporting(false)}>
-                キャンセル
+                {t("common.cancel")}
               </button>
               <button className="like-btn" disabled={busy} onClick={submitReport}>
-                送信
+                {t("common.send")}
               </button>
             </div>
           </div>

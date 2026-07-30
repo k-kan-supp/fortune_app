@@ -4,46 +4,48 @@ import type { CandidateFilters } from "@/features/matching/api/matchingApi";
 import { CandidateCard } from "@/features/matching/components/CandidateCard";
 import { CandidateFilter } from "@/features/matching/components/CandidateFilter";
 import { useCandidates } from "@/features/matching/hooks/useCandidates";
+import { useI18n } from "@/i18n";
 
 export function DiscoverPage() {
   const [filters, setFilters] = useState<CandidateFilters>({});
   const { current, loading, error, matchedWith, dismissMatch, like, pass } =
     useCandidates(filters);
+  const { t } = useI18n();
 
   return (
     <main className="container">
-      <h1>さがす</h1>
+      <h1>{t("discover.title")}</h1>
       <CandidateFilter onApply={setFilters} />
       {error && <p className="error">{error}</p>}
 
       {loading ? (
-        <p>読み込み中…</p>
+        <p>{t("common.loading")}</p>
       ) : current ? (
         <>
           <CandidateCard profile={current} />
           <div className="swipe-actions">
             <button className="pass-btn" onClick={pass}>
-              スキップ
+              {t("discover.pass")}
             </button>
             <button className="like-btn" onClick={like}>
-              いいね
+              {t("discover.like")}
             </button>
           </div>
         </>
       ) : (
-        <p className="hint">条件に合う候補がいません。絞り込みを変えてみてください。</p>
+        <p className="hint">{t("discover.empty")}</p>
       )}
 
       {matchedWith && (
         <div className="match-modal" onClick={dismissMatch}>
           <div className="match-modal-card" onClick={(e) => e.stopPropagation()}>
-            <h2>マッチしました 🎉</h2>
-            <p>{matchedWith} さんとマッチしました。</p>
+            <h2>{t("discover.matchedTitle")}</h2>
+            <p>{t("discover.matchedBody", { name: matchedWith })}</p>
             <Link to="/matches" className="like-btn">
-              メッセージを送る
+              {t("discover.toMessages")}
             </Link>
             <button className="link-btn" onClick={dismissMatch}>
-              続けてさがす
+              {t("discover.keepBrowsing")}
             </button>
           </div>
         </div>

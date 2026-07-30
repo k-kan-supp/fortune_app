@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.i18n import DEFAULT_LANG, Lang, translate
 from app.core.security import (
     create_access_token,
     generate_magic_link_token,
@@ -17,11 +18,17 @@ from app.schemas.auth import AuthResult, UserOut
 from app.services.email.base import EmailSender
 
 
-async def request_magic_link(db: AsyncSession, email: str, sender: EmailSender) -> None:
+async def request_magic_link(
+    db: AsyncSession,
+    email: str,
+    sender: EmailSender,
+    lang: Lang = DEFAULT_LANG,
+) -> None:
     """メールアドレスに対して登録/ログイン用のマジックリンクを発行・送信する。
 
     未登録なら仮ユーザーを作成する。ユーザーの存在有無はレスポンスから
     判別できないようにする（アカウント列挙対策）。
+    メール文面は ``lang``（リクエストの言語）で出し分ける。
     """
     email = email.strip().lower()
 
@@ -44,12 +51,12 @@ async def request_magic_link(db: AsyncSession, email: str, sender: EmailSender) 
     url = f"{settings.frontend_url}/auth/verify?token={raw_token}"
     await sender.send(
         to=email,
-        subject="【四柱推命】登録用リンクのご案内",
-        body=(
-            "以下のリンクを開くと登録が完了し、ログインできます。\n"
-            f"（有効期限: {settings.magic_link_expire_minutes}分）\n\n"
-            f"{url}\n\n"
-            "心当たりがない場合は、このメールを破棄してください。"
+        subject=translate("email.magic_link_subject", lang),
+        body=translate(
+            "email.magic_link_body",
+            lang,
+            url=url,
+            minutes=settings.magic_link_expire_minutes,
         ),
     )
 

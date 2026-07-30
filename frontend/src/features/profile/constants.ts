@@ -1,3 +1,4 @@
+import type { MessageKey, Translate } from "@/i18n";
 import type {
   BloodType,
   BodyType,
@@ -8,54 +9,71 @@ import type {
   SmokingStatus,
 } from "./types";
 
-/** セレクト用の {値: 表示ラベル} 定義。 */
-export const GENDERS: { value: Gender; label: string }[] = [
-  { value: "male", label: "男性" },
-  { value: "female", label: "女性" },
-  { value: "other", label: "その他" },
+/**
+ * セレクト用の選択肢定義。
+ * 保存する値は言語に依らないので、表示ラベルはメッセージキーで持つ。
+ */
+export interface OptionDef<T extends string> {
+  value: T;
+  labelKey: MessageKey;
+}
+
+export const GENDERS: OptionDef<Gender>[] = [
+  { value: "male", labelKey: "options.gender.male" },
+  { value: "female", labelKey: "options.gender.female" },
+  { value: "other", labelKey: "options.gender.other" },
 ];
 
-export const BODY_TYPES: { value: BodyType; label: string }[] = [
-  { value: "slim", label: "細身" },
-  { value: "average", label: "普通" },
-  { value: "muscular", label: "筋肉質・がっちり" },
-  { value: "plump", label: "ぽっちゃり" },
+export const BODY_TYPES: OptionDef<BodyType>[] = [
+  { value: "slim", labelKey: "options.bodyType.slim" },
+  { value: "average", labelKey: "options.bodyType.average" },
+  { value: "muscular", labelKey: "options.bodyType.muscular" },
+  { value: "plump", labelKey: "options.bodyType.plump" },
 ];
 
-export const BLOOD_TYPES: { value: BloodType; label: string }[] = [
-  { value: "A", label: "A型" },
-  { value: "B", label: "B型" },
-  { value: "O", label: "O型" },
-  { value: "AB", label: "AB型" },
+export const BLOOD_TYPES: OptionDef<BloodType>[] = [
+  { value: "A", labelKey: "options.bloodType.A" },
+  { value: "B", labelKey: "options.bloodType.B" },
+  { value: "O", labelKey: "options.bloodType.O" },
+  { value: "AB", labelKey: "options.bloodType.AB" },
 ];
 
-export const EDUCATIONS: { value: Education; label: string }[] = [
-  { value: "high_school", label: "高校" },
-  { value: "vocational", label: "専門学校" },
-  { value: "junior_college", label: "短大" },
-  { value: "university", label: "大学" },
-  { value: "graduate", label: "大学院" },
+export const EDUCATIONS: OptionDef<Education>[] = [
+  { value: "high_school", labelKey: "options.education.high_school" },
+  { value: "vocational", labelKey: "options.education.vocational" },
+  { value: "junior_college", labelKey: "options.education.junior_college" },
+  { value: "university", labelKey: "options.education.university" },
+  { value: "graduate", labelKey: "options.education.graduate" },
 ];
 
-export const MARITAL_STATUSES: { value: MaritalStatus; label: string }[] = [
-  { value: "single", label: "未婚" },
-  { value: "married", label: "既婚" },
-  { value: "divorced", label: "離婚" },
+export const MARITAL_STATUSES: OptionDef<MaritalStatus>[] = [
+  { value: "single", labelKey: "options.maritalStatus.single" },
+  { value: "married", labelKey: "options.maritalStatus.married" },
+  { value: "divorced", labelKey: "options.maritalStatus.divorced" },
 ];
 
-export const SMOKING_STATUSES: { value: SmokingStatus; label: string }[] = [
-  { value: "no", label: "吸わない" },
-  { value: "yes", label: "吸う" },
-  { value: "sometimes", label: "時々吸う" },
-  { value: "quit", label: "やめた" },
+export const SMOKING_STATUSES: OptionDef<SmokingStatus>[] = [
+  { value: "no", labelKey: "options.smoking.no" },
+  { value: "yes", labelKey: "options.smoking.yes" },
+  { value: "sometimes", labelKey: "options.smoking.sometimes" },
+  { value: "quit", labelKey: "options.smoking.quit" },
 ];
 
-export const DRINKING_STATUSES: { value: DrinkingStatus; label: string }[] = [
-  { value: "no", label: "飲まない" },
-  { value: "yes", label: "飲む" },
-  { value: "sometimes", label: "時々飲む" },
+export const DRINKING_STATUSES: OptionDef<DrinkingStatus>[] = [
+  { value: "no", labelKey: "options.drinking.no" },
+  { value: "yes", labelKey: "options.drinking.yes" },
+  { value: "sometimes", labelKey: "options.drinking.sometimes" },
 ];
 
+/** 選択肢定義を <select> 用の {値, 表示ラベル} に変換する。 */
+export function toOptions<T extends string>(
+  defs: OptionDef<T>[],
+  t: Translate,
+): { value: T; label: string }[] {
+  return defs.map((d) => ({ value: d.value, label: t(d.labelKey) }));
+}
+
+// 保存値は日本語名のまま。英語表示は i18n/prefectures.ts の対応表で行う。
 export const PREFECTURES: string[] = [
   "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
   "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県",

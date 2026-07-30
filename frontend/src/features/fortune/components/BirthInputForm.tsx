@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useI18n } from "@/i18n";
 import type { FortuneRequest } from "../types";
 
 interface Props {
@@ -20,6 +21,7 @@ const DEFAULTS: FortuneRequest = {
 /** 生年月日時の入力フォーム。設問を 1 ブロックずつ縦に並べる。 */
 export function BirthInputForm({ onSubmit, loading, initial }: Props) {
   const [form, setForm] = useState<FortuneRequest>({ ...DEFAULTS, ...initial });
+  const { t } = useI18n();
 
   // initial は非同期（プロフィール取得後）に届くので、届いたら反映する
   useEffect(() => {
@@ -33,11 +35,11 @@ export function BirthInputForm({ onSubmit, loading, initial }: Props) {
   return (
     <form onSubmit={(e: FormEvent) => { e.preventDefault(); onSubmit(form); }} className="q-list">
       <section className="q-block">
-        <h2 className="q-title">生まれた年・月・日を教えてください。</h2>
-        <p className="q-note">西暦で入力してください。命式はこの日付から組み立てます。</p>
+        <h2 className="q-title">{t("fortune.form.dateTitle")}</h2>
+        <p className="q-note">{t("fortune.form.dateNote")}</p>
         <div className="q-fields">
           <label className="q-field">
-            年
+            {t("fortune.form.year")}
             <input
               type="number"
               value={form.year}
@@ -45,7 +47,7 @@ export function BirthInputForm({ onSubmit, loading, initial }: Props) {
             />
           </label>
           <label className="q-field">
-            月
+            {t("fortune.form.month")}
             <input
               type="number"
               value={form.month}
@@ -53,7 +55,7 @@ export function BirthInputForm({ onSubmit, loading, initial }: Props) {
             />
           </label>
           <label className="q-field">
-            日
+            {t("fortune.form.day")}
             <input
               type="number"
               value={form.day}
@@ -64,11 +66,11 @@ export function BirthInputForm({ onSubmit, loading, initial }: Props) {
       </section>
 
       <section className="q-block">
-        <h2 className="q-title">生まれた時刻はわかりますか。</h2>
-        <p className="q-note">時柱に使います。わからない場合は 12 時のままで構いません。</p>
+        <h2 className="q-title">{t("fortune.form.timeTitle")}</h2>
+        <p className="q-note">{t("fortune.form.timeNote")}</p>
         <div className="q-fields">
           <label className="q-field">
-            時
+            {t("fortune.form.hour")}
             <input
               type="number"
               value={form.hour}
@@ -80,7 +82,7 @@ export function BirthInputForm({ onSubmit, loading, initial }: Props) {
 
       <div className="q-actions">
         <button type="submit" className="q-submit" disabled={loading}>
-          {loading ? "鑑定中…" : "鑑定する"}
+          {loading ? t("fortune.form.submitting") : t("fortune.form.submit")}
         </button>
       </div>
     </form>

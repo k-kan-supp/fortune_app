@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { getLang, translate } from "@/i18n";
 import { verifyMagicLink } from "../api/authApi";
 import { saveToken } from "../authStorage";
 import type { User } from "../types";
@@ -18,7 +19,7 @@ export function useVerify(token: string | null) {
 
     if (!token) {
       setStatus("error");
-      setError("トークンがありません。");
+      setError(translate(getLang(), "verify.missingToken"));
       return;
     }
 
@@ -29,7 +30,9 @@ export function useVerify(token: string | null) {
         setStatus("success");
       })
       .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : "検証に失敗しました。");
+        setError(
+          e instanceof Error ? e.message : translate(getLang(), "verify.failed"),
+        );
         setStatus("error");
       });
   }, [token]);

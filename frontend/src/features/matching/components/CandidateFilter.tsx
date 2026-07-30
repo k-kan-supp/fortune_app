@@ -1,5 +1,7 @@
-import { useState } from "react";
-import { GENDERS, PREFECTURES } from "@/features/profile/constants";
+import { useMemo, useState } from "react";
+import { GENDERS, PREFECTURES, toOptions } from "@/features/profile/constants";
+import { useI18n } from "@/i18n";
+import { prefectureLabel } from "@/i18n/prefectures";
 import type { CandidateFilters } from "../api/matchingApi";
 
 interface Props {
@@ -13,6 +15,13 @@ export function CandidateFilter({ onApply }: Props) {
   const [minAge, setMinAge] = useState("");
   const [maxAge, setMaxAge] = useState("");
   const [prefecture, setPrefecture] = useState("");
+  const { t, lang } = useI18n();
+
+  const genderOptions = toOptions(GENDERS, t);
+  const prefOptions = useMemo(
+    () => PREFECTURES.map((p) => ({ value: p, label: prefectureLabel(p, lang) })),
+    [lang],
+  );
 
   function apply() {
     onApply({
@@ -36,16 +45,16 @@ export function CandidateFilter({ onApply }: Props) {
   return (
     <div className="filter">
       <button className="link-btn" onClick={() => setOpen((v) => !v)}>
-        {open ? "絞り込みを閉じる" : "絞り込み"}
+        {open ? t("filter.close") : t("filter.open")}
       </button>
 
       {open && (
         <div className="filter-panel">
           <label>
-            性別
+            {t("filter.gender")}
             <select value={gender} onChange={(e) => setGender(e.target.value)}>
-              <option value="">指定なし</option>
-              {GENDERS.map((g) => (
+              <option value="">{t("common.any")}</option>
+              {genderOptions.map((g) => (
                 <option key={g.value} value={g.value}>
                   {g.label}
                 </option>
@@ -54,18 +63,18 @@ export function CandidateFilter({ onApply }: Props) {
           </label>
 
           <label>
-            年齢
+            {t("filter.age")}
             <span className="age-range">
               <input
                 type="number"
-                placeholder="下限"
+                placeholder={t("filter.minAge")}
                 value={minAge}
                 onChange={(e) => setMinAge(e.target.value)}
               />
               〜
               <input
                 type="number"
-                placeholder="上限"
+                placeholder={t("filter.maxAge")}
                 value={maxAge}
                 onChange={(e) => setMaxAge(e.target.value)}
               />
@@ -73,12 +82,12 @@ export function CandidateFilter({ onApply }: Props) {
           </label>
 
           <label>
-            エリア
+            {t("filter.area")}
             <select value={prefecture} onChange={(e) => setPrefecture(e.target.value)}>
-              <option value="">指定なし</option>
-              {PREFECTURES.map((p) => (
-                <option key={p} value={p}>
-                  {p}
+              <option value="">{t("common.any")}</option>
+              {prefOptions.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
                 </option>
               ))}
             </select>
@@ -86,10 +95,10 @@ export function CandidateFilter({ onApply }: Props) {
 
           <div className="filter-actions">
             <button className="pass-btn" onClick={reset}>
-              リセット
+              {t("filter.reset")}
             </button>
             <button className="like-btn" onClick={apply}>
-              この条件でさがす
+              {t("filter.apply")}
             </button>
           </div>
         </div>

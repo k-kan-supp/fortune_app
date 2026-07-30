@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, status
 
-from app.api.deps import CurrentUser, DbSession
+from app.api.deps import CurrentUser, DbSession, RequestLang
+from app.core.i18n import translate
 from app.schemas.profile import ProfileOut, ProfileUpdate
 from app.services.profile import (
     InvalidImageError,
@@ -31,18 +32,22 @@ async def edit_profile(data: ProfileUpdate, user: CurrentUser, db: DbSession) ->
 
 
 @router.put("/me/avatar", response_model=ProfileOut)
-async def upload_avatar(file: UploadFile, user: CurrentUser, db: DbSession) -> ProfileOut:
+async def upload_avatar(
+    file: UploadFile, user: CurrentUser, db: DbSession, lang: RequestLang
+) -> ProfileOut:
     if file.content_type not in _ALLOWED_TYPES:
         raise HTTPException(
             status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            "対応していない画像形式です（JPEG / PNG / WebP / GIF）。",
+            translate("image.unsupported_type", lang),
         )
     storage = get_file_storage()
     profile = await get_or_create_profile(db, user)
     try:
         profile = await set_avatar(db, profile, await file.read(), storage)
     except InvalidImageError as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, translate(e.key, lang)
+        ) from e
     return to_out(user, profile, storage)
 
 

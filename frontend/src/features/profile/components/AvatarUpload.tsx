@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { useI18n } from "@/i18n";
 
 interface Props {
   avatarUrl: string | null;
@@ -9,13 +10,14 @@ interface Props {
 /** アイコン画像のプレビューと、選択/削除の操作。 */
 export function AvatarUpload({ avatarUrl, onSelect, onRemove }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
 
   return (
     <div className="avatar-upload">
       {avatarUrl ? (
-        <img src={avatarUrl} alt="アイコン" className="avatar-preview" />
+        <img src={avatarUrl} alt={t("avatar.alt")} className="avatar-preview" />
       ) : (
-        <div className="avatar-preview avatar-placeholder">No Image</div>
+        <div className="avatar-preview avatar-placeholder">{t("common.noImage")}</div>
       )}
 
       <div className="avatar-actions">
@@ -31,11 +33,11 @@ export function AvatarUpload({ avatarUrl, onSelect, onRemove }: Props) {
           }}
         />
         <button type="button" onClick={() => inputRef.current?.click()}>
-          画像を選択
+          {t("avatar.choose")}
         </button>
         {avatarUrl && (
           <button type="button" className="link-btn" onClick={onRemove}>
-            削除
+            {t("common.remove")}
           </button>
         )}
       </div>

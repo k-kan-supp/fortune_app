@@ -15,7 +15,14 @@ from app.services.storage.base import FileStorage
 
 
 class InvalidImageError(Exception):
-    """アップロードされた画像が不正・非対応の場合。"""
+    """アップロードされた画像が不正・非対応の場合。
+
+    ``key`` は app.core.i18n のメッセージキー。API 層で言語に応じて訳す。
+    """
+
+    def __init__(self, key: str) -> None:
+        super().__init__(key)
+        self.key = key
 
 
 async def get_or_create_profile(db: AsyncSession, user: User) -> UserProfile:
@@ -55,7 +62,7 @@ def _process_avatar(raw: bytes) -> bytes:
         img.verify()  # まず破損チェック
         img = Image.open(io.BytesIO(raw))  # verify 後は再オープンが必要
     except (UnidentifiedImageError, OSError) as e:
-        raise InvalidImageError("画像として読み込めませんでした。") from e
+        raise InvalidImageError("image.unreadable") from e
 
     img = img.convert("RGB")
 
@@ -78,7 +85,7 @@ async def set_avatar(
 ) -> UserProfile:
     """アイコン画像を処理・保存し、プロフィールに紐づける。"""
     if len(raw) > settings.avatar_max_bytes:
-        raise InvalidImageError("画像サイズが大きすぎます。")
+        raise InvalidImageError("image.too_large")
 
     processed = _process_avatar(raw)
     new_key = f"avatars/{uuid.uuid4().hex}.webp"

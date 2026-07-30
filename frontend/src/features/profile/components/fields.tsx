@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useI18n } from "@/i18n";
 
 interface Option {
   value: string;
@@ -17,11 +18,13 @@ export function SelectField({
   options: Option[];
   onChange: (v: string | null) => void;
 }) {
+  const { t } = useI18n();
+
   return (
     <label>
       {label}
       <select value={value ?? ""} onChange={(e) => onChange(e.target.value || null)}>
-        <option value="">未選択</option>
+        <option value="">{t("common.notSelected")}</option>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

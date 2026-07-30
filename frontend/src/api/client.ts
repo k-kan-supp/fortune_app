@@ -1,10 +1,15 @@
 import { getToken } from "@/features/auth/authStorage";
+import { getLang } from "@/i18n";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
-function authHeaders(): Record<string, string> {
+/** 認証トークンと、サーバのメッセージを翻訳させる Accept-Language を付ける。 */
+function commonHeaders(): Record<string, string> {
   const token = getToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return {
+    "Accept-Language": getLang(),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
 }
 
 async function handle<T>(res: Response): Promise<T> {
@@ -33,14 +38,14 @@ async function jsonRequest<TReq, TRes>(
 ): Promise<TRes> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json", ...commonHeaders() },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   return handle<TRes>(res);
 }
 
 export const apiGet = <TRes>(path: string): Promise<TRes> =>
-  fetch(`${BASE_URL}${path}`, { headers: authHeaders() }).then(handle<TRes>);
+  fetch(`${BASE_URL}${path}`, { headers: commonHeaders() }).then(handle<TRes>);
 
 export const apiPost = <TReq, TRes>(path: string, body: TReq): Promise<TRes> =>
   jsonRequest<TReq, TRes>("POST", path, body);
@@ -61,7 +66,7 @@ export async function apiUpload<TRes>(
   form.append("file", file);
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
-    headers: authHeaders(),
+    headers: commonHeaders(),
     body: form,
   });
   return handle<TRes>(res);

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getToken } from "@/features/auth/authStorage";
+import { getLang, translate, useI18n } from "@/i18n";
 import { getMessages, markRead } from "../api/matchingApi";
 import type { Message } from "../types";
 
@@ -27,6 +28,7 @@ export function useChat(matchId: string) {
   const [othersTyping, setOthersTyping] = useState(false);
   const socketRef = useRef<WebSocket | null>(null);
   const typingOffTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     let active = true;
@@ -35,7 +37,11 @@ export function useChat(matchId: string) {
     // 1) 初期履歴（取得時にサーバ側で既読化される）
     getMessages(matchId)
       .then((m) => active && setMessages(m))
-      .catch((e) => active && setError(e instanceof Error ? e.message : "取得に失敗しました。"));
+      .catch(
+        (e) =>
+          active &&
+          setError(e instanceof Error ? e.message : translate(getLang(), "errors.fetch")),
+      );
 
     // 2) WebSocket 接続
     if (!token) return;
@@ -44,7 +50,8 @@ export function useChat(matchId: string) {
 
     ws.onopen = () => active && setConnected(true);
     ws.onclose = () => active && setConnected(false);
-    ws.onerror = () => active && setError("接続エラーが発生しました。");
+    ws.onerror = () =>
+      active && setError(translate(getLang(), "chat.connectionError"));
     ws.onmessage = (ev) => {
       if (!active) return;
       const data = JSON.parse(ev.data) as ServerEvent;
@@ -95,7 +102,7 @@ export function useChat(matchId: string) {
     const text = body.trim();
     if (!text) return;
     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-      setError("接続していません。少し待って再試行してください。");
+      setError(t("chat.notConnected"));
       return;
     }
     // 送信分はサーバからの配信（echo）で反映されるため、ここでは追加しない

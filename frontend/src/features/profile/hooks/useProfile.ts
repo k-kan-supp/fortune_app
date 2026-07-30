@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { getLang, translate } from "@/i18n";
 import {
   getProfile,
   removeAvatar,
@@ -18,7 +19,9 @@ export function useProfile() {
     try {
       setProfile(await fn());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "エラーが発生しました。");
+      setError(
+        e instanceof Error ? e.message : translate(getLang(), "errors.generic"),
+      );
     }
   }, []);
 

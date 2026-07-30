@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
+import { useI18n } from "@/i18n";
 import type { Match } from "../types";
 
 /** マッチ一覧。各行がチャット画面へのリンクになる。 */
 export function MatchList({ matches }: { matches: Match[] }) {
+  const { t } = useI18n();
+
   if (matches.length === 0) {
-    return <p className="hint">まだマッチはありません。「さがす」からいいねしてみましょう。</p>;
+    return <p className="hint">{t("matches.empty")}</p>;
   }
 
   return (
@@ -18,13 +21,15 @@ export function MatchList({ matches }: { matches: Match[] }) {
               <div className="match-avatar match-avatar--empty" />
             )}
             <div className="match-info">
-              <span className="match-name">{m.user.display_name ?? "名称未設定"}</span>
+              <span className="match-name">
+                {m.user.display_name ?? t("common.unnamed")}
+              </span>
               <span className="match-last">
                 {m.last_message
-                  ? `${m.last_message.is_mine ? "自分: " : ""}${
-                      m.last_message.image_url ? "📷 画像" : m.last_message.body
+                  ? `${m.last_message.is_mine ? t("matches.mine") : ""}${
+                      m.last_message.image_url ? t("matches.image") : m.last_message.body
                     }`
-                  : "メッセージを送ってみましょう"}
+                  : t("matches.noMessages")}
               </span>
             </div>
             {m.unread_count > 0 && <span className="badge">{m.unread_count}</span>}

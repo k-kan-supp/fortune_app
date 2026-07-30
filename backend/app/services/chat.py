@@ -17,7 +17,14 @@ _CHAT_IMAGE_MAX_PX = 1280
 
 
 class InvalidImageError(Exception):
-    """アップロードされた画像が不正・非対応の場合。"""
+    """アップロードされた画像が不正・非対応の場合。
+
+    ``key`` は app.core.i18n のメッセージキー。API 層で言語に応じて訳す。
+    """
+
+    def __init__(self, key: str) -> None:
+        super().__init__(key)
+        self.key = key
 
 
 def to_message_out(
@@ -101,7 +108,7 @@ def process_chat_image(raw: bytes) -> bytes:
         Image.open(io.BytesIO(raw)).verify()
         img = Image.open(io.BytesIO(raw))  # verify 後は再オープンが必要
     except (UnidentifiedImageError, OSError) as e:
-        raise InvalidImageError("画像として読み込めませんでした。") from e
+        raise InvalidImageError("image.unreadable") from e
 
     img = img.convert("RGB")
     img.thumbnail((_CHAT_IMAGE_MAX_PX, _CHAT_IMAGE_MAX_PX))  # 縦横比を保って縮小

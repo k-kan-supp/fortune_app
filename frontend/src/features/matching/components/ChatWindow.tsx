@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useI18n } from "@/i18n";
 import { uploadChatImage } from "../api/matchingApi";
 import { useChat } from "../hooks/useChat";
 
@@ -14,6 +15,7 @@ export function ChatWindow({ matchId }: { matchId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const typingRef = useRef(false);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { t } = useI18n();
 
   // 新着・入力中表示が変わったら最下部へスクロール
   useEffect(() => {
@@ -57,7 +59,7 @@ export function ChatWindow({ matchId }: { matchId: string }) {
       // 送信分は WebSocket の配信（echo）で反映されるため、ここでは追加しない
       await uploadChatImage(matchId, file);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "画像の送信に失敗しました。");
+      setUploadError(err instanceof Error ? err.message : t("chat.imageFailed"));
     } finally {
       setUploading(false);
     }
@@ -80,7 +82,9 @@ export function ChatWindow({ matchId }: { matchId: string }) {
                 m.body
               )}
             </div>
-            {m.id === lastReadMineId && <span className="read-receipt">既読</span>}
+            {m.id === lastReadMineId && (
+              <span className="read-receipt">{t("chat.read")}</span>
+            )}
           </div>
         ))}
         {othersTyping && (
@@ -112,18 +116,18 @@ export function ChatWindow({ matchId }: { matchId: string }) {
           className="image-btn"
           onClick={() => fileRef.current?.click()}
           disabled={!connected || uploading}
-          aria-label="画像を送る"
+          aria-label={t("chat.sendImage")}
         >
           {uploading ? "…" : "＋"}
         </button>
         <input
           type="text"
-          placeholder={connected ? "メッセージを入力" : "接続中…"}
+          placeholder={connected ? t("chat.placeholder") : t("chat.connecting")}
           value={text}
           onChange={(e) => handleChange(e.target.value)}
         />
         <button type="submit" disabled={!connected || !text.trim()}>
-          送信
+          {t("common.send")}
         </button>
       </form>
     </div>

@@ -11,7 +11,8 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CurrentUser, DbSession
+from app.api.deps import CurrentUser, DbSession, RequestLang
+from app.core.i18n import Lang, translate
 from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.models.user import User
@@ -73,10 +74,14 @@ async def candidates(
 
 
 @router.post("/likes", response_model=LikeResult)
-async def like(req: LikeRequest, user: CurrentUser, db: DbSession) -> LikeResult:
+async def like(
+    req: LikeRequest, user: CurrentUser, db: DbSession, lang: RequestLang
+) -> LikeResult:
     """いいね/スキップを送る。相互いいねならマッチ成立。"""
     if req.target_user_id == str(user.id):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "自分自身は対象にできません。")
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, translate("matching.self_not_allowed", lang)
+        )
     return await like_user(db, user, req.target_user_id, req.like)
 
 
@@ -92,17 +97,21 @@ async def unread(user: CurrentUser, db: DbSession) -> UnreadCount:
     return UnreadCount(count=await total_unread(db, user))
 
 
-async def _require_match(db: DbSession, user: CurrentUser, match_id: str):
+async def _require_match(db: DbSession, user: CurrentUser, match_id: str, lang: Lang):
     match = await get_match_or_none(db, user, match_id)
     if match is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "マッチが見つかりません。")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, translate("matching.match_not_found", lang)
+        )
     return match
 
 
 @router.get("/matches/{match_id}/messages", response_model=list[MessageOut])
-async def get_messages(match_id: str, user: CurrentUser, db: DbSession) -> list[MessageOut]:
+async def get_messages(
+    match_id: str, user: CurrentUser, db: DbSession, lang: RequestLang
+) -> list[MessageOut]:
     """マッチ内のメッセージを取得する。取得時に既読化する。"""
-    match = await _require_match(db, user, match_id)
+    match = await _require_match(db, user, match_id, lang)
     msgs = await list_messages(db, match, user.id, get_file_storage())
     read_at = await mark_read(db, match.id, user.id)
     await manager.notify_read(match.id, user.id, read_at)
@@ -111,10 +120,10 @@ async def get_messages(match_id: str, user: CurrentUser, db: DbSession) -> list[
 
 @router.post("/matches/{match_id}/messages", response_model=MessageOut)
 async def post_message(
-    match_id: str, req: MessageIn, user: CurrentUser, db: DbSession
+    match_id: str, req: MessageIn, user: CurrentUser, db: DbSession, lang: RequestLang
 ) -> MessageOut:
     """マッチ内にテキストメッセージを送信する（REST フォールバック）。"""
-    match = await _require_match(db, user, match_id)
+    match = await _require_match(db, user, match_id, lang)
     return await send_message(db, match, user.id, req.body, get_file_storage())
 
 
@@ -123,20 +132,22 @@ _ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 @router.post("/matches/{match_id}/images", response_model=MessageOut)
 async def post_image(
-    match_id: str, file: UploadFile, user: CurrentUser, db: DbSession
+    match_id: str, file: UploadFile, user: CurrentUser, db: DbSession, lang: RequestLang
 ) -> MessageOut:
     """マッチ内に画像メッセージを送信する。保存後 WebSocket でも配信する。"""
     if file.content_type not in _ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            "対応していない画像形式です（JPEG / PNG / WebP / GIF）。",
+            translate("image.unsupported_type", lang),
         )
-    match = await _require_match(db, user, match_id)
+    match = await _require_match(db, user, match_id, lang)
     storage = get_file_storage()
     try:
         processed = process_chat_image(await file.read())
     except InvalidImageError as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, translate(e.key, lang)
+        ) from e
 
     key = f"chat/{uuid.uuid4().hex}.webp"
     await storage.save(key, processed)
@@ -148,26 +159,30 @@ async def post_image(
 
 
 @router.post("/matches/{match_id}/read", status_code=status.HTTP_204_NO_CONTENT)
-async def read_match(match_id: str, user: CurrentUser, db: DbSession) -> None:
+async def read_match(
+    match_id: str, user: CurrentUser, db: DbSession, lang: RequestLang
+) -> None:
     """マッチを既読にする。"""
-    match = await _require_match(db, user, match_id)
+    match = await _require_match(db, user, match_id, lang)
     read_at = await mark_read(db, match.id, user.id)
     await manager.notify_read(match.id, user.id, read_at)
 
 
 @router.post("/matches/{match_id}/block", status_code=status.HTTP_204_NO_CONTENT)
-async def block_in_match(match_id: str, user: CurrentUser, db: DbSession) -> None:
+async def block_in_match(
+    match_id: str, user: CurrentUser, db: DbSession, lang: RequestLang
+) -> None:
     """このマッチの相手をブロックする（以後、候補・マッチ・チャットから除外）。"""
-    match = await _require_match(db, user, match_id)
+    match = await _require_match(db, user, match_id, lang)
     await block_user(db, user, match_peer_id(match, user.id))
 
 
 @router.post("/matches/{match_id}/report", status_code=status.HTTP_204_NO_CONTENT)
 async def report_in_match(
-    match_id: str, req: ReportRequest, user: CurrentUser, db: DbSession
+    match_id: str, req: ReportRequest, user: CurrentUser, db: DbSession, lang: RequestLang
 ) -> None:
     """このマッチの相手を通報する。"""
-    match = await _require_match(db, user, match_id)
+    match = await _require_match(db, user, match_id, lang)
     await report_user(db, user, match_peer_id(match, user.id), req.reason)
 
 
@@ -178,12 +193,16 @@ async def blocks(user: CurrentUser, db: DbSession) -> list[PublicProfile]:
 
 
 @router.delete("/blocks/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def unblock(user_id: str, user: CurrentUser, db: DbSession) -> None:
+async def unblock(
+    user_id: str, user: CurrentUser, db: DbSession, lang: RequestLang
+) -> None:
     """ブロックを解除する。"""
     try:
         target = uuid.UUID(user_id)
     except ValueError as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "不正なユーザーIDです。") from e
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, translate("matching.invalid_user_id", lang)
+        ) from e
     await unblock_user(db, user, target)
 
 

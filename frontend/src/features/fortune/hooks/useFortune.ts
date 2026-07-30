@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useI18n } from "@/i18n";
 import { fetchFortune } from "../api/fortuneApi";
 import type { FortuneRequest, FortuneResponse } from "../types";
 
@@ -7,6 +8,7 @@ export function useFortune() {
   const [result, setResult] = useState<FortuneResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useI18n();
 
   async function submit(req: FortuneRequest) {
     setLoading(true);
@@ -14,7 +16,7 @@ export function useFortune() {
     try {
       setResult(await fetchFortune(req));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "不明なエラー");
+      setError(e instanceof Error ? e.message : t("errors.unknown"));
     } finally {
       setLoading(false);
     }

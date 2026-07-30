@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import auth, fortune, matching, profile
 from app.core.config import settings
 
-app = FastAPI(title="四柱推命 API", version="0.1.0")
+app = FastAPI(title="四柱推命 API / Four Pillars API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
