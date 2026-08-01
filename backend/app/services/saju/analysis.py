@@ -142,11 +142,37 @@ def _seasonal_state_elements(month_branch: str) -> dict[str, str]:
     }
 
 
+# 同点の軸がこれより多く並ぶ側は、強み／弱みとして挙げない。
+# 「出現しない地支が8つ」のような並びを弱みと呼んでも、読む側の情報にならない。
+_EXTREME_MAX_TIED = 2
+
+
+def _extremes(axes: list[RadarAxis]) -> tuple[list[str], list[str]]:
+    """際立って高い軸と低い軸のコードを返す。
+
+    全軸が同じ値の平坦な図では、どちらも空にする（順位を付ける意味がないため）。
+    """
+    values = [axis.value for axis in axes]
+    if len(set(values)) < 2:
+        return [], []
+
+    highs = [axis.code for axis in axes if axis.value == max(values)]
+    lows = [axis.code for axis in axes if axis.value == min(values)]
+    return (
+        highs if len(highs) <= _EXTREME_MAX_TIED else [],
+        lows if len(lows) <= _EXTREME_MAX_TIED else [],
+    )
+
+
 def _chart(key: str, values: dict[str, float], order: list[str], max_value: float) -> RadarChart:
+    axes = [RadarAxis(code=code, value=round(values.get(code, 0.0), 1)) for code in order]
+    strengths, weaknesses = _extremes(axes)
     return RadarChart(
         key=key,
         max_value=max_value,
-        axes=[RadarAxis(code=code, value=round(values.get(code, 0.0), 1)) for code in order],
+        axes=axes,
+        strengths=strengths,
+        weaknesses=weaknesses,
     )
 
 

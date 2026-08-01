@@ -35,6 +35,12 @@ class RadarChart(BaseModel):
     key: str = Field(..., description="チャート種別（five_elements など）")
     max_value: float = Field(..., description="外周にあたる値。軸の値はこれを上限に描く")
     axes: list[RadarAxis]
+    strengths: list[str] = Field(
+        default_factory=list, description="際立って高い軸のコード。無ければ空"
+    )
+    weaknesses: list[str] = Field(
+        default_factory=list, description="際立って低い軸のコード。無ければ空"
+    )
 
 
 class FortuneResponse(BaseModel):

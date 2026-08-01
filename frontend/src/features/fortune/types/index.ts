@@ -28,6 +28,10 @@ export interface RadarChart {
   key: string;
   max_value: number;
   axes: RadarAxis[];
+  /** 際立って高い軸のコード。並びが平坦なチャートでは空。 */
+  strengths: string[];
+  /** 際立って低い軸のコード。並びが平坦なチャートでは空。 */
+  weaknesses: string[];
 }
 
 export interface FortuneResponse {

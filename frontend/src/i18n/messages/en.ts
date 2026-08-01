@@ -100,6 +100,8 @@ export const en: Messages = {
       axis: "Axis",
       value: "Value",
       scale: "Outer ring = {{max}}.",
+      strengths: "Strongest",
+      weaknesses: "Weakest",
       five_elements: {
         title: "Five elements",
         note: "How strong wood, fire, earth, metal and water are, scored across all four pillars.",

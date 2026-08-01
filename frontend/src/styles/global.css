@@ -606,6 +606,44 @@ button {
   color: var(--ink-muted);
 }
 
+/* 図を読まなくても突出した軸が分かるようにする一行 */
+.chart-extremes {
+  margin: 0.6rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.chart-extreme {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--surface-veil);
+  border: 1px solid var(--border);
+}
+
+.chart-extreme dt {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-muted);
+}
+
+.chart-extreme dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.chart-extreme--strong dd {
+  color: var(--violet-deep);
+}
+
+.chart-extreme--weak dd {
+  color: var(--ink-muted);
+}
+
 /* チャートと同じ内容の数値表 */
 .chart-table {
   margin-top: 0.3rem;

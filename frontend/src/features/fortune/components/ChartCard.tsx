@@ -63,6 +63,25 @@ export const ChartCard = memo(function ChartCard({ chart, onSelectTerm }: Props)
         onSelectAxis={openTerm}
       />
 
+      {/* 図を読み取らなくても、どこが突出して高い／低いかは言葉で分かるようにする。
+          並びが平坦なチャートでは順位に意味がないので、バックエンドが空で返す。 */}
+      {(chart.strengths.length > 0 || chart.weaknesses.length > 0) && (
+        <dl className="chart-extremes">
+          {chart.strengths.length > 0 && (
+            <div className="chart-extreme chart-extreme--strong">
+              <dt>{t("fortune.charts.strengths")}</dt>
+              <dd>{chart.strengths.map((code) => axisLabel(code, lang, ns)).join(t("common.metaSeparator"))}</dd>
+            </div>
+          )}
+          {chart.weaknesses.length > 0 && (
+            <div className="chart-extreme chart-extreme--weak">
+              <dt>{t("fortune.charts.weaknesses")}</dt>
+              <dd>{chart.weaknesses.map((code) => axisLabel(code, lang, ns)).join(t("common.metaSeparator"))}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+
       {/* チャートと同じ内容を数値でも読めるようにしておく */}
       <details className="chart-table">
         <summary>{t("fortune.charts.showValues")}</summary>

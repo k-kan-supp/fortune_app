@@ -126,3 +126,41 @@ def test_balanced_chart_scores_high_on_health():
     even = axes_by_key(balanced, balanced_dm)
     skewed = axes_by_key(PILLARS, DAY_MASTER)
     assert even["life_areas"]["health"] > skewed["life_areas"]["health"]
+
+
+def test_extremes_name_the_highest_and_lowest_axes():
+    """強み・弱みは、実際にその図の最大値・最小値を取る軸を指す。"""
+    for chart in build_charts(PILLARS, DAY_MASTER, True):
+        values = {axis.code: axis.value for axis in chart.axes}
+        for code in chart.strengths:
+            assert values[code] == max(values.values())
+        for code in chart.weaknesses:
+            assert values[code] == min(values.values())
+        # 同じ軸が強みと弱みの両方に現れることはない
+        assert not set(chart.strengths) & set(chart.weaknesses)
+
+
+def test_flat_chart_has_no_strengths_or_weaknesses():
+    """全軸が同じ値なら順位を付ける意味がないので、どちらも空にする。"""
+    from app.services.saju.analysis import _chart
+
+    chart = _chart("flat", {"a": 1.0, "b": 1.0, "c": 1.0}, ["a", "b", "c"], 1.0)
+    assert chart.strengths == []
+    assert chart.weaknesses == []
+
+
+def test_widely_tied_side_is_not_reported():
+    """同点が3つ以上並ぶ側は挙げない。
+
+    「出現しない地支が8つ」のような並びを弱みと呼んでも情報にならない。
+    """
+    from app.services.saju.analysis import _chart
+
+    order = ["a", "b", "c", "d"]
+    chart = _chart("tied_low", {"a": 3.0, "b": 0.0, "c": 0.0, "d": 0.0}, order, 3.0)
+    assert chart.strengths == ["a"]
+    assert chart.weaknesses == []  # 0 が3つ並ぶので弱みとしては出さない
+
+    chart = _chart("tied_high", {"a": 3.0, "b": 3.0, "c": 3.0, "d": 0.0}, order, 3.0)
+    assert chart.strengths == []
+    assert chart.weaknesses == ["d"]
