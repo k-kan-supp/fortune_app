@@ -197,6 +197,18 @@ async def like_user(
                 )
 
     await db.commit()
+
+    # マッチ成立は上で別に記録済み。ここは全操作の履歴として残す。
+    logger.info(
+        "like recorded",
+        extra={
+            "user_id": str(me.id),
+            "peer_id": str(target_uuid),
+            "is_like": is_like,
+            "changed": existing is not None,
+            "matched": matched is not None,
+        },
+    )
     return LikeResult(
         matched=matched is not None,
         match_id=str(matched.id) if matched else None,
@@ -285,6 +297,11 @@ async def unblock_user(db: AsyncSession, me: User, target_id: uuid.UUID) -> None
     if existing is not None:
         await db.delete(existing)
         await db.commit()
+        # ブロックと対で残さないと、解除済みかどうかを後から追えない。
+        logger.info(
+            "user unblocked",
+            extra={"user_id": str(me.id), "peer_id": str(target_id)},
+        )
 
 
 async def list_blocked(
@@ -354,6 +371,20 @@ async def compatibility_with(
     mine = _fortune_request(profiles.get(me.id))
     theirs = _fortune_request(profiles.get(target_id))
     if mine is None or theirs is None:
+        # 「相性が出ない」の問い合わせは、どちら側の生年月日が欠けているかで対応が変わる。
+        logger.info(
+            "compatibility skipped",
+            extra={
+                "user_id": str(me.id),
+                "peer_id": str(target_id),
+                "reason": "birthday_missing",
+                "missing": ",".join(
+                    side
+                    for side, req in (("me", mine), ("peer", theirs))
+                    if req is None
+                ),
+            },
+        )
         return None
 
     my_pillars, _ = four_pillars(mine)

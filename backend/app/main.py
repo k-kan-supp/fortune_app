@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, Request, status
@@ -14,7 +15,21 @@ from app.services.images import InvalidImageError
 
 configure_logging()
 
+logger = logging.getLogger("app.startup")
+
 app = FastAPI(title="四柱推命 API / Four Pillars API", version="0.1.0")
+
+# 「どの設定で動いているのか」を最初の1行で確定させる。
+# 障害時にまず疑うのがここなので、秘密値は載せず効いている設定だけを出す。
+logger.info(
+    "starting",
+    extra={
+        "env": settings.app_env,
+        "log_level": settings.log_level.upper(),
+        "storage": settings.storage_backend,
+        "email": settings.email_backend,
+    },
+)
 
 
 @app.exception_handler(InvalidImageError)

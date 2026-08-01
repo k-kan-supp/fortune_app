@@ -2,7 +2,13 @@
 
 干支と節入りの計算は sxtwl（寿星天文暦）に委譲する。
 sxtwl 未インストールでもモジュール自体は import できるよう、遅延 import にしている。
+
+ログは鑑定1回につき1行だけ、この層に置く。``ten_gods`` や ``analysis`` の中は
+相性判定から総当たりで何万回も呼ばれるため、ログを入れると出力が溢れる。
+生年月日そのものは個人情報なので載せず、導出結果（日主）だけを残す。
 """
+
+import logging
 
 from app.schemas.fortune import FortuneRequest, FortuneResponse, Pillar
 from app.services.saju.analysis import build_charts
@@ -13,6 +19,8 @@ from app.services.saju.constants import (
     STEM_ELEMENT,
 )
 from app.services.saju.ten_gods import ten_god
+
+logger = logging.getLogger("app.saju")
 
 
 def _pillar(stem_idx: int, branch_idx: int, day_master: str | None) -> Pillar:
@@ -57,6 +65,13 @@ def four_pillars(req: FortuneRequest) -> tuple[dict[str, Pillar], str]:
 def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
     """生年月日時から命式とバランス指標を組み立てる。"""
     pillars, day_master = four_pillars(req)
+    charts = build_charts(pillars, day_master, req.is_male)
+
+    # 生年月日は載せない。日主と枚数だけで「計算が通ったか」は追える。
+    logger.info(
+        "chart calculated",
+        extra={"day_master": day_master, "charts": len(charts)},
+    )
 
     return FortuneResponse(
         year_pillar=pillars["year"],
@@ -64,5 +79,5 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
         day_pillar=pillars["day"],
         hour_pillar=pillars["hour"],
         day_master=day_master,
-        charts=build_charts(pillars, day_master, req.is_male),
+        charts=charts,
     )

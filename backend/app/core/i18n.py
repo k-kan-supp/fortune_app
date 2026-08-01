@@ -4,7 +4,10 @@
 文言はキーで持ち、レスポンスを組み立てる直前に翻訳する。
 """
 
+import logging
 from typing import Literal
+
+logger = logging.getLogger("app.i18n")
 
 Lang = Literal["ja", "en"]
 
@@ -121,6 +124,10 @@ def translate(key: str, lang: Lang = DEFAULT_LANG, **params: object) -> str:
     """メッセージキーを翻訳する。未知のキーはそのまま返す（開発時の気づき用）。"""
     entry = MESSAGES.get(key)
     if entry is None:
+        # キーがそのまま画面に出てしまう状態。放置されやすいので警告で気づけるようにする。
+        logger.warning("missing message key", extra={"key": key, "lang": lang})
         return key
+    if lang not in entry:
+        logger.warning("message not translated", extra={"key": key, "lang": lang})
     text = entry.get(lang) or entry[DEFAULT_LANG]
     return text.format(**params) if params else text

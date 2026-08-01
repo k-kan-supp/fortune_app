@@ -1,5 +1,10 @@
-"""チャット（マッチ内メッセージ）と既読管理のドメインロジック。"""
+"""チャット（マッチ内メッセージ）と既読管理のドメインロジック。
 
+**本文は絶対にログに残さない**。誰がどのマッチに何文字送ったかまでで、
+中身は DB を見るしかない粒度に留める。
+"""
+
+import logging
 import uuid
 from datetime import UTC, datetime
 
@@ -11,6 +16,8 @@ from app.models.user import User
 from app.schemas.matching import MessageOut
 from app.services.images import to_bounded_webp
 from app.services.storage.base import FileStorage
+
+logger = logging.getLogger("app.chat")
 
 _CHAT_IMAGE_MAX_PX = 1280
 
@@ -80,6 +87,17 @@ async def create_message(
     db.add(msg)
     await db.commit()
     await db.refresh(msg)
+
+    # 本文の代わりに文字数だけ残す。空文字＋画像だけの送信も区別できる。
+    logger.info(
+        "message sent",
+        extra={
+            "match_id": str(match.id),
+            "user_id": str(sender_id),
+            "body_len": len(body),
+            "has_image": image_key is not None,
+        },
+    )
     return msg
 
 
@@ -92,7 +110,12 @@ async def send_message(
 
 def process_chat_image(raw: bytes) -> bytes:
     """チャット画像を検証し、長辺を上限に縮小して WebP バイト列で返す。"""
-    return to_bounded_webp(raw, _CHAT_IMAGE_MAX_PX)
+    processed = to_bounded_webp(raw, _CHAT_IMAGE_MAX_PX)
+    logger.debug(
+        "chat image processed",
+        extra={"in_bytes": len(raw), "out_bytes": len(processed)},
+    )
+    return processed
 
 
 async def get_last_message(
@@ -125,6 +148,12 @@ async def mark_read(
     else:
         rec.last_read_at = now
     await db.commit()
+
+    # 既読はポーリングのたびに動くので debug。既読が進まない不具合の調査用。
+    logger.debug(
+        "match read",
+        extra={"match_id": str(match_id), "user_id": str(user_id)},
+    )
     return now
 
 
