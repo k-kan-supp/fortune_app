@@ -27,7 +27,6 @@ from app.schemas.matching import (
     UnreadCount,
 )
 from app.services.chat import (
-    InvalidImageError,
     create_message,
     list_messages,
     mark_read,
@@ -35,6 +34,7 @@ from app.services.chat import (
     send_message,
     total_unread,
 )
+from app.services.images import ALLOWED_IMAGE_TYPES
 from app.services.matching import (
     block_user,
     get_match_or_none,
@@ -127,27 +127,20 @@ async def post_message(
     return await send_message(db, match, user.id, req.body, get_file_storage())
 
 
-_ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-
-
 @router.post("/matches/{match_id}/images", response_model=MessageOut)
 async def post_image(
     match_id: str, file: UploadFile, user: CurrentUser, db: DbSession, lang: RequestLang
 ) -> MessageOut:
     """マッチ内に画像メッセージを送信する。保存後 WebSocket でも配信する。"""
-    if file.content_type not in _ALLOWED_IMAGE_TYPES:
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             translate("image.unsupported_type", lang),
         )
     match = await _require_match(db, user, match_id, lang)
     storage = get_file_storage()
-    try:
-        processed = process_chat_image(await file.read())
-    except InvalidImageError as e:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, translate(e.key, lang)
-        ) from e
+    # 読めない画像は InvalidImageError が飛び、main.py の例外ハンドラが 400 に変換する
+    processed = process_chat_image(await file.read())
 
     key = f"chat/{uuid.uuid4().hex}.webp"
     await storage.save(key, processed)

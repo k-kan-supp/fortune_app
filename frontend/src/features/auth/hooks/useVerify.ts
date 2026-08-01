@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getLang, translate } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { verifyMagicLink } from "../api/authApi";
 import { saveToken } from "../authStorage";
 import type { User } from "../types";
@@ -31,7 +32,7 @@ export function useVerify(token: string | null) {
       })
       .catch((e: unknown) => {
         setError(
-          e instanceof Error ? e.message : translate(getLang(), "verify.failed"),
+          errorMessage(e, translate(getLang(), "verify.failed")),
         );
         setStatus("error");
       });

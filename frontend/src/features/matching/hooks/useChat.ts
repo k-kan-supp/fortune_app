@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getToken } from "@/features/auth/authStorage";
 import { getLang, translate, useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { getMessages, markRead } from "../api/matchingApi";
 import type { Message } from "../types";
 
@@ -40,7 +41,7 @@ export function useChat(matchId: string) {
       .catch(
         (e) =>
           active &&
-          setError(e instanceof Error ? e.message : translate(getLang(), "errors.fetch")),
+          setError(errorMessage(e, translate(getLang(), "errors.fetch"))),
       );
 
     // 2) WebSocket 接続

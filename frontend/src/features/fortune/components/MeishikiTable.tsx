@@ -42,7 +42,13 @@ export function MeishikiTable({ result }: Props) {
         <button
           type="button"
           className="term-link"
-          onClick={() => setTerm({ ns: "stem", code: result.day_master })}
+          onClick={() =>
+            setTerm({
+              ns: "stem",
+              code: result.day_master,
+              label: stemLabel(result.day_master, lang),
+            })
+          }
         >
           {stemLabel(result.day_master, lang)}
         </button>

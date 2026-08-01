@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 export interface RadarPoint {
   /** 軸の表示名（言語解決済み） */
@@ -58,6 +58,10 @@ function wrap(label: string): string[] {
 /** 軸が増えるほどラベル同士の間隔が詰まるので、字を小さくして逃がす。 */
 const labelFontSize = (count: number): number => (count >= 12 ? 8.5 : count >= 10 ? 9 : 10);
 
+/** 真上・真下の頂点は中央寄せ、右半分は左寄せ、左半分は右寄せ。 */
+const anchorFor = (x: number): "middle" | "start" | "end" =>
+  Math.abs(x - CX) < 2 ? "middle" : x > CX ? "start" : "end";
+
 /**
  * 直接ラベルを頂点のどちら側に置くか。
  * 下半分の頂点は形の外（下）に出す。ただし外周近くだと軸ラベルにぶつかるので、
@@ -80,6 +84,18 @@ export function RadarChart({ points, maxValue, title, onSelectAxis }: Props) {
   const count = points.length;
   const scale = maxValue > 0 ? R / maxValue : 0;
   const radiusOf = (value: number) => Math.min(Math.max(value, 0) * scale, R);
+  const fontSize = labelFontSize(count);
+
+  // 目盛り・軸線・当たり判定は軸数だけで決まるので、ホバーのたびに作り直さない
+  const frame = useMemo(
+    () => ({
+      rings: Array.from({ length: RINGS }, (_, i) => polygon(count, (R * (i + 1)) / RINGS)),
+      spokes: Array.from({ length: count }, (_, i) => pointAt(i, count, R)),
+      wedges: Array.from({ length: count }, (_, i) => wedgePath(i, count)),
+      labels: Array.from({ length: count }, (_, i) => pointAt(i, count, LABEL_R)),
+    }),
+    [count],
+  );
 
   const vertices = points.map((p, i) => pointAt(i, count, radiusOf(p.value)));
 
@@ -96,13 +112,12 @@ export function RadarChart({ points, maxValue, title, onSelectAxis }: Props) {
         <title id={titleId}>{title}</title>
 
         <g className="radar-grid" aria-hidden="true">
-          {Array.from({ length: RINGS }, (_, i) => (
-            <polygon key={i} points={polygon(count, (R * (i + 1)) / RINGS)} />
+          {frame.rings.map((ring, i) => (
+            <polygon key={i} points={ring} />
           ))}
-          {points.map((_, i) => {
-            const { x, y } = pointAt(i, count, R);
-            return <line key={i} x1={CX} y1={CY} x2={x} y2={y} />;
-          })}
+          {frame.spokes.map(({ x, y }, i) => (
+            <line key={i} x1={CX} y1={CY} x2={x} y2={y} />
+          ))}
         </g>
 
         {/* 目盛り: 外周と中間の値。軸ラベルとぶつからないよう縦軸のすぐ右に置く */}
@@ -138,33 +153,28 @@ export function RadarChart({ points, maxValue, title, onSelectAxis }: Props) {
           <text
             className="radar-peak"
             x={vertices[labelled].x}
-            y={vertices[labelled].y + peakOffset(vertices[labelled].y, radiusOf(points[labelled].value))}
-            textAnchor={
-              Math.abs(vertices[labelled].x - CX) < 2
-                ? "middle"
-                : vertices[labelled].x > CX
-                  ? "start"
-                  : "end"
+            y={
+              vertices[labelled].y +
+              peakOffset(vertices[labelled].y, radiusOf(points[labelled].value))
             }
+            textAnchor={anchorFor(vertices[labelled].x)}
           >
             {formatValue(points[labelled].value)}
           </text>
         )}
 
-        <g className="radar-axis-label" fontSize={labelFontSize(count)}>
+        <g className="radar-axis-label" fontSize={fontSize}>
           {points.map((point, i) => {
-            const { x, y } = pointAt(i, count, LABEL_R);
-            const dx = x - CX;
-            const anchor = Math.abs(dx) < 2 ? "middle" : dx > 0 ? "start" : "end";
+            const { x, y } = frame.labels[i];
             const lines = wrap(point.label);
-            const lineHeight = labelFontSize(count) + 1.5;
+            const lineHeight = fontSize + 1.5;
             const top = y - ((lines.length - 1) * lineHeight) / 2;
             return (
               <text
                 key={i}
                 x={x}
                 y={top}
-                textAnchor={anchor}
+                textAnchor={anchorFor(x)}
                 dominantBaseline="middle"
                 className={active === i ? "is-active" : undefined}
               >
@@ -184,8 +194,8 @@ export function RadarChart({ points, maxValue, title, onSelectAxis }: Props) {
           {points.map((point, i) => (
             <path
               key={i}
-              d={wedgePath(i, count)}
-              onPointerMove={() => setHovered(i)}
+              d={frame.wedges[i]}
+              onPointerEnter={() => setHovered(i)}
               // キーボードでも、ホバーと同じ強調と数値が出るようにする
               onFocus={() => setHovered(i)}
               onBlur={() => setHovered(null)}

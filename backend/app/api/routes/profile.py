@@ -3,8 +3,8 @@ from fastapi import APIRouter, HTTPException, UploadFile, status
 from app.api.deps import CurrentUser, DbSession, RequestLang
 from app.core.i18n import translate
 from app.schemas.profile import ProfileOut, ProfileUpdate
+from app.services.images import ALLOWED_IMAGE_TYPES
 from app.services.profile import (
-    InvalidImageError,
     get_or_create_profile,
     remove_avatar,
     set_avatar,
@@ -14,8 +14,6 @@ from app.services.profile import (
 from app.services.storage import get_file_storage
 
 router = APIRouter(prefix="/profile", tags=["profile"])
-
-_ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 
 
 @router.get("/me", response_model=ProfileOut)
@@ -35,19 +33,16 @@ async def edit_profile(data: ProfileUpdate, user: CurrentUser, db: DbSession) ->
 async def upload_avatar(
     file: UploadFile, user: CurrentUser, db: DbSession, lang: RequestLang
 ) -> ProfileOut:
-    if file.content_type not in _ALLOWED_TYPES:
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             translate("image.unsupported_type", lang),
         )
     storage = get_file_storage()
     profile = await get_or_create_profile(db, user)
-    try:
-        profile = await set_avatar(db, profile, await file.read(), storage)
-    except InvalidImageError as e:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, translate(e.key, lang)
-        ) from e
+    # 画像として読めない・大きすぎる場合は InvalidImageError が飛び、
+    # main.py の例外ハンドラが言語に応じた 400 に変換する
+    profile = await set_avatar(db, profile, await file.read(), storage)
     return to_out(user, profile, storage)
 
 

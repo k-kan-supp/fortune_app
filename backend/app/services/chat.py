@@ -1,30 +1,18 @@
 """チャット（マッチ内メッセージ）と既読管理のドメインロジック。"""
 
-import io
 import uuid
 from datetime import datetime, timezone
 
-from PIL import Image, UnidentifiedImageError
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.matching import Match, MatchRead, Message
 from app.models.user import User
 from app.schemas.matching import MessageOut
+from app.services.images import to_bounded_webp
 from app.services.storage.base import FileStorage
 
 _CHAT_IMAGE_MAX_PX = 1280
-
-
-class InvalidImageError(Exception):
-    """アップロードされた画像が不正・非対応の場合。
-
-    ``key`` は app.core.i18n のメッセージキー。API 層で言語に応じて訳す。
-    """
-
-    def __init__(self, key: str) -> None:
-        super().__init__(key)
-        self.key = key
 
 
 def to_message_out(
@@ -104,17 +92,7 @@ async def send_message(
 
 def process_chat_image(raw: bytes) -> bytes:
     """チャット画像を検証し、長辺を上限に縮小して WebP バイト列で返す。"""
-    try:
-        Image.open(io.BytesIO(raw)).verify()
-        img = Image.open(io.BytesIO(raw))  # verify 後は再オープンが必要
-    except (UnidentifiedImageError, OSError) as e:
-        raise InvalidImageError("image.unreadable") from e
-
-    img = img.convert("RGB")
-    img.thumbnail((_CHAT_IMAGE_MAX_PX, _CHAT_IMAGE_MAX_PX))  # 縦横比を保って縮小
-    buf = io.BytesIO()
-    img.save(buf, format="WEBP", quality=82)
-    return buf.getvalue()
+    return to_bounded_webp(raw, _CHAT_IMAGE_MAX_PX)
 
 
 async def get_last_message(

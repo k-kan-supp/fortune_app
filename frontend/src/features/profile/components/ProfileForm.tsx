@@ -26,9 +26,19 @@ export function ProfileForm({ profile, onSave }: Props) {
   const [saved, setSaved] = useState(false);
   const { t, lang } = useI18n();
 
-  const prefOptions = useMemo(
-    () => PREFECTURES.map((p) => ({ value: p, label: prefectureLabel(p, lang) })),
-    [lang],
+  // 選択肢は言語が変わったときだけ作り直す（入力のたびに 30 個の翻訳を引かない）
+  const options = useMemo(
+    () => ({
+      gender: toOptions(GENDERS, t),
+      bodyType: toOptions(BODY_TYPES, t),
+      bloodType: toOptions(BLOOD_TYPES, t),
+      education: toOptions(EDUCATIONS, t),
+      maritalStatus: toOptions(MARITAL_STATUSES, t),
+      smoking: toOptions(SMOKING_STATUSES, t),
+      drinking: toOptions(DRINKING_STATUSES, t),
+      prefecture: PREFECTURES.map((p) => ({ value: p, label: prefectureLabel(p, lang) })),
+    }),
+    [t, lang],
   );
 
   // プロフィール読込後にフォーム初期値を反映（HH:MM:SS → HH:MM）
@@ -76,7 +86,7 @@ export function ProfileForm({ profile, onSave }: Props) {
         <SelectField
           label={t("profile.fields.gender")}
           value={form.gender ?? null}
-          options={toOptions(GENDERS, t)}
+          options={options.gender}
           onChange={(v) => set("gender", v as Profile["gender"])}
         />
       </Section>
@@ -99,13 +109,13 @@ export function ProfileForm({ profile, onSave }: Props) {
         <SelectField
           label={t("profile.fields.bodyType")}
           value={form.body_type ?? null}
-          options={toOptions(BODY_TYPES, t)}
+          options={options.bodyType}
           onChange={(v) => set("body_type", v as Profile["body_type"])}
         />
         <SelectField
           label={t("profile.fields.bloodType")}
           value={form.blood_type ?? null}
-          options={toOptions(BLOOD_TYPES, t)}
+          options={options.bloodType}
           onChange={(v) => set("blood_type", v as Profile["blood_type"])}
         />
       </Section>
@@ -120,31 +130,31 @@ export function ProfileForm({ profile, onSave }: Props) {
         <SelectField
           label={t("profile.fields.education")}
           value={form.education ?? null}
-          options={toOptions(EDUCATIONS, t)}
+          options={options.education}
           onChange={(v) => set("education", v as Profile["education"])}
         />
         <SelectField
           label={t("profile.fields.prefecture")}
           value={form.prefecture ?? null}
-          options={prefOptions}
+          options={options.prefecture}
           onChange={(v) => set("prefecture", v)}
         />
         <SelectField
           label={t("profile.fields.maritalStatus")}
           value={form.marital_status ?? null}
-          options={toOptions(MARITAL_STATUSES, t)}
+          options={options.maritalStatus}
           onChange={(v) => set("marital_status", v as Profile["marital_status"])}
         />
         <SelectField
           label={t("profile.fields.smoking")}
           value={form.smoking ?? null}
-          options={toOptions(SMOKING_STATUSES, t)}
+          options={options.smoking}
           onChange={(v) => set("smoking", v as Profile["smoking"])}
         />
         <SelectField
           label={t("profile.fields.drinking")}
           value={form.drinking ?? null}
-          options={toOptions(DRINKING_STATUSES, t)}
+          options={options.drinking}
           onChange={(v) => set("drinking", v as Profile["drinking"])}
         />
       </Section>

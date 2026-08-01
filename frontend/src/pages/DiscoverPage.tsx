@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Modal } from "@/components/ui/Modal";
 import type { CandidateFilters } from "@/features/matching/api/matchingApi";
 import { CandidateCard } from "@/features/matching/components/CandidateCard";
 import { CandidateFilter } from "@/features/matching/components/CandidateFilter";
@@ -37,18 +38,20 @@ export function DiscoverPage() {
       )}
 
       {matchedWith && (
-        <div className="match-modal" onClick={dismissMatch}>
-          <div className="match-modal-card" onClick={(e) => e.stopPropagation()}>
-            <h2>{t("discover.matchedTitle")}</h2>
-            <p>{t("discover.matchedBody", { name: matchedWith })}</p>
-            <Link to="/matches" className="like-btn">
-              {t("discover.toMessages")}
-            </Link>
-            <button className="link-btn" onClick={dismissMatch}>
-              {t("discover.keepBrowsing")}
-            </button>
-          </div>
-        </div>
+        <Modal
+          onClose={dismissMatch}
+          cardClassName="match-modal-card"
+          labelledBy="match-modal-title"
+        >
+          <h2 id="match-modal-title">{t("discover.matchedTitle")}</h2>
+          <p>{t("discover.matchedBody", { name: matchedWith })}</p>
+          <Link to="/matches" className="like-btn">
+            {t("discover.toMessages")}
+          </Link>
+          <button className="link-btn" onClick={dismissMatch}>
+            {t("discover.keepBrowsing")}
+          </button>
+        </Modal>
       )}
     </main>
   );

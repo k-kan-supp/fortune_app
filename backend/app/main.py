@@ -1,13 +1,26 @@
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import auth, fortune, matching, profile
 from app.core.config import settings
+from app.core.i18n import resolve_lang, translate
+from app.services.images import InvalidImageError
 
 app = FastAPI(title="四柱推命 API / Four Pillars API", version="0.1.0")
+
+
+@app.exception_handler(InvalidImageError)
+async def invalid_image_handler(request: Request, exc: InvalidImageError) -> JSONResponse:
+    """画像エラーは、どのエンドポイントでも 400 + 翻訳済みの detail で返す。"""
+    lang = resolve_lang(request.headers.get("accept-language"))
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"detail": translate(exc.key, lang)},
+    )
 
 app.add_middleware(
     CORSMiddleware,

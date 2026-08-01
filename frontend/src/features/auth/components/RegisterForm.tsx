@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { requestMagicLink } from "../api/authApi";
 
 type Status = "idle" | "sending" | "sent" | "error";
@@ -20,7 +21,7 @@ export function RegisterForm() {
       setMessage(res.message);
       setStatus("sent");
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : t("errors.send"));
+      setMessage(errorMessage(err, t("errors.send")));
       setStatus("error");
     }
   }

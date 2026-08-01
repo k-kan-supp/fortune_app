@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { isAuthenticated } from "@/features/auth/authStorage";
 import { BirthInputModal } from "@/features/fortune/components/BirthInputModal";
@@ -16,29 +16,30 @@ const STEPS = [
 ] as const;
 
 export function FortunePage() {
+  // プロフィール由来の初期値。届いていれば「反映しました」の注記も出す。
   const [defaults, setDefaults] = useState<Partial<FortuneRequest>>();
-  const [prefilled, setPrefilled] = useState(false);
   // 入力フォームは「鑑定する」を押すとポップアップで開く
   const [formOpen, setFormOpen] = useState(false);
+  const profileRequested = useRef(false);
   const loggedIn = isAuthenticated();
   const navigate = useNavigate();
   const { t } = useI18n();
 
-  // ログイン済みならプロフィールの生年月日を初期値に反映する
-  useEffect(() => {
-    if (!loggedIn) return;
+  function openForm() {
+    setFormOpen(true);
+
+    // 生年月日の初期値は、フォームを開いたときに一度だけ取りに行く
+    if (!loggedIn || profileRequested.current) return;
+    profileRequested.current = true;
     getProfile()
       .then((p) => {
         const d = profileToFortuneDefaults(p);
-        if (Object.keys(d).length > 0) {
-          setDefaults(d);
-          setPrefilled(true);
-        }
+        if (Object.keys(d).length > 0) setDefaults(d);
       })
       .catch(() => {
-        /* 未ログイン・未設定は無視（手入力で使える） */
+        /* 未設定・取得失敗は無視（手入力で使える） */
       });
-  }, [loggedIn]);
+  }
 
   // 鑑定は結果ページで行う。入力値はクエリで渡す。
   function openResult(req: FortuneRequest) {
@@ -67,7 +68,7 @@ export function FortunePage() {
         </div>
 
         <div className="start-cta">
-          <button type="button" className="q-submit" onClick={() => setFormOpen(true)}>
+          <button type="button" className="q-submit" onClick={openForm}>
             {t("fortune.startCta")}
           </button>
         </div>
@@ -76,10 +77,9 @@ export function FortunePage() {
           <BirthInputModal
             onClose={() => setFormOpen(false)}
             onSubmit={openResult}
-            loading={false}
             initial={defaults}
             note={
-              prefilled ? (
+              defaults ? (
                 <p className="hint prefill-note">
                   {t("fortune.prefillNote")}
                   <Link to="/profile">{t("fortune.prefillEdit")}</Link>

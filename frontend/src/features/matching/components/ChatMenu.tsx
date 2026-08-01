@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Modal } from "@/components/ui/Modal";
 import { useI18n, type MessageKey } from "@/i18n";
 import { blockInMatch, reportInMatch } from "../api/matchingApi";
 
@@ -77,35 +78,38 @@ export function ChatMenu({ matchId }: { matchId: string }) {
       )}
 
       {reporting && (
-        <div className="match-modal" onClick={() => !busy && setReporting(false)}>
-          <div className="match-modal-card report-card" onClick={(e) => e.stopPropagation()}>
-            <h2>{t("chatMenu.reportTitle")}</h2>
-            <label>
-              {t("chatMenu.reason")}
-              <select value={reasonKey} onChange={(e) => setReasonKey(e.target.value)}>
-                {REPORT_REASONS.map((r) => (
-                  <option key={r.key} value={r.key}>
-                    {t(r.labelKey)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <textarea
-              rows={3}
-              placeholder={t("chatMenu.detail")}
-              value={detail}
-              onChange={(e) => setDetail(e.target.value)}
-            />
-            <div className="filter-actions">
-              <button className="pass-btn" disabled={busy} onClick={() => setReporting(false)}>
-                {t("common.cancel")}
-              </button>
-              <button className="like-btn" disabled={busy} onClick={submitReport}>
-                {t("common.send")}
-              </button>
-            </div>
+        <Modal
+          onClose={() => setReporting(false)}
+          cardClassName="match-modal-card report-card"
+          labelledBy="report-modal-title"
+          closable={!busy}
+        >
+          <h2 id="report-modal-title">{t("chatMenu.reportTitle")}</h2>
+          <label>
+            {t("chatMenu.reason")}
+            <select value={reasonKey} onChange={(e) => setReasonKey(e.target.value)}>
+              {REPORT_REASONS.map((r) => (
+                <option key={r.key} value={r.key}>
+                  {t(r.labelKey)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <textarea
+            rows={3}
+            placeholder={t("chatMenu.detail")}
+            value={detail}
+            onChange={(e) => setDetail(e.target.value)}
+          />
+          <div className="filter-actions">
+            <button className="pass-btn" disabled={busy} onClick={() => setReporting(false)}>
+              {t("common.cancel")}
+            </button>
+            <button className="like-btn" disabled={busy} onClick={submitReport}>
+              {t("common.send")}
+            </button>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

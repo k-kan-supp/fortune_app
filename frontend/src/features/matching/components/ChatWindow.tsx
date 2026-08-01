@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { uploadChatImage } from "../api/matchingApi";
 import { useChat } from "../hooks/useChat";
 
@@ -59,7 +60,7 @@ export function ChatWindow({ matchId }: { matchId: string }) {
       // 送信分は WebSocket の配信（echo）で反映されるため、ここでは追加しない
       await uploadChatImage(matchId, file);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : t("chat.imageFailed"));
+      setUploadError(errorMessage(err, t("chat.imageFailed")));
     } finally {
       setUploading(false);
     }

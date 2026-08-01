@@ -145,10 +145,9 @@ def build_charts(pillars: dict[str, Pillar], day_master: str, is_male: bool) -> 
 
     stem_scores = _tally(weighted)
     element_scores = _tally(weighted, STEM_ELEMENT)
-    god_scores = _tally(weighted, {s: ten_god(day_master, s) for s in HEAVENLY_STEMS})
-    group_scores = _tally(
-        weighted, {s: TEN_GOD_GROUP[ten_god(day_master, s)] for s in HEAVENLY_STEMS}
-    )
+    gods = {s: ten_god(day_master, s) for s in HEAVENLY_STEMS}
+    god_scores = _tally(weighted, gods)
+    group_scores = _tally(weighted, {s: TEN_GOD_GROUP[g] for s, g in gods.items()})
 
     branch_counts = {b: float(branches.count(b)) for b in EARTHLY_BRANCHES}
     stages = {code: twelve_stage(day_master, p.branch) for code, p in pillars.items()}

@@ -8,8 +8,6 @@ export const en: Messages = {
 
   lang: {
     label: "Language",
-    ja: "日本語",
-    en: "English",
   },
 
   nav: {
@@ -82,7 +80,6 @@ export const en: Messages = {
       timeNote: "This sets the hour pillar. If you are not sure, leave it at 12.",
       hour: "Hour",
       submit: "Get my reading",
-      submitting: "Reading…",
     },
     table: {
       dayMaster: "Day master",

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getBlocked, unblockUser } from "@/features/matching/api/matchingApi";
 import type { PublicProfile } from "@/features/matching/types";
 import { useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 
 export function BlockedPage() {
   const [users, setUsers] = useState<PublicProfile[]>([]);
@@ -13,7 +14,7 @@ export function BlockedPage() {
   useEffect(() => {
     getBlocked()
       .then(setUsers)
-      .catch((e) => setError(e instanceof Error ? e.message : t("errors.fetch")))
+      .catch((e) => setError(errorMessage(e, t("errors.fetch"))))
       .finally(() => setLoading(false));
     // 言語切り替えで再取得はしない（初回のみ）
     // eslint-disable-next-line react-hooks/exhaustive-deps

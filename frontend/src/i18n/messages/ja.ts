@@ -6,8 +6,6 @@ export const ja = {
 
   lang: {
     label: "言語",
-    ja: "日本語",
-    en: "English",
   },
 
   nav: {
@@ -81,7 +79,6 @@ export const ja = {
       timeNote: "時柱に使います。わからない場合は 12 時のままで構いません。",
       hour: "時",
       submit: "鑑定する",
-      submitting: "鑑定中…",
     },
     table: {
       dayMaster: "日主",

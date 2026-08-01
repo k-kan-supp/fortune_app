@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getLang, translate } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { getMatches } from "../api/matchingApi";
 import type { Match } from "../types";
 
@@ -12,7 +13,7 @@ export function useMatches() {
     getMatches()
       .then(setMatches)
       .catch((e) =>
-        setError(e instanceof Error ? e.message : translate(getLang(), "errors.fetch")),
+        setError(errorMessage(e, translate(getLang(), "errors.fetch"))),
       )
       .finally(() => setLoading(false));
   }, []);

@@ -143,8 +143,23 @@ const AXIS_JA: Record<string, string> = {
   study: "学習運",
 };
 
-/** 軸コード（"木" / "甲" / "career" など）を表示名に変換する。 */
-export function axisLabel(code: string, lang: Lang): string {
+/**
+ * 同じコードでもチャートによって意味が変わる軸の訳語。
+ * 例: 「死」は十二運星では Death（動きが止まる時期）、
+ * 官位では旺に剋されて最も勢いを失った状態を指す。
+ */
+const AXIS_EN_BY_NS: Record<string, Record<string, string>> = {
+  seasonal: { 死: "Dormant" },
+};
+
+/**
+ * 軸コード（"木" / "甲" / "career" など）を表示名に変換する。
+ * ``ns``（用語の種別）を渡すと、コードが重なる軸を種別ごとに訳し分ける。
+ */
+export function axisLabel(code: string, lang: Lang, ns?: string): string {
   if (lang === "ja") return AXIS_JA[code] ?? code;
-  return AXIS_EN[code] ?? BRANCH_EN[code] ?? TEN_GOD_EN[code] ?? STEM_EN[code] ?? code;
+  const scoped = ns ? AXIS_EN_BY_NS[ns]?.[code] : undefined;
+  return (
+    scoped ?? AXIS_EN[code] ?? BRANCH_EN[code] ?? TEN_GOD_EN[code] ?? STEM_EN[code] ?? code
+  );
 }

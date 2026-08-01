@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "@/i18n";
+import { errorMessage } from "@/lib/errors";
 import { getCandidates, sendLike, type CandidateFilters } from "../api/matchingApi";
 import type { PublicProfile } from "../types";
 
@@ -19,7 +20,7 @@ export function useCandidates(filters: CandidateFilters) {
     setError(null);
     getCandidates(filters)
       .then(setDeck)
-      .catch((e) => setError(e instanceof Error ? e.message : t("errors.fetch")))
+      .catch((e) => setError(errorMessage(e, t("errors.fetch"))))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey]);
@@ -36,7 +37,7 @@ export function useCandidates(filters: CandidateFilters) {
       const res = await sendLike(target.user_id, like);
       if (res.matched) setMatchedWith(target.display_name ?? t("discover.someone"));
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("errors.send"));
+      setError(errorMessage(e, t("errors.send")));
     }
   }
 

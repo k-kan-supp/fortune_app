@@ -4,7 +4,6 @@ import type { FortuneRequest } from "../types";
 
 interface Props {
   onSubmit: (req: FortuneRequest) => void;
-  loading: boolean;
   /** プロフィール等から渡す初期値（非同期に届くため後から反映する）。 */
   initial?: Partial<FortuneRequest>;
 }
@@ -19,7 +18,7 @@ const DEFAULTS: FortuneRequest = {
 };
 
 /** 生年月日時の入力フォーム。設問を 1 ブロックずつ縦に並べる。 */
-export function BirthInputForm({ onSubmit, loading, initial }: Props) {
+export function BirthInputForm({ onSubmit, initial }: Props) {
   const [form, setForm] = useState<FortuneRequest>({ ...DEFAULTS, ...initial });
   const { t } = useI18n();
 
@@ -81,8 +80,8 @@ export function BirthInputForm({ onSubmit, loading, initial }: Props) {
       </section>
 
       <div className="q-actions">
-        <button type="submit" className="q-submit" disabled={loading}>
-          {loading ? t("fortune.form.submitting") : t("fortune.form.submit")}
+        <button type="submit" className="q-submit">
+          {t("fortune.form.submit")}
         </button>
       </div>
     </form>

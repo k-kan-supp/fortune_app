@@ -36,5 +36,6 @@ export interface FortuneResponse {
   day_pillar: Pillar;
   hour_pillar: Pillar;
   day_master: string;
-  charts: RadarChart[];
+  /** 古い API は返さないので任意扱い（バックエンドの既定値は空配列）。 */
+  charts?: RadarChart[];
 }

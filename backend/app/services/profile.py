@@ -1,9 +1,7 @@
 """プロフィール取得・更新・アイコン処理のドメインロジック。"""
 
-import io
 import uuid
 
-from PIL import Image, UnidentifiedImageError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,18 +9,8 @@ from app.core.config import settings
 from app.models.profile import UserProfile
 from app.models.user import User
 from app.schemas.profile import ProfileOut, ProfileUpdate
+from app.services.images import InvalidImageError, to_square_webp
 from app.services.storage.base import FileStorage
-
-
-class InvalidImageError(Exception):
-    """アップロードされた画像が不正・非対応の場合。
-
-    ``key`` は app.core.i18n のメッセージキー。API 層で言語に応じて訳す。
-    """
-
-    def __init__(self, key: str) -> None:
-        super().__init__(key)
-        self.key = key
 
 
 async def get_or_create_profile(db: AsyncSession, user: User) -> UserProfile:
@@ -55,31 +43,6 @@ async def update_profile(
     return profile
 
 
-def _process_avatar(raw: bytes) -> bytes:
-    """画像を検証し、正方形にクロップ・リサイズして WebP バイト列で返す。"""
-    try:
-        img = Image.open(io.BytesIO(raw))
-        img.verify()  # まず破損チェック
-        img = Image.open(io.BytesIO(raw))  # verify 後は再オープンが必要
-    except (UnidentifiedImageError, OSError) as e:
-        raise InvalidImageError("image.unreadable") from e
-
-    img = img.convert("RGB")
-
-    # 中央を正方形にクロップ
-    side = min(img.size)
-    left = (img.width - side) // 2
-    top = (img.height - side) // 2
-    img = img.crop((left, top, left + side, top + side))
-
-    size = settings.avatar_size_px
-    img = img.resize((size, size))
-
-    buf = io.BytesIO()
-    img.save(buf, format="WEBP", quality=85)
-    return buf.getvalue()
-
-
 async def set_avatar(
     db: AsyncSession, profile: UserProfile, raw: bytes, storage: FileStorage
 ) -> UserProfile:
@@ -87,7 +50,7 @@ async def set_avatar(
     if len(raw) > settings.avatar_max_bytes:
         raise InvalidImageError("image.too_large")
 
-    processed = _process_avatar(raw)
+    processed = to_square_webp(raw, settings.avatar_size_px)
     new_key = f"avatars/{uuid.uuid4().hex}.webp"
     await storage.save(new_key, processed)
 

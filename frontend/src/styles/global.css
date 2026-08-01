@@ -1286,8 +1286,7 @@ button {
 }
 
 /* --- マッチ成立モーダル --- */
-/* モーダルの背景（.match-modal は成立モーダル用の従来名） */
-.match-modal,
+/* モーダルの背景（components/ui/Modal が付ける） */
 .modal-backdrop {
   position: fixed;
   inset: 0;
