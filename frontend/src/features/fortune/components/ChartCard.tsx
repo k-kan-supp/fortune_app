@@ -1,9 +1,10 @@
 import { memo, useMemo } from "react";
 import { findMessage, useI18n } from "@/i18n";
 import { chartTermNs, glossaryText, type TermRef } from "../glossary";
+import { formatValue } from "../radarGeometry";
 import { axisLabel } from "../terms";
 import type { RadarChart as RadarChartData } from "../types";
-import { formatValue, RadarChart } from "./RadarChart";
+import { RadarChart } from "./RadarChart";
 
 interface Props {
   chart: RadarChartData;
