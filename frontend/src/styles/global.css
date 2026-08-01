@@ -669,6 +669,16 @@ button {
   color: var(--ink-faint);
 }
 
+/* 軸の一覧に続く解説文。長い段落なので、区切り線を引いて読み口を変える */
+.chart-note {
+  margin: 0.55rem 0 0;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--border);
+  color: var(--ink-muted);
+  line-height: 1.9;
+  text-align: justify;
+}
+
 /* チャートと同じ内容の数値表 */
 .chart-table {
   margin-top: 0.3rem;

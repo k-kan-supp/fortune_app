@@ -23,6 +23,16 @@ export interface RadarAxis {
   value: number;
 }
 
+/**
+ * 解説文の一文分。文言はバックエンドが持たないので、key で訳を引き、
+ * codes を訳した軸名（{{axis}}）と params の数値を差し込んで組み立てる。
+ */
+export interface NarrativeSegment {
+  key: string;
+  codes: string[];
+  params: Record<string, number>;
+}
+
 /** レーダーチャート1枚分。値の意味はチャートごとに違うので外周値を持ち回る。 */
 export interface RadarChart {
   key: string;
@@ -32,6 +42,10 @@ export interface RadarChart {
   strengths: string[];
   /** 際立って低い軸のコード。並びが平坦なチャートでは空。 */
   weaknesses: string[];
+  /** 強みの解説文。strengths が空なら空。 */
+  strength_note: NarrativeSegment[];
+  /** 弱みの解説文。weaknesses が空なら空。 */
+  weakness_note: NarrativeSegment[];
 }
 
 export interface FortuneResponse {

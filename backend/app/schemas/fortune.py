@@ -29,6 +29,18 @@ class RadarAxis(BaseModel):
     value: float = Field(..., description="この軸の値（0〜max_value）")
 
 
+class NarrativeSegment(BaseModel):
+    """解説文の一文分。文言は持たず、フロントが訳して差し込むための材料だけを返す。"""
+
+    key: str = Field(..., description="文言のキー（フロントの fortune.narrative 以下）")
+    codes: list[str] = Field(
+        default_factory=list, description="{{axis}} に入れる軸コード。訳と連結はフロント側"
+    )
+    params: dict[str, float] = Field(
+        default_factory=dict, description="{{value}} などに差し込む数値"
+    )
+
+
 class RadarChart(BaseModel):
     """レーダーチャート1枚分のデータ。"""
 
@@ -40,6 +52,12 @@ class RadarChart(BaseModel):
     )
     weaknesses: list[str] = Field(
         default_factory=list, description="際立って低い軸のコード。無ければ空"
+    )
+    strength_note: list[NarrativeSegment] = Field(
+        default_factory=list, description="強みの解説文（一文ずつ）。strengths が空なら空"
+    )
+    weakness_note: list[NarrativeSegment] = Field(
+        default_factory=list, description="弱みの解説文（一文ずつ）。weaknesses が空なら空"
     )
 
 

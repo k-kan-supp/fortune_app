@@ -26,6 +26,7 @@ from app.services.saju.constants import (
     TWELVE_STAGE_ENERGY,
     TWELVE_STAGES,
 )
+from app.services.saju.narrative import build_note
 from app.services.saju.ten_gods import ten_god
 from app.services.saju.twelve_stages import twelve_stage
 
@@ -173,6 +174,8 @@ def _chart(key: str, values: dict[str, float], order: list[str], max_value: floa
         axes=axes,
         strengths=strengths,
         weaknesses=weaknesses,
+        strength_note=build_note(key, axes, strengths, weaknesses, max_value, high=True),
+        weakness_note=build_note(key, axes, weaknesses, strengths, max_value, high=False),
     )
 
 

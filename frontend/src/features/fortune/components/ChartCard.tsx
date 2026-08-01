@@ -3,7 +3,7 @@ import { findMessage, useI18n, type Lang } from "@/i18n";
 import { chartTermNs, glossaryText, type TermRef } from "../glossary";
 import { formatValue } from "../radarGeometry";
 import { axisLabel } from "../terms";
-import type { RadarChart as RadarChartData } from "../types";
+import type { NarrativeSegment, RadarChart as RadarChartData } from "../types";
 import { RadarChart } from "./RadarChart";
 
 interface Props {
@@ -42,6 +42,42 @@ function ExtremeList({
       })}
     </ul>
   );
+}
+
+/**
+ * 数値から組み立てた解説文。
+ *
+ * どの軸がどれだけ突出しているかの判断はバックエンドが済ませていて、ここは
+ * 一文ずつ訳して連結するだけ。値の計算はしない（フロントで再計算しない方針）。
+ * 訳の無い一文は落とす。全滅したときだけ段落ごと出さない。
+ */
+function ExtremeNote({
+  segments,
+  lang,
+  ns,
+}: {
+  segments: NarrativeSegment[];
+  lang: Lang;
+  ns: string | undefined;
+}) {
+  const text = useMemo(() => {
+    const axisJoin = findMessage(lang, "fortune.narrative.axisJoin") ?? "";
+    const sentenceJoin = findMessage(lang, "fortune.narrative.sentenceJoin") ?? "";
+    return segments
+      .map((segment) => {
+        const params: Record<string, string> = {
+          axis: segment.codes.map((code) => axisLabel(code, lang, ns)).join(axisJoin),
+        };
+        for (const [name, value] of Object.entries(segment.params)) {
+          params[name] = formatValue(value);
+        }
+        return findMessage(lang, `fortune.narrative.${segment.key}`, params) ?? "";
+      })
+      .filter(Boolean)
+      .join(sentenceJoin);
+  }, [segments, lang, ns]);
+
+  return text ? <p className="chart-note">{text}</p> : null;
 }
 
 /**
@@ -104,6 +140,7 @@ export const ChartCard = memo(function ChartCard({ chart, onSelectTerm }: Props)
               <dt>{t("fortune.charts.strengths")}</dt>
               <dd>
                 <ExtremeList codes={chart.strengths} lang={lang} ns={ns} />
+                <ExtremeNote segments={chart.strength_note} lang={lang} ns={ns} />
               </dd>
             </div>
           )}
@@ -112,6 +149,7 @@ export const ChartCard = memo(function ChartCard({ chart, onSelectTerm }: Props)
               <dt>{t("fortune.charts.weaknesses")}</dt>
               <dd>
                 <ExtremeList codes={chart.weaknesses} lang={lang} ns={ns} />
+                <ExtremeNote segments={chart.weakness_note} lang={lang} ns={ns} />
               </dd>
             </div>
           )}

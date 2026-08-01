@@ -143,6 +143,111 @@ export const en: Messages = {
         note: "The same mix read by life area. Health is measured by how even your five elements are.",
       },
     },
+
+    /** 強み・弱みの解説文（ja.ts の narrative と同じキー構造）。 */
+    narrative: {
+      axisJoin: " and ",
+      sentenceJoin: " ",
+
+      high: {
+        lead: "Of the {{count}} axes, {{axis}} stands highest, at {{value}} against an outer ring of {{max}}.",
+        spread:
+          "The average across every axis is {{average}}, so this one sits {{diff}} above it and reaches {{fill}}% of the way to the rim.",
+        band: {
+          dominant:
+            "With this much force gathered in one place, the axis effectively draws the outline of your chart. The trait shows plainly enough that people notice it on first meeting, but your good and bad spells ride on it too, and recovering when it spins uselessly takes time.",
+          clear:
+            "It sits a clear step above the rest without running away with the chart, which is the easiest height to work with. You almost certainly reach for it without thinking, and you can still choose when to lean on it and when to hold it back. There is room left to grow.",
+          slight:
+            "The margin is small and the shape is close to flat. Read it as this axis being half a step ahead rather than in a class of its own, because other axes will lead in some situations. Treat it as where to turn when undecided, not as a verdict.",
+        },
+        counter:
+          "The gap to the lowest axis, {{axis}} at {{value}}, is {{gap}} — and that drop is exactly what gives you your shape.",
+        counter_flat:
+          "The low side is a row of tied axes, so there is no single trough to point at. With one peak standing out, the rest hold level underneath it.",
+      },
+
+      low: {
+        lead: "Of the {{count}} axes, {{axis}} sits lowest, stopping at {{value}} against an outer ring of {{max}}.",
+        spread:
+          "The average across every axis is {{average}}, so this one falls {{diff}} short of it and stands at only {{fill}}% of the rim.",
+        band: {
+          absent:
+            "This axis does not appear in your chart at all. Because it is missing outright it rarely feels real to you, and it slides down the list even when it is needed. Rather than mourn what is absent, cover it through another axis or plan from the start to hand it to someone else.",
+          scarce:
+            "This is a pronounced trough, well below the average of the chart. It is not wholly absent, so deliberate effort will give it shape, but left alone it simply stays dormant. Whether or not you are aware of it makes most of the difference here.",
+          modest:
+            "Low as it is, it never strays far from the average, so read it as understated rather than as a weak point. Noticing it when the moment calls for it is enough; your time returns more if you spend it raising the axes that already stand high.",
+        },
+        counter:
+          "It runs {{gap}} behind the highest axis, {{axis}} at {{value}}, and that drop is what the imbalance actually consists of.",
+        counter_flat:
+          "The high side is a row of tied axes with no standing peak. Only the trough is distinct, so filling it in evens out the whole shape.",
+      },
+
+      hint: {
+        five_elements: {
+          strength:
+            "A thick share of one element colours both how you spend your energy and how you frame a problem. Where the element fits, you decide quickly; against people or situations it cannot push through, you take the long way round. Choosing the right ground to stand on is what decides the outcome.",
+          weakness:
+            "A thin element is one you rarely think about until it is suddenly required, which is when the scramble starts. Adding it from outside — working with someone who has it, or covering it with tools and routines — beats trying to thicken it by willpower.",
+        },
+        ten_stems: {
+          strength:
+            "The same element behaves differently in its yang and yin forms. A heavy stem means that particular way of expressing the element has become second nature, and it surfaces in the impression you leave, your turns of phrase, even the order in which you pick a task up.",
+          weakness:
+            "A thin stem means you lean toward the opposite expression within the same element. That is common enough and not a flaw, but rooms that ask for this particular form of the element head-on will feel constraining.",
+        },
+        twelve_branches: {
+          strength:
+            "A repeated branch means you were born holding that season's energy in concentration. Matters and people tied to that time of year gather around you easily, and your form lifts each time the season comes round. Pile it too high, though, and the same energy turns inflexible.",
+          weakness:
+            "A branch missing from your chart simply did not fit into four pillars; it is not a defect. Even so, that season and direction tend to run thin for you, and ventures begun in that stretch of the year take longer to pick up momentum.",
+        },
+        ten_gods: {
+          strength:
+            "A plentiful god means your day master's force flows readily in that direction. Requests start arriving in that shape, experience accumulates, and you grow genuinely good at it. The more the chart tilts to one god, though, the more its drawbacks come through with it.",
+          weakness:
+            "Where a god runs thin is where things fall outside your attention — it shows up as everyone else doing something as a matter of course while you alone skip it. It is a missing habit rather than a lack of ability, so a fixed routine covers it well enough.",
+        },
+        ten_god_groups: {
+          strength:
+            "A large share among the five camps means your chart has already settled on where its force is spent. Life choices tend to follow that camp without being forced, and choosing against it tires you out sooner than you expect.",
+          weakness:
+            "When a camp is small, decisions in that territory get postponed. Nothing collapses, but when a turning point puts the question to you directly, the hesitation runs long. Plan on talking it through with someone you trust.",
+        },
+        twelve_stages: {
+          strength:
+            "Four pillars gathered on one stage means you repeat that way of spending momentum through every phase of life. Good spells and bad ones both arrive in the same form, so knowing it in advance as a habit of yours makes the switch quicker.",
+          weakness:
+            "A stage that never appears is a phase of momentum you have not yet passed through. It is hard to picture, so the feelings of someone standing in it are hard to read, and your own preparation for landing there is thin.",
+        },
+        pillar_energy: {
+          strength:
+            "Momentum gathered in one pillar means you find your power in the period and setting that pillar governs. Year covers childhood and outward impression, month your work, day yourself and your partner, hour later life and private wishes — so which pillar leads changes where your strength lands.",
+          weakness:
+            "A weak pillar is a period or setting where force of will alone will not carry you. Preparation and borrowed hands work better than pushing. It is precisely the territory of the weak pillar that rewards getting ready early.",
+        },
+        seasonal_states: {
+          strength:
+            "Measured from the season of your birth month, you hold a thick share of the element in this rank. The season is behind that energy, so matters touching it turn over with less effort, and recognition comes more easily there.",
+          weakness:
+            "A thin element in this rank means a place with no seasonal backing is thinner still. Forcing it through regardless of timing tends to spin, so either wait for the moment or route around it using another element.",
+        },
+        personality: {
+          strength:
+            "This trait stands high among the six because your mix of ten-god camps pushes it forward. Strengths are hardest to notice exactly where they feel ordinary to you, so hold it up against what other people compliment you on.",
+          weakness:
+            "A low score here says nothing about your character being poor; it says the chart's force is allocated elsewhere. Adding one deliberate move when the situation calls for it lasts far better than straining to raise it.",
+        },
+        life_areas: {
+          strength:
+            "A high area means your chart's balance of camps meshes with that part of life. The same effort returns more there, so when you are torn, shifting your time toward this area gets everything else moving too.",
+          weakness:
+            "A low area does not mean bad luck; it means the chart's force does not naturally point that way. Rather than measuring yourself against others, take the slack you build in a strong area and spend it here.",
+        },
+      },
+    },
   },
 
   glossary: {
