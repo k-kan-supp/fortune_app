@@ -606,42 +606,67 @@ button {
   color: var(--ink-muted);
 }
 
-/* 図を読まなくても突出した軸が分かるようにする一行 */
+/* 図を読まなくても、突出した軸とその意味が読めるようにする */
 .chart-extremes {
-  margin: 0.6rem 0 0;
+  margin: 0.7rem 0 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.6rem;
-  font-size: 0.8rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.82rem;
 }
 
 .chart-extreme {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: start;
+  padding: 0.6rem 0.75rem;
+  border-radius: 12px;
   background: var(--surface-veil);
   border: 1px solid var(--border);
 }
 
 .chart-extreme dt {
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
   font-size: 0.68rem;
+  font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--ink-muted);
+  white-space: nowrap;
+  color: var(--surface-solid);
+  background: var(--ink-faint);
+}
+
+.chart-extreme--strong dt {
+  background: var(--violet);
 }
 
 .chart-extreme dd {
   margin: 0;
-  font-weight: 700;
 }
 
-.chart-extreme--strong dd {
+.chart-extreme ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.chart-extreme li b {
   color: var(--violet-deep);
 }
 
-.chart-extreme--weak dd {
+/* 軸名のあとに解説を続ける。改行しても読み筋が途切れないよう字下げはしない */
+.chart-extreme li span {
   color: var(--ink-muted);
+  line-height: 1.7;
+}
+
+.chart-extreme li span::before {
+  content: " — ";
+  color: var(--ink-faint);
 }
 
 /* チャートと同じ内容の数値表 */

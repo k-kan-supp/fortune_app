@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react";
-import { findMessage, useI18n } from "@/i18n";
+import { findMessage, useI18n, type Lang } from "@/i18n";
 import { chartTermNs, glossaryText, type TermRef } from "../glossary";
 import { formatValue } from "../radarGeometry";
 import { axisLabel } from "../terms";
@@ -10,6 +10,38 @@ interface Props {
   chart: RadarChartData;
   /** 軸がクリックされたときに用語解説を開く。 */
   onSelectTerm: (term: TermRef) => void;
+}
+
+/**
+ * 突出した軸を「名前 ＋ その軸が何を見ているか」で並べる。
+ *
+ * 説明文は用語解説をそのまま使う。強み用・弱み用に別の文章を書き起こすと
+ * 軸の数だけ二重管理になるうえ、同じ軸の意味が二通りに散らばってしまう。
+ * 解説が未登録の軸は名前だけを出す。
+ */
+function ExtremeList({
+  codes,
+  lang,
+  ns,
+}: {
+  codes: string[];
+  lang: Lang;
+  ns: string | undefined;
+}) {
+  return (
+    <ul>
+      {codes.map((code) => {
+        const label = axisLabel(code, lang, ns);
+        const text = ns ? glossaryText({ ns, code, label }, lang) : undefined;
+        return (
+          <li key={code}>
+            <b>{label}</b>
+            {text && <span>{text}</span>}
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 /**
@@ -63,20 +95,24 @@ export const ChartCard = memo(function ChartCard({ chart, onSelectTerm }: Props)
         onSelectAxis={openTerm}
       />
 
-      {/* 図を読み取らなくても、どこが突出して高い／低いかは言葉で分かるようにする。
+      {/* 図を読み取らなくても、どこが突出して高い／低いかを言葉で分かるようにする。
           並びが平坦なチャートでは順位に意味がないので、バックエンドが空で返す。 */}
       {(chart.strengths.length > 0 || chart.weaknesses.length > 0) && (
         <dl className="chart-extremes">
           {chart.strengths.length > 0 && (
             <div className="chart-extreme chart-extreme--strong">
               <dt>{t("fortune.charts.strengths")}</dt>
-              <dd>{chart.strengths.map((code) => axisLabel(code, lang, ns)).join(t("common.metaSeparator"))}</dd>
+              <dd>
+                <ExtremeList codes={chart.strengths} lang={lang} ns={ns} />
+              </dd>
             </div>
           )}
           {chart.weaknesses.length > 0 && (
             <div className="chart-extreme chart-extreme--weak">
               <dt>{t("fortune.charts.weaknesses")}</dt>
-              <dd>{chart.weaknesses.map((code) => axisLabel(code, lang, ns)).join(t("common.metaSeparator"))}</dd>
+              <dd>
+                <ExtremeList codes={chart.weaknesses} lang={lang} ns={ns} />
+              </dd>
             </div>
           )}
         </dl>
