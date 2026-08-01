@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
     cors_origins: str = "http://localhost:5173"
 
+    # ログ
+    log_level: str = "INFO"
+    # 本番は収集基盤に載せる前提で JSON。開発は読みやすさ優先でテキスト。
+    log_json: bool = False
+
     # DB
     database_url: str = "postgresql+asyncpg://fortune:fortune@localhost:5432/fortune"
 

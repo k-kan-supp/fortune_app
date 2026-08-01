@@ -5,8 +5,11 @@ API 層が言語に応じて訳せるようメッセージキーを持った例�
 """
 
 import io
+import logging
 
 from PIL import Image, UnidentifiedImageError
+
+logger = logging.getLogger("app.images")
 
 # 受け付けるアップロードの Content-Type
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
@@ -29,6 +32,10 @@ def _open_rgb(raw: bytes) -> Image.Image:
         Image.open(io.BytesIO(raw)).verify()  # まず破損チェック
         img = Image.open(io.BytesIO(raw))  # verify 後は再オープンが必要
     except (UnidentifiedImageError, OSError) as e:
+        logger.info(
+            "rejected an unreadable image",
+            extra={"bytes": len(raw), "reason": type(e).__name__},
+        )
         raise InvalidImageError("image.unreadable") from e
     return img.convert("RGB")
 

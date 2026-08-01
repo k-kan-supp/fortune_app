@@ -8,7 +8,11 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import auth, fortune, matching, profile
 from app.core.config import settings
 from app.core.i18n import resolve_lang, translate
+from app.core.logging import configure_logging
+from app.core.middleware import RequestLoggingMiddleware
 from app.services.images import InvalidImageError
+
+configure_logging()
 
 app = FastAPI(title="四柱推命 API / Four Pillars API", version="0.1.0")
 
@@ -28,6 +32,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# CORS より後に足すと外側に入るので、CORS が弾いた分もログに残る
+app.add_middleware(RequestLoggingMiddleware)
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(fortune.router, prefix="/api")

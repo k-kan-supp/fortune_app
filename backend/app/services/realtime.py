@@ -5,6 +5,7 @@
 複数プロセス/スケール時は Redis Pub/Sub 等に置き換える（配信I/Fは同じ）。
 """
 
+import logging
 import uuid
 from collections import defaultdict
 from datetime import datetime
@@ -16,6 +17,8 @@ from app.models.matching import Message
 from app.services.chat import to_message_out
 from app.services.storage.base import FileStorage
 
+logger = logging.getLogger("app.realtime")
+
 
 class ConnectionManager:
     def __init__(self) -> None:
@@ -25,6 +28,14 @@ class ConnectionManager:
     async def connect(self, match_id: uuid.UUID, ws: WebSocket, user_id: uuid.UUID) -> None:
         await ws.accept()
         self._rooms[match_id].append((ws, user_id))
+        logger.info(
+            "chat connected",
+            extra={
+                "match_id": str(match_id),
+                "user_id": str(user_id),
+                "room_size": len(self._rooms[match_id]),
+            },
+        )
 
     def disconnect(self, match_id: uuid.UUID, ws: WebSocket) -> None:
         conns = self._rooms.get(match_id)
@@ -63,7 +74,16 @@ class ConnectionManager:
     async def _safe_send(self, match_id: uuid.UUID, ws: WebSocket, data: dict[str, Any]) -> None:
         try:
             await ws.send_json(data)
-        except Exception:  # 切断済み等は掃除して継続
+        except Exception as e:  # 切断済み等は掃除して継続
+            # 本文は載せない。落ちた事実と種別だけ残す。
+            logger.info(
+                "chat send failed, dropping connection",
+                extra={
+                    "match_id": str(match_id),
+                    "event": data.get("type"),
+                    "reason": type(e).__name__,
+                },
+            )
             self.disconnect(match_id, ws)
 
 

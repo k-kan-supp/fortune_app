@@ -1,12 +1,15 @@
 """トークン発行・ハッシュ・JWT を扱う共通処理。"""
 
 import hashlib
+import logging
 import secrets
 from datetime import UTC, datetime, timedelta
 
 import jwt
 
 from app.core.config import settings
+
+logger = logging.getLogger("app.security")
 
 _ALGORITHM = "HS256"
 
@@ -41,6 +44,8 @@ def decode_access_token(token: str) -> str | None:
     """JWT を検証し、有効なら subject(user id) を返す。無効なら None。"""
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[_ALGORITHM])
-    except jwt.PyJWTError:
+    except jwt.PyJWTError as e:
+        # 期限切れは日常的に起きるので DEBUG。理由だけ残し、トークンは決して出さない。
+        logger.debug("access token rejected", extra={"reason": type(e).__name__})
         return None
     return payload.get("sub")

@@ -1,5 +1,6 @@
 """マジックリンク（パスワードレス登録/ログイン）のドメインロジック。"""
 
+import logging
 from datetime import UTC, datetime
 
 from sqlalchemy import select
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.i18n import DEFAULT_LANG, Lang, translate
+from app.core.logging import mask_email
 from app.core.security import (
     create_access_token,
     generate_magic_link_token,
@@ -16,6 +18,8 @@ from app.core.security import (
 from app.models.user import MagicLinkToken, User
 from app.schemas.auth import AuthResult, UserOut
 from app.services.email.base import EmailSender
+
+logger = logging.getLogger("app.auth")
 
 
 async def request_magic_link(
@@ -33,6 +37,7 @@ async def request_magic_link(
     email = email.strip().lower()
 
     user = await db.scalar(select(User).where(User.email == email))
+    is_new = user is None
     if user is None:
         user = User(email=email)
         db.add(user)
@@ -47,6 +52,12 @@ async def request_magic_link(
         )
     )
     await db.commit()
+
+    # URL には生トークンが入るのでログには出さない。誰宛に出したかだけを残す。
+    logger.info(
+        "magic link issued",
+        extra={"user_id": str(user.id), "email": mask_email(email), "new_user": is_new},
+    )
 
     url = f"{settings.frontend_url}/auth/verify?token={raw_token}"
     await sender.send(
@@ -69,15 +80,35 @@ async def verify_magic_link(db: AsyncSession, raw_token: str) -> AuthResult | No
     )
 
     now = datetime.now(UTC)
-    if token is None or token.used_at is not None or token.expires_at <= now:
+    # 失敗理由は運用上たいてい知りたい（期限切れが多いのか、総当たりされているのか）
+    if token is None:
+        logger.warning("magic link rejected", extra={"reason": "unknown_token"})
+        return None
+    if token.used_at is not None:
+        logger.warning(
+            "magic link rejected",
+            extra={"reason": "already_used", "user_id": str(token.user_id)},
+        )
+        return None
+    if token.expires_at <= now:
+        logger.info(
+            "magic link rejected",
+            extra={"reason": "expired", "user_id": str(token.user_id)},
+        )
         return None
 
     token.used_at = now
     user = await db.get(User, token.user_id)
     if user is None:
+        logger.error(
+            "magic link points at a missing user",
+            extra={"user_id": str(token.user_id)},
+        )
         return None
     user.is_verified = True
     await db.commit()
+
+    logger.info("signed in", extra={"user_id": str(user.id)})
 
     return AuthResult(
         access_token=create_access_token(str(user.id)),

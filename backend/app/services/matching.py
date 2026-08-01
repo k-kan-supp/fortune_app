@@ -1,5 +1,6 @@
 """マッチング（候補提示・いいね・成立判定）のドメインロジック。"""
 
+import logging
 import uuid
 from datetime import date
 
@@ -22,6 +23,8 @@ from app.services.saju.compatibility import comparison_charts
 from app.services.saju.compatibility import compatibility as saju_compatibility
 from app.services.saju.pillars import four_pillars
 from app.services.storage.base import FileStorage
+
+logger = logging.getLogger("app.matching")
 
 # 相性順に並べるとき、返す件数の何倍を母集団として取るか（と、その上限）。
 # 広く取るほど順位は正確になるが、命式の計算がその分だけ増える。
@@ -184,6 +187,14 @@ async def like_user(
                 matched = Match(user_a_id=a, user_b_id=b)
                 db.add(matched)
                 await db.flush()
+                logger.info(
+                    "match created",
+                    extra={
+                        "match_id": str(matched.id),
+                        "user_id": str(me.id),
+                        "peer_id": str(target_uuid),
+                    },
+                )
 
     await db.commit()
     return LikeResult(
@@ -261,6 +272,10 @@ async def block_user(db: AsyncSession, me: User, target_id: uuid.UUID) -> None:
     if existing is None:
         db.add(Block(blocker_id=me.id, blocked_id=target_id))
         await db.commit()
+        logger.info(
+            "user blocked",
+            extra={"user_id": str(me.id), "peer_id": str(target_id)},
+        )
 
 
 async def unblock_user(db: AsyncSession, me: User, target_id: uuid.UUID) -> None:
@@ -293,6 +308,11 @@ async def report_user(
 ) -> None:
     db.add(Report(reporter_id=me.id, reported_id=target_id, reason=reason))
     await db.commit()
+    # 通報は必ず人が見る。本文は DB にあるので、ログには誰から誰へかだけ残す。
+    logger.warning(
+        "user reported",
+        extra={"user_id": str(me.id), "peer_id": str(target_id)},
+    )
 
 
 def match_peer_id(match: Match, me_id: uuid.UUID) -> uuid.UUID:
