@@ -948,6 +948,25 @@ button {
   outline: none;
 }
 
+/* 登録フォームのポップアップ。フォーム自身が .auth-card の見た目を持つので、
+   土台は透明にして閉じるボタンだけを重ねる */
+.signup-modal-card {
+  position: relative;
+  width: min(460px, 100%);
+}
+
+.signup-modal-card .auth-card {
+  margin: 0;
+  max-width: none;
+}
+
+.signup-modal-card .modal-close {
+  position: absolute;
+  top: 0.9rem;
+  right: 1.1rem;
+  z-index: 1;
+}
+
 .term-modal-card {
   background: var(--surface-solid);
   border: 1px solid var(--border-strong);

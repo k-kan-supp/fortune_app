@@ -19,8 +19,10 @@ services:
     build: ./backend
     environment:
       DATABASE_URL: postgresql+asyncpg://fortune:fortune@db:5432/fortune
-      FRONTEND_URL: http://localhost:8090
-      CORS_ORIGINS: http://localhost:8090
+      # 既定はこのスタックのフロント(8090)。開発サーバ(5173)で試すときは
+      # リポジトリ直下の .env で上書きする（登録メールのリンク先に使われる）。
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8090}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8090}
       SECRET_KEY: demo-secret-change-me-in-production
       APP_ENV: production
       EMAIL_BACKEND: console

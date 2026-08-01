@@ -7,6 +7,8 @@ interface Props {
   cardClassName: string;
   /** 見出し要素の id（読み上げ用）。 */
   labelledBy?: string;
+  /** 見出し要素が無いときの読み上げ名。 */
+  label?: string;
   /** 送信中など、閉じさせたくない間は false にする。 */
   closable?: boolean;
   children: ReactNode;
@@ -21,6 +23,7 @@ export function Modal({
   onClose,
   cardClassName,
   labelledBy,
+  label,
   closable = true,
   children,
 }: Props) {
@@ -45,6 +48,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
+        aria-label={label}
         onClick={(e) => e.stopPropagation()}
       >
         {children}

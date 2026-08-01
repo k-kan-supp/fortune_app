@@ -1,5 +1,7 @@
-import { useEffect, useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Modal, ModalCloseButton } from "@/components/ui/Modal";
+import { RegisterForm } from "@/features/auth/components/RegisterForm";
 import { AnalysisCharts } from "@/features/fortune/components/AnalysisCharts";
 import { MeishikiTable } from "@/features/fortune/components/MeishikiTable";
 import { useFortune } from "@/features/fortune/hooks/useFortune";
@@ -13,6 +15,8 @@ import { useI18n } from "@/i18n";
 export function ResultPage() {
   const [params] = useSearchParams();
   const { result, loading, error, submit } = useFortune();
+  // 結果を見たあとの導線。登録フォームはページ内のポップアップで出す。
+  const [signupOpen, setSignupOpen] = useState(false);
   const { t } = useI18n();
 
   const request = useMemo(() => parseFortuneQuery(params), [params]);
@@ -53,9 +57,22 @@ export function ResultPage() {
         )}
 
         <p className="back-link">
-          <Link to="/">{t("fortune.backToTop")}</Link>
+          <button type="button" className="link-btn" onClick={() => setSignupOpen(true)}>
+            {t("fortune.registerCta")}
+          </button>
         </p>
       </div>
+
+      {signupOpen && (
+        <Modal
+          onClose={() => setSignupOpen(false)}
+          cardClassName="signup-modal-card"
+          label={t("register.title")}
+        >
+          <ModalCloseButton onClose={() => setSignupOpen(false)} />
+          <RegisterForm />
+        </Modal>
+      )}
     </main>
   );
 }

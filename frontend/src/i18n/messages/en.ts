@@ -66,7 +66,7 @@ export const en: Messages = {
     resultTitle: "Your chart",
     resultHint:
       "The stems, branches and hidden stems of the four pillars, centred on your day master.",
-    backToTop: "← Try another birth date",
+    registerCta: "Continue to sign-up",
     missingParams: "No birth date was given. Please enter one from the top page.",
     toProfile: "Profile settings →",
     toRegister: "Sign up to save your birth date →",
