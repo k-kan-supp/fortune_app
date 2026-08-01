@@ -1,8 +1,21 @@
 import pytest
 
 from app.schemas.fortune import FortuneRequest, Pillar
-from app.services.saju.compatibility import FACET_WEIGHTS, TOTAL_RANGE, compatibility
-from app.services.saju.constants import BRANCH_HIDDEN_STEMS, EARTHLY_BRANCHES, STEM_ELEMENT
+from app.services.saju.analysis import element_ratios
+from app.services.saju.compatibility import (
+    BALANCED,
+    FACET_WEIGHTS,
+    TOTAL_RANGE,
+    comparison_charts,
+    compatibility,
+)
+from app.services.saju.constants import (
+    BRANCH_HIDDEN_STEMS,
+    EARTHLY_BRANCHES,
+    FIVE_ELEMENTS,
+    STEM_ELEMENT,
+    TEN_GOD_GROUPS,
+)
 from app.services.saju.pillars import four_pillars
 
 FACETS = {"body", "heart", "mind", "support"}
@@ -134,3 +147,73 @@ def test_notes_name_the_facet_they_explain():
         "mind",  # 思考
         "element",  # 支え合い
     }
+
+
+def test_charts_cover_the_two_facets_that_come_from_proportions():
+    """体・心は一点の関係で決まるので図にならない。構成比で決める二つだけを返す。"""
+    charts = comparison_charts(_chart("庚", "酉"), _chart("乙", "卯"))
+
+    assert [chart.key for chart in charts] == ["five_elements", "ten_god_groups"]
+    # 軸の並びは定数の順そのまま。フロントは highlight を axes の位置で引くので崩せない。
+    assert charts[0].axes == FIVE_ELEMENTS
+    assert charts[1].axes == TEN_GOD_GROUPS
+
+
+def test_each_side_is_a_full_breakdown_that_fits_inside_the_ring():
+    for chart in comparison_charts(_chart("壬", "寅"), _chart("癸", "亥")):
+        for values in (chart.you, chart.them):
+            assert len(values) == len(chart.axes)  # 値0の軸も省かない
+            assert sum(values) == pytest.approx(100.0, abs=0.5)
+            # 外周をはみ出すと多角形が切り詰められ、図が嘘をつく
+            assert max(values) <= chart.max_value
+        assert chart.max_value >= 40  # 低すぎて図が潰れない下限
+        assert chart.max_value % 10 == 0  # 目盛りは10刻み
+
+
+def test_the_five_element_chart_shades_where_one_covers_for_the_other():
+    """支え合いの決め手は、片方だけが平均を下回る五行。そこで補い合いが起きる。"""
+    a, b = _chart("壬", "寅"), _chart("癸", "亥")
+    ratios_a, ratios_b = element_ratios(a), element_ratios(b)
+    highlight = comparison_charts(a, b)[0].highlight
+
+    assert highlight, "補い合う五行があるのに強調されていない"
+    for element in FIVE_ELEMENTS:
+        short_in_one = (ratios_a[element] < BALANCED) != (ratios_b[element] < BALANCED)
+        assert (element in highlight) == short_in_one, element
+
+
+def test_a_pair_with_nothing_to_complement_shades_the_shortage_they_share():
+    """補い合いが無いときは、二人とも足りない五行が共通の弱点として残る。"""
+    same = _chart("庚", "酉")
+    ratios = element_ratios(same)
+    highlight = comparison_charts(same, same)[0].highlight
+
+    # 同じ命式なので補い合いは起きようがない。それでも図は空にならない。
+    assert highlight == [el for el in FIVE_ELEMENTS if ratios[el] < BALANCED]
+    assert highlight
+
+
+def test_the_ten_god_chart_shades_the_two_widest_gaps():
+    """考え方の違いを生んでいるのは、構成比が最も開いた軸。"""
+    a, b = _chart("庚", "酉"), _chart("乙", "卯")
+    chart = comparison_charts(a, b)[1]
+    gap = {
+        axis: abs(you - them)
+        for axis, you, them in zip(chart.axes, chart.you, chart.them, strict=True)
+    }
+
+    assert len(chart.highlight) == 2
+    rest = [g for axis, g in gap.items() if axis not in chart.highlight]
+    assert min(gap[axis] for axis in chart.highlight) >= max(rest)
+
+
+def test_swapping_the_pair_swaps_the_two_series_and_leaves_the_shading():
+    a, b = _chart("庚", "酉"), _chart("乙", "卯")
+    forward, backward = comparison_charts(a, b), comparison_charts(b, a)
+
+    for mine, theirs in zip(forward, backward, strict=True):
+        assert mine.you == theirs.them
+        assert mine.them == theirs.you
+        # 決め手は「二人の間の関係」なので、どちらから見ても同じ軸が残る
+        assert sorted(mine.highlight) == sorted(theirs.highlight)
+        assert mine.max_value == theirs.max_value

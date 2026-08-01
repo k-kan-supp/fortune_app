@@ -11,12 +11,14 @@ from app.models.profile import UserProfile
 from app.models.user import User
 from app.schemas.fortune import FortuneRequest
 from app.schemas.matching import (
+    CompatibilityChart,
     CompatibilityFacet,
     CompatibilityOut,
     LikeResult,
     MatchOut,
     PublicProfile,
 )
+from app.services.saju.compatibility import comparison_charts
 from app.services.saju.compatibility import compatibility as saju_compatibility
 from app.services.saju.pillars import four_pillars
 from app.services.storage.base import FileStorage
@@ -311,4 +313,15 @@ async def compatibility_with(
         score=score,
         facets=[CompatibilityFacet(code=code, value=value) for code, value in facets.items()],
         notes=notes,
+        charts=[
+            CompatibilityChart(
+                key=chart.key,
+                axes=chart.axes,
+                you=chart.you,
+                them=chart.them,
+                max_value=chart.max_value,
+                highlight=chart.highlight,
+            )
+            for chart in comparison_charts(my_pillars, their_pillars)
+        ],
     )

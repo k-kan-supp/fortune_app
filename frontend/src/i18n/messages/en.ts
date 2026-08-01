@@ -262,6 +262,26 @@ export const en: Messages = {
     title: "Four Pillars compatibility",
     open: "See how you match",
     hint: "Tap the card to see how you match",
+    chartsTitle: "What this reading is based on",
+    chartsHint:
+      "Your two profiles, laid over each other. The shaded wedges are what decided the notes above.",
+    you: "You",
+    charts: {
+      five_elements: "Balance of strengths (behind Support)",
+      ten_god_groups: "Habits of thought (behind Way of thinking)",
+    },
+    axisLabels: {
+      木: "Growth",
+      火: "Passion",
+      土: "Steadiness",
+      金: "Resolve",
+      水: "Reflection",
+      比劫: "Self",
+      食傷: "Expression",
+      財星: "Enjoyment",
+      官殺: "Discipline",
+      印星: "Learning",
+    },
     facets: {
       body: "Body",
       heart: "Heart",
@@ -276,37 +296,37 @@ export const en: Messages = {
     },
     notes: {
       "day_master.generates":
-        "Your day master produces theirs — you are the one who nurtures and looks after them.",
+        "You are the one who ends up looking after them — giving a push, smoothing the way. Being relied on brings out your best.",
       "day_master.generated":
-        "Their day master produces yours — support comes easily and you can relax around them.",
+        "They are the one who props you up. It is easy to lean on them or talk things through, and you relax in their company.",
       "day_master.same_mixed":
-        "Same element, opposite polarity: close values, and you fill in each other's gaps.",
+        "Alike in outlook, yet good at different things. You agree easily and still cover each other's weak spots.",
       "day_master.same":
-        "Same element and polarity: you understand each other fast, but may need to give ground.",
+        "You think and react in much the same way. That makes things quick, but when you disagree, someone has to give ground on purpose.",
       "day_master.controls":
-        "Your day master controls theirs — you tend to lead, and the pairing is stimulating.",
+        "You tend to take the lead here. The pull is yours, so keep an eye on their pace and the pairing stays steady.",
       "day_master.controlled":
-        "Their day master controls yours — some tension, but it pushes you to grow.",
+        "They tend to come on stronger. Some moments are tense, but this is the person who toughens you up and helps you grow.",
       "branch.six_harmony":
-        "Your day branches are a six harmony: you attract each other and ties form easily.",
+        "You are drawn to each other without trying. The distance closes quickly and time together feels easy.",
       "branch.three_harmony":
-        "Your day branches share a harmony triad: you face the same way and work well together.",
+        "You naturally face the same way. Goals and tastes line up, and joining forces gets things moving.",
       "branch.same":
-        "The same day branch: comfortable and alike, though change is slower to come.",
+        "You sense things alike, which is comfortable. The flip side is that novelty has to come from you two.",
       "branch.clash":
-        "Your day branches clash: friction, but plenty of stimulation and learning with it.",
+        "You meet head-on. There is no shortage of spark — what decides it is whether you can talk after a clash.",
       "branch.harm":
-        "Your day branches harm each other: things can miss, so say what you mean out loud.",
+        "Your day-to-day pace slips out of step easily. Say what you are thinking out loud and the crossed wires drop away.",
       "branch.neutral":
-        "No strong tie between your day branches — the distance is yours to set.",
+        "Neither pulled together nor pushed apart. You get to set the distance at your own pace.",
       "element.complements":
-        "Together your five elements even out: each of you supplies what the other lacks.",
+        "What one of you finds hard, the other covers without effort. Together the balance comes out right.",
       "element.similar":
-        "Your elements lean the same way: shared strengths, but shared blind spots too.",
+        "You are good at similar things. The strengths stack up, but so do the blind spots — watch for tripping on the same step.",
       "mind.alike":
-        "Your ten gods fall in similar proportions, so you weigh things up the same way.",
+        "You weigh things up and decide in much the same way, so you get each other without long explanations.",
       "mind.different":
-        "Your ten gods fall differently, so you reason differently — worth spelling things out.",
+        "You reason along different lines. It widens the view, as long as you spell out what you are assuming.",
     },
   },
 

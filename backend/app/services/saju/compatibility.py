@@ -15,6 +15,9 @@
 文言は返さず、フロントが訳せるようコード（notes）だけを返す。
 """
 
+import math
+from typing import NamedTuple
+
 from app.schemas.fortune import Pillar
 from app.services.saju.analysis import element_ratios, ten_god_group_ratios
 from app.services.saju.constants import (
@@ -198,6 +201,72 @@ def _support_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, s
     return score, (
         "element.complements" if score >= SUPPORT_COMPLEMENT_THRESHOLD else "element.similar"
     )
+
+
+class ComparisonChart(NamedTuple):
+    """判断の根拠を二人分重ねて見せるためのレーダー値。"""
+
+    key: str
+    axes: list[str]
+    you: list[float]
+    them: list[float]
+    max_value: float
+    highlight: list[str]  # その判断の決め手になった軸
+
+
+def _chart_ceiling(values: list[float]) -> float:
+    """外周の目盛り。10刻みで切り上げ、低すぎて潰れないよう下限を置く。"""
+    return max(40.0, math.ceil(max(values) / 10) * 10)
+
+
+def comparison_charts(
+    a_pillars: dict[str, Pillar], b_pillars: dict[str, Pillar]
+) -> list[ComparisonChart]:
+    """「支え合い」と「考え方」の判断根拠を、二人分の構成比として返す。
+
+    体・心は日支と日主という一点の関係から決まるので図にならない。
+    構成比で決めているこの二つだけを重ね合わせの対象にする。
+    """
+    ratios_a, ratios_b = element_ratios(a_pillars), element_ratios(b_pillars)
+    groups_a, groups_b = ten_god_group_ratios(a_pillars), ten_god_group_ratios(b_pillars)
+
+    # 支え合い: 片方が平均より少なく、もう片方が多い五行。ここで補い合いが起きる。
+    complementing = [
+        el for el in FIVE_ELEMENTS if (ratios_a[el] < BALANCED) != (ratios_b[el] < BALANCED)
+    ]
+    if not complementing:
+        # 補い合いが無いときは、二人とも足りない五行が共通の弱点になる。
+        complementing = [
+            el for el in FIVE_ELEMENTS if ratios_a[el] < BALANCED and ratios_b[el] < BALANCED
+        ]
+
+    # 考え方: 構成比の開きが大きい上位2つが、違いを生んでいる軸。
+    widest = sorted(TEN_GOD_GROUPS, key=lambda g: abs(groups_a[g] - groups_b[g]), reverse=True)
+
+    def pct(ratios: dict[str, float], keys: list[str]) -> list[float]:
+        return [round(ratios[k] * 100, 1) for k in keys]
+
+    elements_you, elements_them = pct(ratios_a, FIVE_ELEMENTS), pct(ratios_b, FIVE_ELEMENTS)
+    groups_you, groups_them = pct(groups_a, TEN_GOD_GROUPS), pct(groups_b, TEN_GOD_GROUPS)
+
+    return [
+        ComparisonChart(
+            key="five_elements",
+            axes=list(FIVE_ELEMENTS),
+            you=elements_you,
+            them=elements_them,
+            max_value=_chart_ceiling(elements_you + elements_them),
+            highlight=complementing,
+        ),
+        ComparisonChart(
+            key="ten_god_groups",
+            axes=list(TEN_GOD_GROUPS),
+            you=groups_you,
+            them=groups_them,
+            max_value=_chart_ceiling(groups_you + groups_them),
+            highlight=widest[:2],
+        ),
+    ]
 
 
 def compatibility(

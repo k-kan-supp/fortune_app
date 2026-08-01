@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Modal, ModalCloseButton } from "@/components/ui/Modal";
+import { axisLabel } from "@/features/fortune/terms";
 import { findMessage, getLang, translate, useI18n } from "@/i18n";
 import { errorMessage } from "@/lib/errors";
 import { getCompatibility } from "../api/matchingApi";
 import type { Compatibility } from "../types";
+import { CompareRadar } from "./CompareRadar";
 
 interface Props {
   userId: string;
@@ -73,6 +75,37 @@ export function CompatibilityModal({ userId, name, onClose }: Props) {
               <li key={note}>{findMessage(lang, `compat.notes.${note}`) ?? note}</li>
             ))}
           </ul>
+
+          {/* その判断の元になった構成比を、二人分重ねて見せる */}
+          {result.charts.length > 0 && (
+            <section className="compat-charts">
+              <h3>{t("compat.chartsTitle")}</h3>
+              <p className="hint">{t("compat.chartsHint")}</p>
+              {result.charts.map((chart) => {
+                const title =
+                  findMessage(lang, `compat.charts.${chart.key}`) ?? chart.key;
+                return (
+                  <figure key={chart.key} className="compat-chart">
+                    <figcaption>{title}</figcaption>
+                    <CompareRadar
+                      // 相性は占いを知らない人も読むので、軸名も言い換えを優先する
+                      labels={chart.axes.map(
+                        (code) =>
+                          findMessage(lang, `compat.axisLabels.${code}`) ?? axisLabel(code, lang),
+                      )}
+                      you={chart.you}
+                      them={chart.them}
+                      maxValue={chart.max_value}
+                      highlight={chart.highlight.map((code) => chart.axes.indexOf(code))}
+                      youLabel={t("compat.you")}
+                      themLabel={name}
+                      title={title}
+                    />
+                  </figure>
+                );
+              })}
+            </section>
+          )}
         </>
       )}
     </Modal>

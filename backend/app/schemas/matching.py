@@ -25,6 +25,19 @@ class CompatibilityFacet(BaseModel):
     value: float = Field(..., description="0〜100 の点数")
 
 
+class CompatibilityChart(BaseModel):
+    """判断の根拠を二人分重ねて見せるレーダー。"""
+
+    key: str = Field(..., description="チャート種別（five_elements / ten_god_groups）")
+    axes: list[str] = Field(..., description="軸コード。表示名はフロントで解決する")
+    you: list[float] = Field(..., description="自分の構成比（%）")
+    them: list[float] = Field(..., description="相手の構成比（%）")
+    max_value: float = Field(..., description="外周にあたる値")
+    highlight: list[str] = Field(
+        default_factory=list, description="その判断の決め手になった軸コード"
+    )
+
+
 class CompatibilityOut(BaseModel):
     """二人の命式から見た相性。"""
 
@@ -32,6 +45,9 @@ class CompatibilityOut(BaseModel):
     facets: list[CompatibilityFacet]
     notes: list[str] = Field(
         default_factory=list, description="説明文のキー（day_master.generates など）"
+    )
+    charts: list[CompatibilityChart] = Field(
+        default_factory=list, description="判断根拠の重ね合わせレーダー"
     )
 
 

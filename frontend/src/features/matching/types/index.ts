@@ -41,8 +41,20 @@ export interface CompatibilityFacet {
   value: number;
 }
 
+/** 判断の根拠を二人分重ねて見せるレーダー。値は構成比（%）。 */
+export interface CompatibilityChart {
+  key: string;
+  axes: string[];
+  you: number[];
+  them: number[];
+  max_value: number;
+  /** 判断の決め手になった軸コード。 */
+  highlight: string[];
+}
+
 export interface Compatibility {
   score: number;
   facets: CompatibilityFacet[];
   notes: string[];
+  charts: CompatibilityChart[];
 }

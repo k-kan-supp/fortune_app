@@ -1167,6 +1167,108 @@ button {
   color: var(--ink-faint);
 }
 
+/* --- 判断根拠の重ね合わせレーダー --- */
+/*
+ * 系列色は 2 色。紫と琥珀の組は色覚特性下でも見分けがつく
+ * （OKLab ΔE: 通常視 25.2 / protan 24.5）。加えて相手側は破線にしてあり、
+ * 色を使わなくても線の形で区別できる。
+ */
+:root {
+  --series-you: #6f4fa8;
+  --series-them: #b06a12;
+}
+
+.compat-charts {
+  margin-top: 1.4rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.compat-charts h3 {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--violet-deep);
+}
+
+.compat-charts .hint {
+  margin: 0 0 0.6rem;
+  font-size: 0.75rem;
+}
+
+.compat-chart {
+  margin: 0 0 0.8rem;
+}
+
+.compat-chart figcaption {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.1rem;
+}
+
+.compare-radar svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* 決め手になった軸の区画。系列色(紫・琥珀)と紛れない中間色で、薄く敷く */
+.compare-highlight polygon {
+  fill: rgba(155, 143, 184, 0.22);
+}
+
+.compare-area {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.compare-area--you {
+  stroke: var(--series-you);
+  fill: rgba(111, 79, 168, 0.1);
+}
+
+/* 破線が「色以外の手がかり」になる */
+.compare-area--them {
+  stroke: var(--series-them);
+  stroke-dasharray: 5 3;
+  fill: rgba(176, 106, 18, 0.08);
+}
+
+.compare-legend {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 0.1rem 0 0;
+  padding: 0;
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+}
+
+.compare-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* 凡例は線のマークに合わせて短い線で示す */
+.compare-key {
+  width: 16px;
+  height: 0;
+  border-top-width: 2px;
+}
+
+.compare-key--you {
+  border-top: 2px solid var(--series-you);
+}
+
+.compare-key--them {
+  border-top: 2px dashed var(--series-them);
+}
+
 .compat-bar {
   display: block;
   height: 7px;
