@@ -14,7 +14,8 @@ export const en: Messages = {
     discover: "Discover",
     matches: "Matches",
     fortune: "Reading",
-    settings: "Settings",
+    profile: "Profile",
+    result: "Your reading",
     logout: "Log out",
   },
 
@@ -254,6 +255,47 @@ export const en: Messages = {
       health: "Measured by how even your five elements are: the more balanced, the higher.",
       relationships: "How smoothly you deal with people, from the self and output camps.",
       study: "How easily learning sinks in, read mainly from the resource camp.",
+    },
+  },
+
+  compat: {
+    title: "Four Pillars compatibility",
+    open: "See how you match",
+    hint: "Tap the card to see how you match",
+    facets: {
+      day_master: "Day masters",
+      branch: "Day branches",
+      element: "Element balance",
+    },
+    notes: {
+      "day_master.generates":
+        "Your day master produces theirs — you are the one who nurtures and looks after them.",
+      "day_master.generated":
+        "Their day master produces yours — support comes easily and you can relax around them.",
+      "day_master.same_mixed":
+        "Same element, opposite polarity: close values, and you fill in each other's gaps.",
+      "day_master.same":
+        "Same element and polarity: you understand each other fast, but may need to give ground.",
+      "day_master.controls":
+        "Your day master controls theirs — you tend to lead, and the pairing is stimulating.",
+      "day_master.controlled":
+        "Their day master controls yours — some tension, but it pushes you to grow.",
+      "branch.six_harmony":
+        "Your day branches are a six harmony: you attract each other and ties form easily.",
+      "branch.three_harmony":
+        "Your day branches share a harmony triad: you face the same way and work well together.",
+      "branch.same":
+        "The same day branch: comfortable and alike, though change is slower to come.",
+      "branch.clash":
+        "Your day branches clash: friction, but plenty of stimulation and learning with it.",
+      "branch.harm":
+        "Your day branches harm each other: things can miss, so say what you mean out loud.",
+      "branch.neutral":
+        "No strong tie between your day branches — the distance is yours to set.",
+      "element.complements":
+        "Together your five elements even out: each of you supplies what the other lacks.",
+      "element.similar":
+        "Your elements lean the same way: shared strengths, but shared blind spots too.",
     },
   },
 

@@ -1073,6 +1073,191 @@ button {
   gap: 0.8rem;
 }
 
+/* --- 候補カードのタップ（相性を出す） --- */
+.candidate-tap {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: inherit;
+  font: inherit;
+  color: inherit;
+}
+
+.candidate-tap:hover .candidate-card {
+  box-shadow: var(--shadow-pop);
+}
+
+.candidate-tap-hint {
+  display: block;
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+
+/* --- 相性ポップアップ --- */
+.compat-modal-card {
+  background: var(--surface-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  box-shadow: var(--shadow-pop), 0 0 0 1px rgba(196, 162, 74, 0.25);
+  padding: 1.2rem 1.6rem 1.6rem;
+  width: min(420px, 100%);
+  max-height: min(85vh, 620px);
+  overflow-y: auto;
+}
+
+.compat-modal-card h2 {
+  margin: 0.2rem 0 0.4rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--violet-deep);
+}
+
+.compat-score {
+  margin: 0.6rem 0 1.2rem;
+  text-align: center;
+  color: var(--violet-deep);
+}
+
+.compat-score-value {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.compat-score-unit {
+  margin-left: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+}
+
+.compat-facets {
+  list-style: none;
+  margin: 0 0 1.1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.compat-facets li {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr 2rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+
+.compat-bar {
+  display: block;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--violet-soft);
+  overflow: hidden;
+}
+
+.compat-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7b57b8, #b8578f);
+}
+
+.compat-facet-value {
+  text-align: right;
+  font-weight: 700;
+  color: var(--violet-deep);
+}
+
+.compat-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+  font-size: 0.86rem;
+  line-height: 1.8;
+  color: var(--ink-muted);
+}
+
+.compat-notes li {
+  padding-left: 1rem;
+  position: relative;
+}
+
+.compat-notes li::before {
+  content: "✧";
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+}
+
+/* 右上の「鑑定結果」リンク（左のナビと同じトーンで揃える） */
+.nav-result {
+  text-decoration: none;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.nav-result:hover {
+  color: var(--violet);
+}
+
+.nav-result.active {
+  color: var(--violet-deep);
+  font-weight: 700;
+}
+
+/* --- 右上のプロフィールアイコン --- */
+.nav-avatar {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  background: radial-gradient(circle at 30% 25%, #fff, var(--violet-soft));
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.nav-avatar:hover {
+  border-color: var(--violet);
+  box-shadow: var(--ring);
+}
+
+/* 現在プロフィール画面にいるときは輪郭を強める */
+.nav-avatar.active {
+  border-color: var(--violet-deep);
+  box-shadow: var(--ring);
+}
+
+.nav-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.nav-avatar-initial {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--violet-deep);
+  line-height: 1;
+}
+
 .logout-btn {
   background: transparent;
   border: none;

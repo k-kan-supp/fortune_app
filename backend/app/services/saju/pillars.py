@@ -27,8 +27,8 @@ def _pillar(stem_idx: int, branch_idx: int, day_master: str | None) -> Pillar:
     )
 
 
-def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
-    """生年月日時から命式を組み立てる。"""
+def four_pillars(req: FortuneRequest) -> tuple[dict[str, Pillar], str]:
+    """生年月日時から四柱と日主を求める（チャートは作らない）。"""
     import sxtwl
 
     day = sxtwl.fromSolar(req.year, req.month, req.day)
@@ -50,6 +50,13 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
         "day": _pillar(day_gz.tg, day_gz.dz, day_master),
         "hour": _pillar(hour_stem_idx, hour_branch_idx, day_master),
     }
+
+    return pillars, day_master
+
+
+def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
+    """生年月日時から命式とバランス指標を組み立てる。"""
+    pillars, day_master = four_pillars(req)
 
     return FortuneResponse(
         year_pillar=pillars["year"],

@@ -8,6 +8,7 @@ import {
   uploadAvatar,
 } from "../api/profileApi";
 import type { Profile, ProfileUpdate } from "../types";
+import { notifyProfileUpdated } from "./useProfileSummary";
 
 /** プロフィールの取得・更新・アイコン操作をまとめて扱うフック。 */
 export function useProfile() {
@@ -30,12 +31,18 @@ export function useProfile() {
     run(getProfile).finally(() => setLoading(false));
   }, [run]);
 
+  // アイコンと表示名はナビの右上にも出ているので、変更したら知らせる
+  const runAndNotify = async (fn: () => Promise<Profile>) => {
+    await run(fn);
+    notifyProfileUpdated();
+  };
+
   return {
     profile,
     loading,
     error,
-    save: (data: ProfileUpdate) => run(() => updateProfile(data)),
-    changeAvatar: (file: File) => run(() => uploadAvatar(file)),
-    deleteAvatar: () => run(removeAvatar),
+    save: (data: ProfileUpdate) => runAndNotify(() => updateProfile(data)),
+    changeAvatar: (file: File) => runAndNotify(() => uploadAvatar(file)),
+    deleteAvatar: () => runAndNotify(removeAvatar),
   };
 }

@@ -18,6 +18,23 @@ class PublicProfile(BaseModel):
     avatar_url: str | None
 
 
+class CompatibilityFacet(BaseModel):
+    """相性の内訳ひとつ（day_master / branch / element）。"""
+
+    code: str = Field(..., description="内訳の種別。表示名はフロントで解決する")
+    value: float = Field(..., description="0〜100 の点数")
+
+
+class CompatibilityOut(BaseModel):
+    """二人の命式から見た相性。"""
+
+    score: float = Field(..., description="総合点（0〜100）")
+    facets: list[CompatibilityFacet]
+    notes: list[str] = Field(
+        default_factory=list, description="説明文のキー（day_master.generates など）"
+    )
+
+
 class LikeRequest(BaseModel):
     target_user_id: str
     like: bool = True  # True=いいね / False=スキップ

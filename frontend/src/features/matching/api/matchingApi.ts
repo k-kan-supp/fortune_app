@@ -1,5 +1,11 @@
 import { apiDelete, apiGet, apiPost, apiUpload } from "@/api/client";
-import type { LikeResult, Match, Message, PublicProfile } from "../types";
+import type {
+  Compatibility,
+  LikeResult,
+  Match,
+  Message,
+  PublicProfile,
+} from "../types";
 
 export interface CandidateFilters {
   gender?: string;
@@ -23,6 +29,9 @@ export const sendLike = (targetUserId: string, like: boolean): Promise<LikeResul
     target_user_id: targetUserId,
     like,
   });
+
+export const getCompatibility = (userId: string): Promise<Compatibility> =>
+  apiGet<Compatibility>(`/api/matching/compatibility/${userId}`);
 
 export const getMatches = (): Promise<Match[]> =>
   apiGet<Match[]>("/api/matching/matches");

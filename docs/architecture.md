@@ -88,6 +88,21 @@ routes (HTTP)  →  schemas (契約)  →  services/saju (純粋ロジック)
   重みの表は `analysis.py` の `PERSONALITY_WEIGHTS` / `LIFE_AREA_WEIGHTS` に置く。
   解釈を変えたいときはこの表だけを触る。
 
+### 相性（マッチング）
+
+`GET /api/matching/compatibility/{user_id}` は、自分と相手の命式から相性を返す。
+算出は `services/saju/compatibility.py` に集約し、次の三点を 0〜100 で出して重み付き平均する。
+
+| 内訳 | 見るもの | 重み |
+| --- | --- | --- |
+| `day_master` | 日主どうしの五行関係（相生 90 / 比和 70〜80 / 相剋 55） | 0.35 |
+| `branch` | 日支どうしの関係（六合 95 / 三合 90 / 同支 75 / 害 50 / 冲 45） | 0.30 |
+| `element` | 二人を合わせた五行の均衡度 | 0.35 |
+
+**相手の生年月日そのものは返さない**（点数と説明コードだけ）。説明文はフロントの
+`compat.notes.*` で訳すため、バックエンドは `day_master.generates` のようなコードを返す。
+どちらかの生年月日が未登録なら 404（`matching.birthday_missing`）。
+
 ### フロントエンド（feature-based）
 
 - 画面横断で使うものは `components/` `hooks/` `lib/`、

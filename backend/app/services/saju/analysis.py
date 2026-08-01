@@ -109,6 +109,16 @@ def _blend(weights: dict[str, float], ratios: dict[str, float]) -> float:
     return round(min(score, 1.0) * 100, 1)
 
 
+def element_ratios(pillars: dict[str, Pillar]) -> dict[str, float]:
+    """命式の五行構成比（合計 1）。相性判定などチャート以外からも使う。"""
+    return _ratios(_tally(_weighted_stems(pillars), STEM_ELEMENT), FIVE_ELEMENTS)
+
+
+def element_evenness(ratios: dict[str, float]) -> float:
+    """五行の均衡度（0〜100）。"""
+    return _element_evenness(ratios)
+
+
 def _element_evenness(element_ratios: dict[str, float]) -> float:
     """五行の均衡度を 0〜100 で返す（均等なら100、一行に偏るほど0に近づく）。"""
     # 構成比が均等(0.2)からどれだけ離れているか。最大のずれは一行集中時の 1.6。

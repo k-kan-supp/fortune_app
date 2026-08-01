@@ -4,6 +4,7 @@ import { Modal } from "@/components/ui/Modal";
 import type { CandidateFilters } from "@/features/matching/api/matchingApi";
 import { CandidateCard } from "@/features/matching/components/CandidateCard";
 import { CandidateFilter } from "@/features/matching/components/CandidateFilter";
+import { CompatibilityModal } from "@/features/matching/components/CompatibilityModal";
 import { useCandidates } from "@/features/matching/hooks/useCandidates";
 import { useI18n } from "@/i18n";
 
@@ -11,6 +12,8 @@ export function DiscoverPage() {
   const [filters, setFilters] = useState<CandidateFilters>({});
   const { current, loading, error, matchedWith, dismissMatch, like, pass } =
     useCandidates(filters);
+  // カードをタップすると、その相手との相性を出す
+  const [compatOpen, setCompatOpen] = useState(false);
   const { t } = useI18n();
 
   return (
@@ -23,7 +26,15 @@ export function DiscoverPage() {
         <p>{t("common.loading")}</p>
       ) : current ? (
         <>
-          <CandidateCard profile={current} />
+          <button
+            type="button"
+            className="candidate-tap"
+            onClick={() => setCompatOpen(true)}
+            aria-label={t("compat.open")}
+          >
+            <CandidateCard profile={current} />
+            <span className="candidate-tap-hint">{t("compat.hint")}</span>
+          </button>
           <div className="swipe-actions">
             <button className="pass-btn" onClick={pass}>
               {t("discover.pass")}
@@ -35,6 +46,14 @@ export function DiscoverPage() {
         </>
       ) : (
         <p className="hint">{t("discover.empty")}</p>
+      )}
+
+      {compatOpen && current && (
+        <CompatibilityModal
+          userId={current.user_id}
+          name={current.display_name ?? t("common.unnamed")}
+          onClose={() => setCompatOpen(false)}
+        />
       )}
 
       {matchedWith && (

@@ -17,6 +17,7 @@ from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.matching import (
+    CompatibilityOut,
     LikeRequest,
     LikeResult,
     MatchOut,
@@ -37,7 +38,9 @@ from app.services.chat import (
 from app.services.images import ALLOWED_IMAGE_TYPES
 from app.services.matching import (
     block_user,
+    compatibility_with,
     get_match_or_none,
+    is_blocked_between,
     like_user,
     list_blocked,
     list_candidates,
@@ -177,6 +180,36 @@ async def report_in_match(
     """このマッチの相手を通報する。"""
     match = await _require_match(db, user, match_id, lang)
     await report_user(db, user, match_peer_id(match, user.id), req.reason)
+
+
+@router.get("/compatibility/{user_id}", response_model=CompatibilityOut)
+async def compatibility(
+    user_id: str, user: CurrentUser, db: DbSession, lang: RequestLang
+) -> CompatibilityOut:
+    """自分と相手の四柱推命の相性を返す（生年月日そのものは返さない）。"""
+    try:
+        target = uuid.UUID(user_id)
+    except ValueError as e:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, translate("matching.invalid_user_id", lang)
+        ) from e
+
+    if target == user.id:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, translate("matching.self_not_allowed", lang)
+        )
+    # ブロック関係にある相手は存在ごと伏せる
+    if await is_blocked_between(db, user.id, target):
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, translate("matching.user_not_found", lang)
+        )
+
+    result = await compatibility_with(db, user, target)
+    if result is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, translate("matching.birthday_missing", lang)
+        )
+    return result
 
 
 @router.get("/blocks", response_model=list[PublicProfile])

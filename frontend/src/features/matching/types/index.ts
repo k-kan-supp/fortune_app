@@ -34,3 +34,15 @@ export interface Match {
   unread_count: number;
   created_at: string;
 }
+
+/** 四柱推命の相性（内訳のコードは i18n で表示名に解決する）。 */
+export interface CompatibilityFacet {
+  code: string;
+  value: number;
+}
+
+export interface Compatibility {
+  score: number;
+  facets: CompatibilityFacet[];
+  notes: string[];
+}

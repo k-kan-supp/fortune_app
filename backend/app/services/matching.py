@@ -9,7 +9,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.matching import Block, Like, Match, Report
 from app.models.profile import UserProfile
 from app.models.user import User
-from app.schemas.matching import LikeResult, MatchOut, PublicProfile
+from app.schemas.fortune import FortuneRequest
+from app.schemas.matching import (
+    CompatibilityFacet,
+    CompatibilityOut,
+    LikeResult,
+    MatchOut,
+    PublicProfile,
+)
+from app.services.saju.compatibility import compatibility as saju_compatibility
+from app.services.saju.pillars import four_pillars
 from app.services.storage.base import FileStorage
 
 
@@ -256,3 +265,50 @@ async def report_user(
 def match_peer_id(match: Match, me_id: uuid.UUID) -> uuid.UUID:
     """マッチの相手側ユーザーIDを返す。"""
     return match.user_b_id if match.user_a_id == me_id else match.user_a_id
+
+
+def _fortune_request(profile: UserProfile | None) -> FortuneRequest | None:
+    """プロフィールの生年月日時から鑑定リクエストを組み立てる。未登録なら None。"""
+    if profile is None or profile.birthday is None:
+        return None
+
+    born = profile.birthday
+    time = profile.birth_time
+    return FortuneRequest(
+        year=born.year,
+        month=born.month,
+        day=born.day,
+        # 出生時刻が未登録なら、入力フォームと同じ既定（12時）で見る
+        hour=time.hour if time else 12,
+        minute=time.minute if time else 0,
+        is_male=profile.gender != "female",
+    )
+
+
+async def compatibility_with(
+    db: AsyncSession, me: User, target_id: uuid.UUID
+) -> CompatibilityOut | None:
+    """自分と相手の命式から相性を出す。どちらかの生年月日が未登録なら None。"""
+    profiles = {
+        p.user_id: p
+        for p in (
+            await db.scalars(
+                select(UserProfile).where(UserProfile.user_id.in_([me.id, target_id]))
+            )
+        ).all()
+    }
+
+    mine = _fortune_request(profiles.get(me.id))
+    theirs = _fortune_request(profiles.get(target_id))
+    if mine is None or theirs is None:
+        return None
+
+    my_pillars, _ = four_pillars(mine)
+    their_pillars, _ = four_pillars(theirs)
+
+    score, facets, notes = saju_compatibility(my_pillars, their_pillars)
+    return CompatibilityOut(
+        score=score,
+        facets=[CompatibilityFacet(code=code, value=value) for code, value in facets.items()],
+        notes=notes,
+    )

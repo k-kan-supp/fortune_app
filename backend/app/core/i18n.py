@@ -70,6 +70,14 @@ MESSAGES: dict[str, dict[Lang, str]] = {
         "ja": "マッチが見つかりません。",
         "en": "Match not found.",
     },
+    "matching.user_not_found": {
+        "ja": "ユーザーが見つかりません。",
+        "en": "User not found.",
+    },
+    "matching.birthday_missing": {
+        "ja": "お互いの生年月日が登録されていないと相性を出せません。",
+        "en": "Compatibility needs a birth date on both profiles.",
+    },
     "matching.invalid_user_id": {
         "ja": "不正なユーザーIDです。",
         "en": "Invalid user ID.",
