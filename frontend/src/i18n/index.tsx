@@ -30,9 +30,22 @@ type Params = Record<string, string | number>;
 export type Translate = (key: MessageKey, params?: Params) => string;
 
 function lookup(catalog: Messages, key: string): string | undefined {
-  const value = key
-    .split(".")
-    .reduce<unknown>((acc, part) => (acc as Record<string, unknown>)?.[part], catalog);
+  const parts = key.split(".");
+  let value: unknown = catalog;
+
+  for (let i = 0; i < parts.length; i++) {
+    if (value === null || typeof value !== "object") return undefined;
+    const level = value as Record<string, unknown>;
+    const next = level[parts[i]];
+    if (next === undefined) {
+      // "compat.notes" の下の "branch.neutral" のように、ドットを含む文字列が
+      // そのままキーになっていることがある。残り全部を1キーとして引き直す。
+      value = level[parts.slice(i).join(".")];
+      break;
+    }
+    value = next;
+  }
+
   return typeof value === "string" ? value : undefined;
 }
 

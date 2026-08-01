@@ -114,9 +114,11 @@ def element_ratios(pillars: dict[str, Pillar]) -> dict[str, float]:
     return _ratios(_tally(_weighted_stems(pillars), STEM_ELEMENT), FIVE_ELEMENTS)
 
 
-def element_evenness(ratios: dict[str, float]) -> float:
-    """五行の均衡度（0〜100）。"""
-    return _element_evenness(ratios)
+def ten_god_group_ratios(pillars: dict[str, Pillar]) -> dict[str, float]:
+    """通変星グループの構成比（合計 1）。日主は日柱の天干から取る。"""
+    day_master = pillars["day"].stem
+    groups = {s: TEN_GOD_GROUP[ten_god(day_master, s)] for s in HEAVENLY_STEMS}
+    return _ratios(_tally(_weighted_stems(pillars), groups), TEN_GOD_GROUPS)
 
 
 def _element_evenness(element_ratios: dict[str, float]) -> float:

@@ -1,16 +1,19 @@
 """二人の命式から相性を見る。
 
-古典的な三つの見方を点数にして合成する。
+四柱推命の用語をそのまま出しても伝わらないので、身近な四つの面に噛み砕く。
 
-1. 日主どうしの関係（相生・比和・相剋）— 気の合いやすさ
-2. 日支どうしの関係（六合・三合・冲・害）— 縁の結びつき
-3. 五行の補い — 二人を合わせたときのバランス
+* 体 — 日支の関係（六合・三合・冲・害）と、十二運星から見た生活のテンポ
+* 心 — 日主どうしの五行関係（相生・比和・相剋）と、相手の命式が自分の日主を養うか
+* 思考 — 通変星グループの構成比がどれだけ似ているか
+* 支え合い — 五行の足りない気を互いに埋め合えるか
 
-出す値は 0〜100。文言は返さず、フロントが訳せるようコード（notes）だけを返す。
+各面も総合も 0〜100。最も噛み合わない組み合わせが 0、最も噛み合う組み合わせが
+100 になるよう目盛りを取ってある。文言は返さず、フロントが訳せるようコード
+（notes）だけを返す。
 """
 
 from app.schemas.fortune import Pillar
-from app.services.saju.analysis import element_evenness, element_ratios
+from app.services.saju.analysis import element_ratios, ten_god_group_ratios
 from app.services.saju.constants import (
     CLASH,
     CONTROLS,
@@ -20,60 +23,147 @@ from app.services.saju.constants import (
     SIX_HARMONY,
     STEM_ELEMENT,
     STEM_YANG,
+    TEN_GOD_GROUPS,
     THREE_HARMONY,
+    TWELVE_STAGE_ENERGY,
 )
+from app.services.saju.twelve_stages import twelve_stage
 
-# 合成の重み（合計 1.0）
-FACET_WEIGHTS = {"day_master": 0.35, "branch": 0.3, "element": 0.35}
+# 面の重み（合計 1.0）
+FACET_WEIGHTS = {"body": 0.25, "heart": 0.3, "mind": 0.2, "support": 0.25}
+
+# 五行が均等なときの構成比
+BALANCED = 1 / len(FIVE_ELEMENTS)
+
+# 日主どうしの関係の点数。相生が最も噛み合い、相剋が最も噛み合わない。
+DAY_MASTER_SCORES = {
+    "generates": 100.0,  # 自分が相手を生む
+    "generated": 100.0,  # 相手が自分を生む
+    "same_mixed": 72.0,  # 同じ五行・陰陽違い
+    "same": 48.0,  # 同じ五行・陰陽同じ
+    "controls": 0.0,  # 自分が相手を剋す
+    "controlled": 0.0,  # 相手が自分を剋す
+}
+
+# 日支どうしの関係の点数。六合が最も結びつき、冲が最もぶつかる。
+BRANCH_SCORES = {
+    "six_harmony": 100.0,
+    "three_harmony": 85.0,
+    "same": 55.0,
+    "neutral": 40.0,
+    "harm": 18.0,
+    "clash": 0.0,
+}
+
+# 思考の似方をどこで「似ている」と言うか（構成比の差の割合）
+MIND_ALIKE_THRESHOLD = 65.0
 
 
-def _day_master_facet(a: str, b: str) -> tuple[float, str]:
-    """日主どうしの関係を点数と説明コードにする。"""
+def _day_master_relation(a: str, b: str) -> str:
+    """日主どうしがどの関係にあるかを返す。"""
     el_a, el_b = STEM_ELEMENT[a], STEM_ELEMENT[b]
-    same_polarity = STEM_YANG[a] == STEM_YANG[b]
 
     if el_a == el_b:
-        # 同じ五行。陰陽が違えば補い合い、同じだと似すぎて競いやすい。
-        return (80.0, "day_master.same_mixed") if not same_polarity else (70.0, "day_master.same")
+        return "same" if STEM_YANG[a] == STEM_YANG[b] else "same_mixed"
     if GENERATES[el_a] == el_b:
-        return 90.0, "day_master.generates"  # 自分が相手を生む
+        return "generates"
     if GENERATES[el_b] == el_a:
-        return 90.0, "day_master.generated"  # 相手が自分を生む
+        return "generated"
     if CONTROLS[el_a] == el_b:
-        return 55.0, "day_master.controls"  # 自分が相手を剋す
-    return 55.0, "day_master.controlled"  # 相手が自分を剋す
+        return "controls"
+    return "controlled"
 
 
-def _branch_facet(a: str, b: str) -> tuple[float, str]:
-    """日支どうしの関係を点数と説明コードにする。"""
+def _branch_relation(a: str, b: str) -> str:
+    """日支どうしがどの関係にあるかを返す。"""
     if SIX_HARMONY.get(a) == b:
-        return 95.0, "branch.six_harmony"
+        return "six_harmony"
     # 同支は三合ではなく比和。全ての支が何らかの三合に属するため、
     # この判定を三合より先に置かないと同支が三合として拾われてしまう。
     if a == b:
-        return 75.0, "branch.same"
+        return "same"
     if any(a in triad and b in triad for triad in THREE_HARMONY):
-        return 90.0, "branch.three_harmony"
+        return "three_harmony"
     if CLASH.get(a) == b:
-        return 45.0, "branch.clash"
+        return "clash"
     if HARM.get(a) == b:
-        return 50.0, "branch.harm"
-    return 65.0, "branch.neutral"
+        return "harm"
+    return "neutral"
 
 
-def _element_facet(
-    a_pillars: dict[str, Pillar], b_pillars: dict[str, Pillar]
-) -> tuple[float, str]:
-    """二人を合わせた五行のバランスを点数と説明コードにする。"""
-    ratios_a = element_ratios(a_pillars)
-    ratios_b = element_ratios(b_pillars)
+def _nourishment(day_master: str, other: dict[str, float]) -> float:
+    """相手の命式が自分の日主をどれだけ養うか（0〜100）。
+
+    日主を生む五行と日主と同じ五行は力を与え、日主を剋す五行は削る。
+    """
+    element = STEM_ELEMENT[day_master]
+    generator = next(el for el, made in GENERATES.items() if made == element)
+    controller = next(el for el, ruled in CONTROLS.items() if ruled == element)
+    # 与える気から削る気を引く。構成比なので -1〜1 に収まる。
+    raw = other[generator] + other[element] - other[controller]
+    return (raw + 1) / 2 * 100
+
+
+def _pace(pillars: dict[str, Pillar]) -> float:
+    """十二運星のエネルギーで測った、その人の勢いの平均（1〜12）。"""
+    day_master = pillars["day"].stem
+    energies = [TWELVE_STAGE_ENERGY[twelve_stage(day_master, p.branch)] for p in pillars.values()]
+    return sum(energies) / len(energies)
+
+
+def _tempo(a: dict[str, Pillar], b: dict[str, Pillar]) -> float:
+    """生活のテンポの近さ（0〜100）。勢いが揃っているほど高い。"""
+    span = max(TWELVE_STAGE_ENERGY.values()) - min(TWELVE_STAGE_ENERGY.values())
+    return 100 * (1 - abs(_pace(a) - _pace(b)) / span)
+
+
+def _evenness(ratios: dict[str, float]) -> float:
+    """五行の均衡度（0〜100）。均等なら100、一行に偏るほど0に近づく。"""
+    # 均等(0.2)からのずれの合計。最大は一行に集中したときの 1.6。
+    return (1 - sum(abs(ratios[el] - BALANCED) for el in FIVE_ELEMENTS) / 1.6) * 100
+
+
+def _body_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, str]:
+    """体の相性。日支の縁を軸に、生活のテンポで寄せる。"""
+    relation = _branch_relation(a["day"].branch, b["day"].branch)
+    score = 0.7 * BRANCH_SCORES[relation] + 0.3 * _tempo(a, b)
+    return score, f"branch.{relation}"
+
+
+def _heart_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, str]:
+    """心の相性。日主どうしの関係を軸に、互いを養う度合いで寄せる。"""
+    dm_a, dm_b = a["day"].stem, b["day"].stem
+    relation = _day_master_relation(dm_a, dm_b)
+    nourish = (
+        _nourishment(dm_a, element_ratios(b)) + _nourishment(dm_b, element_ratios(a))
+    ) / 2
+    score = 0.65 * DAY_MASTER_SCORES[relation] + 0.35 * nourish
+    return score, f"day_master.{relation}"
+
+
+def _mind_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, str]:
+    """思考の相性。通変星グループの構成比が似ているほど考え方が近い。"""
+    ratios_a, ratios_b = ten_god_group_ratios(a), ten_god_group_ratios(b)
+    # 総変動距離。0=全く同じ構成、1=全く重ならない構成。
+    distance = sum(abs(ratios_a[g] - ratios_b[g]) for g in TEN_GOD_GROUPS) / 2
+    score = 100 * (1 - distance)
+    return score, "mind.alike" if score >= MIND_ALIKE_THRESHOLD else "mind.different"
+
+
+def _support_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, str]:
+    """支え合い。二人を合わせたとき、偏りがどれだけ解消されるか。
+
+    偏りの大きい方を基準に、残っていた偏りの何割が埋まったかを見る。
+    片方の偏りがそのまま残れば 0、二人で完全に均衡すれば 100。
+    """
+    ratios_a, ratios_b = element_ratios(a), element_ratios(b)
     merged = {el: (ratios_a[el] + ratios_b[el]) / 2 for el in FIVE_ELEMENTS}
 
-    score = element_evenness(merged)
-    alone = max(element_evenness(ratios_a), element_evenness(ratios_b))
-    # 一人のときより均衡が増していれば「補い合っている」と見る
-    note = "element.complements" if score > alone else "element.similar"
-    return score, note
+    alone = min(_evenness(ratios_a), _evenness(ratios_b))
+    if alone >= 100:
+        return 100.0, "element.complements"  # もともと二人とも均衡している
+    score = max(0.0, (_evenness(merged) - alone) / (100 - alone) * 100)
+    return score, "element.complements" if score >= 40 else "element.similar"
 
 
 def compatibility(
@@ -83,16 +173,16 @@ def compatibility(
 
     ``*_pillars`` は ``calculate_four_pillars`` と同じ ``{"year": Pillar, ...}``。
     """
-    day_a, day_b = a_pillars["day"], b_pillars["day"]
-
     facets: dict[str, float] = {}
     notes: list[str] = []
 
-    for code, (value, note) in {
-        "day_master": _day_master_facet(day_a.stem, day_b.stem),
-        "branch": _branch_facet(day_a.branch, day_b.branch),
-        "element": _element_facet(a_pillars, b_pillars),
+    for code, facet in {
+        "body": _body_facet,
+        "heart": _heart_facet,
+        "mind": _mind_facet,
+        "support": _support_facet,
     }.items():
+        value, note = facet(a_pillars, b_pillars)
         facets[code] = round(value, 1)
         notes.append(note)
 

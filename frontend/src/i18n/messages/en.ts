@@ -263,9 +263,16 @@ export const en: Messages = {
     open: "See how you match",
     hint: "Tap the card to see how you match",
     facets: {
-      day_master: "Day masters",
-      branch: "Day branches",
-      element: "Element balance",
+      body: "Body",
+      heart: "Heart",
+      mind: "Way of thinking",
+      support: "Support",
+    },
+    facetNotes: {
+      body: "Daily rhythm, and how easy it feels to be together",
+      heart: "How readily feelings get through, and whether you feel at ease",
+      mind: "Whether you see things and make decisions the same way",
+      support: "Whether you make up for what the other one lacks",
     },
     notes: {
       "day_master.generates":
@@ -296,6 +303,10 @@ export const en: Messages = {
         "Together your five elements even out: each of you supplies what the other lacks.",
       "element.similar":
         "Your elements lean the same way: shared strengths, but shared blind spots too.",
+      "mind.alike":
+        "Your ten gods fall in similar proportions, so you weigh things up the same way.",
+      "mind.different":
+        "Your ten gods fall differently, so you reason differently — worth spelling things out.",
     },
   },
 

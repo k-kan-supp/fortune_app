@@ -60,6 +60,10 @@ export function CompatibilityModal({ userId, name, onClose }: Props) {
                   <span style={{ width: `${Math.max(0, Math.min(facet.value, 100))}%` }} />
                 </span>
                 <span className="compat-facet-value">{Math.round(facet.value)}</span>
+                {/* その面が何を見ているかを一行添える */}
+                <span className="compat-facet-note">
+                  {findMessage(lang, `compat.facetNotes.${facet.code}`) ?? ""}
+                </span>
               </li>
             ))}
           </ul>

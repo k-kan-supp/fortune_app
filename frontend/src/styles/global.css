@@ -1147,11 +1147,24 @@ button {
 
 .compat-facets li {
   display: grid;
-  grid-template-columns: 6.5rem 1fr 2rem;
+  /* 1段目: 面の名前・バー・点数 / 2段目: その面が何を見ているかの説明 */
+  grid-template-columns: 7rem 1fr 2rem;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.3rem 0.6rem;
   font-size: 0.82rem;
   color: var(--ink-muted);
+}
+
+.compat-facet-label {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.compat-facet-note {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--ink-faint);
 }
 
 .compat-bar {
