@@ -938,6 +938,16 @@ button {
   cursor: pointer;
 }
 
+/*
+ * SVG の path に outline を引くとバウンディングボックス（扇形を囲む大きな矩形）が
+ * 出てしまうので、既定のフォーカス枠は消す。
+ * 代わりにフォーカスで hover と同じ強調（点の拡大・軸ラベルの反転・ツールチップ）を出す。
+ */
+.radar-hit path:focus,
+.radar-hit path:focus-visible {
+  outline: none;
+}
+
 .term-modal-card {
   background: var(--surface-solid);
   border: 1px solid var(--border-strong);

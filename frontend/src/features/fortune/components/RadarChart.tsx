@@ -186,6 +186,9 @@ export function RadarChart({ points, maxValue, title, onSelectAxis }: Props) {
               key={i}
               d={wedgePath(i, count)}
               onPointerMove={() => setHovered(i)}
+              // キーボードでも、ホバーと同じ強調と数値が出るようにする
+              onFocus={() => setHovered(i)}
+              onBlur={() => setHovered(null)}
               onClick={onSelectAxis ? () => onSelectAxis(i) : undefined}
               onKeyDown={
                 onSelectAxis
