@@ -8,11 +8,53 @@ import type { FortuneRequest } from "@/features/fortune/types";
 import { getProfile } from "@/features/profile/api/profileApi";
 import { useI18n } from "@/i18n";
 
-// mark（暦・盤・縁）は装飾の紋章なので言語によらず共通。
+// 紋章は線画のみの白黒アイコン。色は .step-art の currentColor に従う。
+const ICON = {
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.4,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+  "aria-hidden": true,
+} as const;
+
+/** 1. 生年月日を入れる — 暦。 */
+function CalendarMark() {
+  return (
+    <svg {...ICON}>
+      <rect x="3.5" y="5.5" width="17" height="15" rx="2.6" />
+      <path d="M3.5 10.5h17M8 3v4.2M16 3v4.2" />
+      <circle cx="12" cy="15.4" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** 2. 命式とチャートを読む — 五角形のレーダー。 */
+function ChartMark() {
+  return (
+    <svg {...ICON}>
+      <path d="M12 2.6 20.94 9.1 17.53 19.6H6.47L3.06 9.1Z" />
+      <path d="M12 7.3 16.47 10.55 14.76 15.8H9.24L7.53 10.55Z" />
+      <circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** 3. 相手と出会う — 縁を重なる二つの輪で表す。 */
+function BondMark() {
+  return (
+    <svg {...ICON}>
+      <circle cx="9" cy="12" r="5.9" />
+      <circle cx="15" cy="12" r="5.9" />
+    </svg>
+  );
+}
+
 const STEPS = [
-  { n: 1, mark: "暦", key: "input" },
-  { n: 2, mark: "盤", key: "chart" },
-  { n: 3, mark: "縁", key: "meet" },
+  { n: 1, Mark: CalendarMark, key: "input" },
+  { n: 2, Mark: ChartMark, key: "chart" },
+  { n: 3, Mark: BondMark, key: "meet" },
 ] as const;
 
 export function FortunePage() {
@@ -59,7 +101,9 @@ export function FortunePage() {
         <div className="step-cards">
           {STEPS.map((s) => (
             <article key={s.n} className={`step-card step-card--${s.n}`}>
-              <div className="step-art">{s.mark}</div>
+              <div className="step-art">
+                <s.Mark />
+              </div>
               <span className="step-badge">{t("fortune.stepBadge", { n: s.n })}</span>
               <h2>{t(`fortune.steps.${s.key}.title`)}</h2>
               <p>{t(`fortune.steps.${s.key}.body`)}</p>

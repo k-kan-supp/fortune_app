@@ -29,6 +29,11 @@
   --danger: #a63a5b;
   --ok: #3f8f78;
 
+  /* 無彩色（線画アイコンの紋章に使う） */
+  --mono-ink: #33313a;
+  --mono-line: #dcdae0;
+  --mono-plate: #eeecf0;
+
   /* 影・光 */
   --shadow-sm: 0 2px 10px rgba(74, 47, 119, 0.07);
   --shadow: 0 10px 30px rgba(74, 47, 119, 0.11);
@@ -257,11 +262,14 @@ button {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 1.9rem;
-  font-weight: 700;
-  color: var(--violet-deep);
-  background: radial-gradient(circle at 30% 25%, #fff, var(--violet-soft));
-  border: 1px solid var(--border);
+  color: var(--mono-ink);
+  background: radial-gradient(circle at 30% 25%, #fff, var(--mono-plate));
+  border: 1px solid var(--mono-line);
+}
+
+.step-art svg {
+  width: 34px;
+  height: 34px;
 }
 
 .step-badge {
