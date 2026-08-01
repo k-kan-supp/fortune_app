@@ -16,6 +16,10 @@ class PublicProfile(BaseModel):
     body_type: str | None
     bio: str | None
     avatar_url: str | None
+    compatibility: float | None = Field(
+        None,
+        description="自分との相性（0〜100）。どちらかの生年月日が未登録なら None",
+    )
 
 
 class CompatibilityFacet(BaseModel):

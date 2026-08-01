@@ -183,6 +183,20 @@ async def report_in_match(
     await report_user(db, user, match_peer_id(match, user.id), req.reason)
 
 
+@router.get("/matches/{match_id}/compatibility", response_model=CompatibilityOut)
+async def match_compatibility(
+    match_id: str, user: CurrentUser, db: DbSession, lang: RequestLang
+) -> CompatibilityOut:
+    """マッチ相手との相性。チャット側は相手のユーザーIDを持たないので match 経由で引く。"""
+    match = await _require_match(db, user, match_id, lang)
+    result = await compatibility_with(db, user, match_peer_id(match, user.id))
+    if result is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, translate("matching.birthday_missing", lang)
+        )
+    return result
+
+
 @router.get("/compatibility/{user_id}", response_model=CompatibilityOut)
 async def compatibility(
     user_id: str, user: CurrentUser, db: DbSession, lang: RequestLang

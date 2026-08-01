@@ -9,6 +9,8 @@ export interface PublicProfile {
   body_type: string | null;
   bio: string | null;
   avatar_url: string | null;
+  /** 自分との相性（0〜100）。どちらかの生年月日が未登録なら null。 */
+  compatibility: number | null;
 }
 
 export interface LikeResult {

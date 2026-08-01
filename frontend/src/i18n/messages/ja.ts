@@ -265,7 +265,7 @@ export const ja = {
   compat: {
     title: "四柱推命の相性",
     open: "この相手との相性を見る",
-    hint: "カードをタップすると相性が出ます",
+    hint: "カードをタップすると、その相性の理由が出ます",
     /** 専門用語を出さず、身近な四つの面に噛み砕いて見せる。 */
     chartsTitle: "この判断のもとになった図",
     chartsHint:
@@ -360,7 +360,12 @@ export const ja = {
     title: "さがす",
     pass: "スキップ",
     like: "いいね",
-    empty: "条件に合う候補がいません。絞り込みを変えてみてください。",
+    empty: "いまお見せできる相手がいません。時間をおくと新しい人が入ってきます。",
+    emptyTitle: "今日はここまで",
+    emptyFiltered: "この絞り込みに合う相手がいません。条件を外すと見つかることがあります。",
+    clearFilters: "絞り込みを解除する",
+    readOwn: "自分の命式を読む",
+    emptyNote: "相手を探していない時間でも、自分の巡りは毎日変わります。",
     matchedTitle: "マッチしました 🎉",
     matchedBody: "{{name}} さんとマッチしました。",
     toMessages: "メッセージを送る",
@@ -399,6 +404,17 @@ export const ja = {
     imageFailed: "画像の送信に失敗しました。",
     connectionError: "接続エラーが発生しました。",
     notConnected: "接続していません。少し待って再試行してください。",
+    openersTitle: "話しかけるきっかけ",
+    openersLead: "二人は「{{facet}}」が {{score}} と出ています。",
+    openersHint: "そのまま送っても、書き換えても大丈夫です。",
+    /** 一番高かった面に合わせて、最初の一言を差し出す。 */
+    openers: {
+      body: "はじめまして。休みの日はどんなふうに過ごしていますか？",
+      heart: "はじめまして。プロフィールを読んで、話しやすそうだなと思いました。",
+      mind: "はじめまして。考え方が似ている気がして、気になりました。",
+      support: "はじめまして。お互い得意なことが違いそうで、面白そうだなと思いました。",
+      generic: "はじめまして。マッチありがとうございます。",
+    },
   },
 
   chatMenu: {
@@ -465,6 +481,7 @@ export const ja = {
 
   candidate: {
     age: "{{age}}歳",
+    compatibility: "相性",
   },
 
   options: {

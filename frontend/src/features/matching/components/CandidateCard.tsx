@@ -27,12 +27,21 @@ export function CandidateCard({ profile }: { profile: PublicProfile }) {
       : null,
   ].filter(Boolean);
 
+  const score = profile.compatibility;
+
   return (
     <div className="candidate-card">
       {profile.avatar_url ? (
         <img src={profile.avatar_url} alt="" className="candidate-photo" />
       ) : (
         <div className="candidate-photo candidate-photo--empty">{t("common.noImage")}</div>
+      )}
+      {/* 相性は「見に行けば分かる情報」ではなく、選ぶ前の一次情報として写真の上に出す */}
+      {score != null && (
+        <p className="candidate-score">
+          <span className="candidate-score-label">{t("candidate.compatibility")}</span>
+          <span className="candidate-score-value">{Math.round(score)}</span>
+        </p>
       )}
       <div className="candidate-body">
         <h2>{profile.display_name ?? t("common.unnamed")}</h2>

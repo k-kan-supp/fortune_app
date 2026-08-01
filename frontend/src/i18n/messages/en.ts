@@ -261,7 +261,7 @@ export const en: Messages = {
   compat: {
     title: "Four Pillars compatibility",
     open: "See how you match",
-    hint: "Tap the card to see how you match",
+    hint: "Tap the card to see why you match",
     chartsTitle: "What this reading is based on",
     chartsHint:
       "Your two profiles, laid over each other. The shaded wedges are what decided the notes above.",
@@ -353,7 +353,12 @@ export const en: Messages = {
     title: "Discover",
     pass: "Skip",
     like: "Like",
-    empty: "No one matches these filters. Try widening your search.",
+    empty: "No one to show right now. New people arrive throughout the day.",
+    emptyTitle: "That's everyone for now",
+    emptyFiltered: "No one matches these filters. Clearing them often turns up more.",
+    clearFilters: "Clear the filters",
+    readOwn: "Read your own chart",
+    emptyNote: "Your own chart shifts day to day, even when you are not looking for anyone.",
     matchedTitle: "It's a match 🎉",
     matchedBody: "You matched with {{name}}.",
     toMessages: "Send a message",
@@ -392,6 +397,17 @@ export const en: Messages = {
     imageFailed: "Could not send the photo.",
     connectionError: "A connection error occurred.",
     notConnected: "Not connected. Please wait a moment and try again.",
+    openersTitle: "Somewhere to start",
+    openersLead: "Your strongest area together is {{facet}}, at {{score}}.",
+    openersHint: "Send one as it is, or edit it first.",
+    /** Offer a first line that suits whichever area scored highest. */
+    openers: {
+      body: "Hi! How do you usually spend your days off?",
+      heart: "Hi! I read your profile and you seemed easy to talk to.",
+      mind: "Hi! It looks like we think about things in a similar way.",
+      support: "Hi! We seem to be good at quite different things, which sounds fun.",
+      generic: "Hi! Thanks for the match.",
+    },
   },
 
   chatMenu: {
@@ -458,6 +474,7 @@ export const en: Messages = {
 
   candidate: {
     age: "{{age}}",
+    compatibility: "Match",
   },
 
   options: {

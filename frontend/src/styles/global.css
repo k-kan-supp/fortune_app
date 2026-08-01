@@ -1099,6 +1099,43 @@ button {
   color: var(--ink-faint);
 }
 
+/* 候補切れを行き止まりにしないための受け皿 */
+.discover-empty {
+  max-width: 420px;
+  margin: 2rem auto 0;
+  padding: 1.8rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.discover-empty h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.discover-empty .hint {
+  margin: 0;
+}
+
+.discover-empty-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.discover-empty-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ink-faint);
+}
+
 /* --- 相性ポップアップ --- */
 .compat-modal-card {
   background: var(--surface-solid);
@@ -1510,6 +1547,7 @@ button {
 
 /* --- 候補カード --- */
 .candidate-card {
+  position: relative;
   max-width: 380px;
   margin: 0 auto;
   border: 1px solid var(--border);
@@ -1534,6 +1572,38 @@ button {
   justify-content: center;
   background: linear-gradient(160deg, var(--violet-soft), #e2d7f4);
   color: var(--ink-faint);
+}
+
+/* 相性は選ぶ前の一次情報なので、写真の上に重ねて必ず目に入る位置に置く */
+.candidate-score {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.45rem 0.7rem 0.55rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(253, 251, 255, 0.86);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-sm);
+  color: var(--violet-deep);
+}
+
+.candidate-score-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+.candidate-score-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .candidate-body {
@@ -1805,6 +1875,66 @@ button {
   gap: 0.5rem;
   padding: 0.5rem 0;
   scrollbar-color: var(--border-strong) transparent;
+}
+
+/* まだ一言も交わしていないマッチに出す、話題の受け渡し */
+.chat-openers {
+  margin: 0.5rem 0 0.75rem;
+  padding: 1rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-veil);
+}
+
+.chat-openers-eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--violet);
+}
+
+.chat-openers-reason {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--ink-muted);
+}
+
+.chat-openers-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.chat-opener {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  font: inherit;
+  line-height: 1.6;
+  cursor: pointer;
+  color: var(--ink);
+  background: var(--surface-solid);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+}
+
+.chat-opener:hover {
+  border-color: var(--violet);
+  box-shadow: var(--ring);
+}
+
+.chat-openers-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-faint);
 }
 
 .chat-messages::-webkit-scrollbar {

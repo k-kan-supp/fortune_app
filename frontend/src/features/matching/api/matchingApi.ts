@@ -33,6 +33,10 @@ export const sendLike = (targetUserId: string, like: boolean): Promise<LikeResul
 export const getCompatibility = (userId: string): Promise<Compatibility> =>
   apiGet<Compatibility>(`/api/matching/compatibility/${userId}`);
 
+/** チャットは相手のユーザーIDを持たないので、マッチ経由で相性を引く。 */
+export const getMatchCompatibility = (matchId: string): Promise<Compatibility> =>
+  apiGet<Compatibility>(`/api/matching/matches/${matchId}/compatibility`);
+
 export const getMatches = (): Promise<Match[]> =>
   apiGet<Match[]>("/api/matching/matches");
 

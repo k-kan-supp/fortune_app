@@ -23,6 +23,11 @@ from app.services.saju.compatibility import compatibility as saju_compatibility
 from app.services.saju.pillars import four_pillars
 from app.services.storage.base import FileStorage
 
+# 相性順に並べるとき、返す件数の何倍を母集団として取るか（と、その上限）。
+# 広く取るほど順位は正確になるが、命式の計算がその分だけ増える。
+CANDIDATE_POOL_FACTOR = 5
+CANDIDATE_POOL_MAX = 200
+
 
 async def is_blocked_between(db: AsyncSession, a: uuid.UUID, b: uuid.UUID) -> bool:
     """a と b の間にどちらか向きのブロックがあるか。"""
@@ -56,7 +61,10 @@ def _years_ago(years: int) -> date:
 
 
 def to_public_profile(
-    user: User, profile: UserProfile | None, storage: FileStorage
+    user: User,
+    profile: UserProfile | None,
+    storage: FileStorage,
+    compatibility: float | None = None,
 ) -> PublicProfile:
     p = profile
     return PublicProfile(
@@ -70,6 +78,7 @@ def to_public_profile(
         body_type=p.body_type if p else None,
         bio=p.bio if p else None,
         avatar_url=storage.url(p.avatar_key) if p and p.avatar_key else None,
+        compatibility=compatibility,
     )
 
 
@@ -116,8 +125,30 @@ async def list_candidates(
     if max_age is not None:
         stmt = stmt.where(UserProfile.birthday > _years_ago(max_age + 1))
 
-    rows = (await db.execute(stmt.limit(limit))).all()
-    return [to_public_profile(user, profile, storage) for user, profile in rows]
+    # 相性で並べ替えるため、返す件数より広めに取ってから絞る。
+    # 先に SQL 側で limit すると「たまたま先頭に来た20人の中での順位」にしかならない。
+    pool = min(limit * CANDIDATE_POOL_FACTOR, CANDIDATE_POOL_MAX)
+    rows = (await db.execute(stmt.limit(pool))).all()
+
+    my_profile = await db.scalar(select(UserProfile).where(UserProfile.user_id == me.id))
+    mine = _fortune_request(my_profile)
+    my_pillars = four_pillars(mine)[0] if mine else None
+
+    scored: list[tuple[float | None, User, UserProfile]] = []
+    for user, profile in rows:
+        score: float | None = None
+        if my_pillars is not None:
+            theirs = _fortune_request(profile)
+            if theirs is not None:
+                score = saju_compatibility(my_pillars, four_pillars(theirs)[0])[0]
+        scored.append((score, user, profile))
+
+    # 相性が高い順。生年月日が未登録で相性を出せない候補は末尾へ。
+    scored.sort(key=lambda row: (row[0] is None, -(row[0] or 0.0)))
+    return [
+        to_public_profile(user, profile, storage, score)
+        for score, user, profile in scored[:limit]
+    ]
 
 
 async def like_user(

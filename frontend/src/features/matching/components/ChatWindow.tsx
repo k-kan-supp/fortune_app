@@ -3,6 +3,7 @@ import { useI18n } from "@/i18n";
 import { errorMessage } from "@/lib/errors";
 import { uploadChatImage } from "../api/matchingApi";
 import { useChat } from "../hooks/useChat";
+import { ChatOpeners } from "./ChatOpeners";
 
 const TYPING_STOP_MS = 2000;
 
@@ -72,6 +73,9 @@ export function ChatWindow({ matchId }: { matchId: string }) {
   return (
     <div className="chat">
       <div className="chat-messages">
+        {messages.length === 0 && (
+          <ChatOpeners matchId={matchId} onPick={handleChange} />
+        )}
         {messages.map((m) => (
           <div key={m.id} className="msg-row">
             <div className={`bubble ${m.is_mine ? "bubble--mine" : "bubble--theirs"}`}>
