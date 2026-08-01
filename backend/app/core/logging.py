@@ -91,10 +91,32 @@ class _RequestIdFilter(logging.Filter):
         return True
 
 
+# 未捕捉例外は RequestLoggingMiddleware が request_id・path・所要時間つきで
+# 記録済み。Starlette がさらに uvicorn まで送出するため、そのままだと同じ
+# トレースが2回出て 1件の 500 が200行になる。uvicorn 側だけ落とす。
+_UVICORN_DUPLICATE = "Exception in ASGI application"
+
+
+class _DropDuplicateAsgiError(logging.Filter):
+    """uvicorn が出す重複トレースだけを捨てる。
+
+    ロガーではなくハンドラに付ける。uvicorn は起動時に dictConfig を適用して
+    自分のロガーの filters を空にするため、ロガー側に付けても消される。
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        # uvicorn は末尾に改行を付けて出すので、完全一致では外れる
+        return not (
+            record.name == "uvicorn.error"
+            and record.getMessage().strip() == _UVICORN_DUPLICATE
+        )
+
+
 def configure_logging() -> None:
     """ルートロガーを差し替える。アプリ起動時に一度だけ呼ぶ。"""
     handler = logging.StreamHandler(sys.stdout)
     handler.addFilter(_RequestIdFilter())
+    handler.addFilter(_DropDuplicateAsgiError())
     handler.setFormatter(JsonFormatter() if settings.log_json else TextFormatter())
 
     root = logging.getLogger()

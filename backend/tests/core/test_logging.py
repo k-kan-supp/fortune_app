@@ -5,6 +5,7 @@
 「出ないこと」を明示的に検証する。
 """
 
+import io
 import json
 import logging
 
@@ -14,6 +15,7 @@ from fastapi.testclient import TestClient
 from app.core.logging import (
     JsonFormatter,
     TextFormatter,
+    configure_logging,
     mask_email,
     request_id_var,
 )
@@ -131,6 +133,37 @@ def test_request_id_does_not_leak_between_requests():
     assert first != second
     # リクエスト外では既定値に戻っている
     assert request_id_var.get() == "-"
+
+
+def test_uvicorn_does_not_repeat_the_traceback_we_already_logged():
+    """未捕捉例外は Starlette が uvicorn まで送出するので、放っておくと同じ
+    トレースが2回出て、1件の 500 が200行になる。uvicorn 側だけ捨てる。
+
+    フィルタが付いているかではなく、実際に書き出される文字列で判定する。
+    ロガーに付けた版は「フィルタは在る」テストを通ったまま、uvicorn の
+    dictConfig に消されて実サーバーでは重複し続けていた。
+    """
+    configure_logging()
+    stream = io.StringIO()
+    handler = logging.getLogger().handlers[0]
+    assert isinstance(handler, logging.StreamHandler)
+    original, handler.stream = handler.stream, stream
+
+    try:
+        uvicorn_error = logging.getLogger("uvicorn.error")
+        # uvicorn が実際に渡す文字列そのまま。末尾の改行込みで一致させないと
+        # 素通りする（最初の実装はここで外れていた）。
+        uvicorn_error.error("Exception in ASGI application\n")
+        uvicorn_error.error("Application startup complete.")
+        logging.getLogger("app.request").error("request failed")
+    finally:
+        handler.stream = original
+
+    written = stream.getvalue()
+    assert "Exception in ASGI application" not in written
+    # uvicorn の他のログと、自分たちの記録は残す
+    assert "Application startup complete." in written
+    assert "request failed" in written
 
 
 def test_unhandled_exception_is_logged_with_traceback(caplog):

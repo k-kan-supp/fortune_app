@@ -17,12 +17,15 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with SessionLocal() as session:
         try:
             yield session
-        except Exception:
+        except Exception as e:
             # 未コミットの変更は with 抜けで破棄されるが、そのままだと
             # 「巻き戻した」事実がどこにも残らない。ロールバックだけ記録して送出は妨げない。
+            #
+            # トレースはここでは出さない。同じ例外を RequestLoggingMiddleware が
+            # 同じ request_id で記録するので、exc_info を付けると 1件のエラーに
+            # 対してトレースが2本並ぶ。種別だけ残せば突き合わせはできる。
             logger.warning(
                 "db session rolled back",
-                extra={"error": "unhandled_exception"},
-                exc_info=True,
+                extra={"reason": type(e).__name__},
             )
             raise
