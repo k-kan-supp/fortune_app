@@ -48,10 +48,12 @@ def _branch_facet(a: str, b: str) -> tuple[float, str]:
     """日支どうしの関係を点数と説明コードにする。"""
     if SIX_HARMONY.get(a) == b:
         return 95.0, "branch.six_harmony"
-    if any(a in triad and b in triad for triad in THREE_HARMONY):
-        return 90.0, "branch.three_harmony"
+    # 同支は三合ではなく比和。全ての支が何らかの三合に属するため、
+    # この判定を三合より先に置かないと同支が三合として拾われてしまう。
     if a == b:
         return 75.0, "branch.same"
+    if any(a in triad and b in triad for triad in THREE_HARMONY):
+        return 90.0, "branch.three_harmony"
     if CLASH.get(a) == b:
         return 45.0, "branch.clash"
     if HARM.get(a) == b:

@@ -1,6 +1,6 @@
 from app.schemas.fortune import Pillar
 from app.services.saju.compatibility import compatibility
-from app.services.saju.constants import BRANCH_HIDDEN_STEMS, STEM_ELEMENT
+from app.services.saju.constants import BRANCH_HIDDEN_STEMS, EARTHLY_BRANCHES, STEM_ELEMENT
 
 
 def _pillar(stem: str, branch: str) -> Pillar:
@@ -48,6 +48,15 @@ def test_three_harmony_is_recognised():
     _, facets, notes = compatibility(_chart("甲", "申"), _chart("甲", "辰"))
     assert "branch.three_harmony" in notes
     assert facets["branch"] == 90.0
+
+
+def test_same_branch_is_not_treated_as_three_harmony():
+    # 十二支はすべていずれかの三合に属するので、同支の判定を三合より後ろに
+    # 置くと「子と子」が三合として拾われてしまう。
+    for branch in EARTHLY_BRANCHES:
+        _, facets, notes = compatibility(_chart("甲", branch), _chart("甲", branch))
+        assert "branch.same" in notes, branch
+        assert facets["branch"] == 75.0, branch
 
 
 def test_score_is_symmetric_and_bounded():
