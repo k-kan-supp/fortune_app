@@ -7,9 +7,12 @@
 * 思考 — 通変星グループの構成比がどれだけ似ているか
 * 支え合い — 五行の足りない気を互いに埋め合えるか
 
-各面も総合も 0〜100。最も噛み合わない組み合わせが 0、最も噛み合う組み合わせが
-100 になるよう目盛りを取ってある。文言は返さず、フロントが訳せるようコード
-（notes）だけを返す。
+各面も総合も 0〜100。素点のままだと点が中央に寄って差が読めないため、
+実在の生年月日で総当たりして測った範囲（``FACET_RANGE`` / ``TOTAL_RANGE``）を
+基準に 0〜100 へ引き伸ばしている。したがって返る総合点は各面の加重平均そのもの
+ではなく、加重平均を同じやり方で引き伸ばした値になる。
+
+文言は返さず、フロントが訳せるようコード（notes）だけを返す。
 """
 
 from app.schemas.fortune import Pillar
@@ -55,8 +58,36 @@ BRANCH_SCORES = {
     "clash": 0.0,
 }
 
-# 思考の似方をどこで「似ている」と言うか（構成比の差の割合）
-MIND_ALIKE_THRESHOLD = 65.0
+# 各面の素点が実際に取りうる範囲。
+# 日支や日主の関係は理屈の上では 0〜100 だが、そこに生活のテンポや五行を
+# 混ぜると実在の生年月日では両端に届かない。素点のままだと点が中央に寄って
+# 差が読めないので、実測した範囲を 0〜100 に引き伸ばして返す。
+#
+# 値は scratchpad の sweep.py で、1950〜2009 の生年月日 560 件・156,520 ペアを
+# 総当たりして得た最小・最大。重みや配点を変えたときは測り直すこと。
+FACET_RANGE = {
+    "body": (7.5, 100.0),
+    "heart": (10.5, 96.0),
+    "mind": (19.3, 100.0),
+    "support": (0.0, 96.7),
+}
+
+# 引き伸ばし後の各面を重み付けした平均が取りうる範囲（同じ総当たりで実測）。
+# 4面の平均は中央に寄るため、総合も同じように引き伸ばす。
+TOTAL_RANGE = (12.9, 89.8)
+
+# 思考の似方をどこで「似ている」と言うか（引き伸ばし後の点）
+MIND_ALIKE_THRESHOLD = 57.0
+# 支え合いをどこで「補い合っている」と言うか（引き伸ばし後の点）
+SUPPORT_COMPLEMENT_THRESHOLD = 41.0
+
+
+def _rescale(value: float, span: tuple[float, float]) -> float:
+    """素点を、実測した範囲 ``span`` を基準に 0〜100 へ引き伸ばす。"""
+    low, high = span
+    if high <= low:
+        return value
+    return min(100.0, max(0.0, (value - low) / (high - low) * 100))
 
 
 def _day_master_relation(a: str, b: str) -> str:
@@ -126,8 +157,8 @@ def _evenness(ratios: dict[str, float]) -> float:
 def _body_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, str]:
     """体の相性。日支の縁を軸に、生活のテンポで寄せる。"""
     relation = _branch_relation(a["day"].branch, b["day"].branch)
-    score = 0.7 * BRANCH_SCORES[relation] + 0.3 * _tempo(a, b)
-    return score, f"branch.{relation}"
+    raw = 0.7 * BRANCH_SCORES[relation] + 0.3 * _tempo(a, b)
+    return _rescale(raw, FACET_RANGE["body"]), f"branch.{relation}"
 
 
 def _heart_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, str]:
@@ -137,8 +168,8 @@ def _heart_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, str
     nourish = (
         _nourishment(dm_a, element_ratios(b)) + _nourishment(dm_b, element_ratios(a))
     ) / 2
-    score = 0.65 * DAY_MASTER_SCORES[relation] + 0.35 * nourish
-    return score, f"day_master.{relation}"
+    raw = 0.65 * DAY_MASTER_SCORES[relation] + 0.35 * nourish
+    return _rescale(raw, FACET_RANGE["heart"]), f"day_master.{relation}"
 
 
 def _mind_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, str]:
@@ -146,7 +177,7 @@ def _mind_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, str]
     ratios_a, ratios_b = ten_god_group_ratios(a), ten_god_group_ratios(b)
     # 総変動距離。0=全く同じ構成、1=全く重ならない構成。
     distance = sum(abs(ratios_a[g] - ratios_b[g]) for g in TEN_GOD_GROUPS) / 2
-    score = 100 * (1 - distance)
+    score = _rescale(100 * (1 - distance), FACET_RANGE["mind"])
     return score, "mind.alike" if score >= MIND_ALIKE_THRESHOLD else "mind.different"
 
 
@@ -162,8 +193,11 @@ def _support_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, s
     alone = min(_evenness(ratios_a), _evenness(ratios_b))
     if alone >= 100:
         return 100.0, "element.complements"  # もともと二人とも均衡している
-    score = max(0.0, (_evenness(merged) - alone) / (100 - alone) * 100)
-    return score, "element.complements" if score >= 40 else "element.similar"
+    raw = max(0.0, (_evenness(merged) - alone) / (100 - alone) * 100)
+    score = _rescale(raw, FACET_RANGE["support"])
+    return score, (
+        "element.complements" if score >= SUPPORT_COMPLEMENT_THRESHOLD else "element.similar"
+    )
 
 
 def compatibility(
@@ -186,5 +220,6 @@ def compatibility(
         facets[code] = round(value, 1)
         notes.append(note)
 
-    total = sum(facets[code] * weight for code, weight in FACET_WEIGHTS.items())
-    return round(total, 1), facets, notes
+    # 4面の加重平均はどうしても中央に寄るので、総合も実測の範囲で引き伸ばす。
+    weighted = sum(facets[code] * weight for code, weight in FACET_WEIGHTS.items())
+    return round(_rescale(weighted, TOTAL_RANGE), 1), facets, notes

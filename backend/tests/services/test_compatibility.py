@@ -1,8 +1,9 @@
 import pytest
 
-from app.schemas.fortune import Pillar
-from app.services.saju.compatibility import FACET_WEIGHTS, compatibility
+from app.schemas.fortune import FortuneRequest, Pillar
+from app.services.saju.compatibility import FACET_WEIGHTS, TOTAL_RANGE, compatibility
 from app.services.saju.constants import BRANCH_HIDDEN_STEMS, EARTHLY_BRANCHES, STEM_ELEMENT
+from app.services.saju.pillars import four_pillars
 
 FACETS = {"body", "heart", "mind", "support"}
 
@@ -90,10 +91,39 @@ def test_score_is_symmetric_and_bounded():
     assert all(0.0 <= value <= 100.0 for value in facets.values())
 
 
-def test_total_is_the_weighted_mean_of_the_facets():
+def test_total_follows_the_weighted_mean_after_rescaling():
+    # 総合は加重平均をそのまま返すのではなく、実測の範囲で 0〜100 に伸ばした値。
     total, facets, _ = compatibility(_chart("壬", "寅"), _chart("癸", "亥"))
-    expected = sum(facets[code] * weight for code, weight in FACET_WEIGHTS.items())
-    assert total == pytest.approx(expected, abs=0.05)
+    weighted = sum(facets[code] * weight for code, weight in FACET_WEIGHTS.items())
+    low, high = TOTAL_RANGE
+    assert total == pytest.approx((weighted - low) / (high - low) * 100, abs=0.05)
+
+
+def test_facets_and_total_reach_both_ends_of_the_scale():
+    """目盛り合わせが効いていて、実在の生年月日で 0 と 100 の両端に届くこと。
+
+    片端しか出ないと「誰と組んでも70点台」に戻ってしまうので、範囲そのものを
+    テストで守る。ここが落ちたら FACET_RANGE / TOTAL_RANGE を測り直す。
+    """
+    charts = [
+        four_pillars(
+            FortuneRequest(year=1950 + n % 60, month=(n * 7) % 12 + 1, day=(n * 11) % 28 + 1)
+        )[0]
+        for n in range(90)
+    ]
+
+    seen: dict[str, list[float]] = {name: [] for name in (*FACETS, "total")}
+    for i, a in enumerate(charts):
+        for b in charts[i + 1 :]:
+            total, facets, _ = compatibility(a, b)
+            seen["total"].append(total)
+            for code, value in facets.items():
+                seen[code].append(value)
+
+    for name, values in seen.items():
+        assert min(values) < 15, f"{name} の下限が高すぎる: {min(values)}"
+        assert max(values) > 85, f"{name} の上限が低すぎる: {max(values)}"
+        assert all(0.0 <= v <= 100.0 for v in values), name
 
 
 def test_notes_name_the_facet_they_explain():
