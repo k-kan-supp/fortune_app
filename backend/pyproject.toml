@@ -39,10 +39,16 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+# B008: FastAPI の `Depends(...)` を引数デフォルトに置くのは公式イディオム
+ignore = ["B008"]
 
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["sxtwl"]           # 型スタブ・py.typed を持たない C 拡張
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

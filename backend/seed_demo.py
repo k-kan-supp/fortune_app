@@ -32,7 +32,8 @@ DEMO = [
          bio="映画とコーヒーが好き。落ち着いた時間を一緒に過ごせたら。", color=(231, 184, 154)),
     dict(email="yuto@example.com", name="ゆうと", gender="male", birthday=date(1990, 11, 12),
          prefecture="神奈川県", occupation="営業", height=182, body_type="muscular",
-         bio="週末はランニングとサウナ。美味しいごはんを食べに行きましょう。", color=(169, 198, 176)),
+         bio="週末はランニングとサウナ。美味しいごはんを食べに行きましょう。",
+         color=(169, 198, 176)),
     dict(email="mio@example.com", name="みお", gender="female", birthday=date(1998, 1, 28),
          prefecture="埼玉県", occupation="看護師", height=158, body_type="average",
          bio="音楽フェスと旅行が好きです。おすすめのお店教えてください！", color=(150, 190, 210)),
@@ -92,7 +93,7 @@ async def main() -> None:
         ren = users["ren@example.com"]
 
         # 全員が hina をいいね済み → hina が誰かをいいねすれば即マッチ
-        for email, u in users.items():
+        for u in users.values():
             if u.id != hina.id:
                 await ensure_like(db, u.id, hina.id)
         # hina ↔ ren は相互いいね（成立済みマッチにする）

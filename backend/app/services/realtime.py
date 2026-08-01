@@ -8,6 +8,7 @@
 import uuid
 from collections import defaultdict
 from datetime import datetime
+from typing import Any
 
 from fastapi import WebSocket
 
@@ -59,7 +60,7 @@ class ConnectionManager:
             if uid != reader_id:
                 await self._safe_send(match_id, ws, event)
 
-    async def _safe_send(self, match_id: uuid.UUID, ws: WebSocket, data: dict) -> None:
+    async def _safe_send(self, match_id: uuid.UUID, ws: WebSocket, data: dict[str, Any]) -> None:
         try:
             await ws.send_json(data)
         except Exception:  # 切断済み等は掃除して継続

@@ -1,11 +1,15 @@
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:  # 実行時は SQLAlchemy が registry から解決するため import 不要
+    from app.models.profile import UserProfile
 
 
 class User(Base):
@@ -24,7 +28,7 @@ class User(Base):
     tokens: Mapped[list["MagicLinkToken"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
-    profile: Mapped["UserProfile | None"] = relationship(  # noqa: F821
+    profile: Mapped["UserProfile | None"] = relationship(
         back_populates="user", cascade="all, delete-orphan", uselist=False
     )
 

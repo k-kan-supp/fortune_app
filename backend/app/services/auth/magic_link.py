@@ -1,6 +1,6 @@
 """マジックリンク（パスワードレス登録/ログイン）のドメインロジック。"""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -68,7 +68,7 @@ async def verify_magic_link(db: AsyncSession, raw_token: str) -> AuthResult | No
         select(MagicLinkToken).where(MagicLinkToken.token_hash == token_hash)
     )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if token is None or token.used_at is not None or token.expires_at <= now:
         return None
 

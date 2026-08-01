@@ -1,11 +1,15 @@
 import uuid
 from datetime import date, datetime, time
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, Time, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:  # 実行時は SQLAlchemy が registry から解決するため import 不要
+    from app.models.user import User
 
 
 class UserProfile(Base):
@@ -51,4 +55,4 @@ class UserProfile(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    user: Mapped["User"] = relationship(back_populates="profile")  # noqa: F821
+    user: Mapped["User"] = relationship(back_populates="profile")

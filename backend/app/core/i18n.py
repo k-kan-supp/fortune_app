@@ -113,7 +113,7 @@ def resolve_lang(accept_language: str | None) -> Lang:
             return DEFAULT_LANG
         primary = tag.split("-")[0]
         if primary in SUPPORTED_LANGS:
-            return primary  # type: ignore[return-value]
+            return primary
     return DEFAULT_LANG
 
 

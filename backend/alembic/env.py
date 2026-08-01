@@ -1,9 +1,9 @@
 import asyncio
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from alembic import context
 from app.core.config import settings
 from app.db.base import Base
 from app.models import *  # noqa: F401,F403  (全モデルを metadata に登録)

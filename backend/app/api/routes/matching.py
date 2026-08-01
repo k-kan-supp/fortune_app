@@ -15,6 +15,7 @@ from app.api.deps import CurrentUser, DbSession, RequestLang
 from app.core.i18n import Lang, translate
 from app.core.security import decode_access_token
 from app.db.session import get_db
+from app.models.matching import Match
 from app.models.user import User
 from app.schemas.matching import (
     CompatibilityOut,
@@ -100,7 +101,7 @@ async def unread(user: CurrentUser, db: DbSession) -> UnreadCount:
     return UnreadCount(count=await total_unread(db, user))
 
 
-async def _require_match(db: DbSession, user: CurrentUser, match_id: str, lang: Lang):
+async def _require_match(db: DbSession, user: CurrentUser, match_id: str, lang: Lang) -> Match:
     match = await get_match_or_none(db, user, match_id)
     if match is None:
         raise HTTPException(

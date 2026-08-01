@@ -1,7 +1,7 @@
 """チャット（マッチ内メッセージ）と既読管理のドメインロジック。"""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -119,7 +119,7 @@ async def mark_read(
             MatchRead.match_id == match_id, MatchRead.user_id == user_id
         )
     )
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if rec is None:
         db.add(MatchRead(match_id=match_id, user_id=user_id, last_read_at=now))
     else:
