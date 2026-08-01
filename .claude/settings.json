@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Bash(./scripts/check.sh*)",
+      "Bash(./scripts/setup.sh*)",
+      "Bash(scripts/check.sh*)",
+      "Bash(scripts/setup.sh*)",
+
+      "Bash(./.venv/bin/*)",
+      "Bash(backend/.venv/bin/*)",
+      "Bash(cd backend && ./.venv/bin/*)",
+
+      "Bash(./node_modules/.bin/*)",
+      "Bash(frontend/node_modules/.bin/*)",
+      "Bash(cd frontend && ./node_modules/.bin/*)",
+      "Bash(npm run *)",
+      "Bash(npm ci*)",
+      "Bash(npm install*)",
+      "Bash(npx *)",
+
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git restore*)",
+      "Bash(git stash*)",
+
+      "Bash(ls*)",
+      "Bash(find *)",
+      "Bash(rg *)",
+      "Bash(wc *)",
+      "Bash(chmod +x *)",
+      "Bash(lsof -nP -iTCP:*)",
+      "Bash(curl -s http://localhost:*)",
+      "Bash(docker compose ps*)",
+      "Bash(docker compose logs*)",
+      "Bash(docker compose up -d db*)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "Bash(gh pr *)",
+      "Bash(docker compose down*)",
+      "Bash(npm publish*)"
+    ]
+  }
+}
