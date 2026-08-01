@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.matching import Block, Like, Match, Report
 from app.models.profile import UserProfile
 from app.models.user import User
-from app.schemas.fortune import FortuneRequest
+from app.schemas.fortune import FortuneRequest, Pillar
 from app.schemas.matching import (
     CompatibilityChart,
     CompatibilityFacet,
@@ -134,16 +134,15 @@ async def list_candidates(
     rows = (await db.execute(stmt.limit(pool))).all()
 
     my_profile = await db.scalar(select(UserProfile).where(UserProfile.user_id == me.id))
-    mine = _fortune_request(my_profile)
-    my_pillars = four_pillars(mine)[0] if mine else None
+    my_pillars = _pillars_of(my_profile)
 
     scored: list[tuple[float | None, User, UserProfile]] = []
     for user, profile in rows:
         score: float | None = None
         if my_pillars is not None:
-            theirs = _fortune_request(profile)
+            theirs = _pillars_of(profile)
             if theirs is not None:
-                score = saju_compatibility(my_pillars, four_pillars(theirs)[0])[0]
+                score = saju_compatibility(my_pillars, theirs)[0]
         scored.append((score, user, profile))
 
     # 相性が高い順。生年月日が未登録で相性を出せない候補は末尾へ。
@@ -355,6 +354,16 @@ def _fortune_request(profile: UserProfile | None) -> FortuneRequest | None:
     )
 
 
+def _pillars_of(profile: UserProfile | None) -> dict[str, Pillar] | None:
+    """プロフィールから命式を組む。生年月日が未登録なら None。
+
+    相性を出す側は「命式が取れたか」だけを見たいので、鑑定リクエストの
+    組み立てとタプルの分解をここに閉じ込める。
+    """
+    req = _fortune_request(profile)
+    return four_pillars(req)[0] if req is not None else None
+
+
 async def compatibility_with(
     db: AsyncSession, me: User, target_id: uuid.UUID
 ) -> CompatibilityOut | None:
@@ -368,9 +377,9 @@ async def compatibility_with(
         ).all()
     }
 
-    mine = _fortune_request(profiles.get(me.id))
-    theirs = _fortune_request(profiles.get(target_id))
-    if mine is None or theirs is None:
+    my_pillars = _pillars_of(profiles.get(me.id))
+    their_pillars = _pillars_of(profiles.get(target_id))
+    if my_pillars is None or their_pillars is None:
         # 「相性が出ない」の問い合わせは、どちら側の生年月日が欠けているかで対応が変わる。
         logger.info(
             "compatibility skipped",
@@ -380,15 +389,12 @@ async def compatibility_with(
                 "reason": "birthday_missing",
                 "missing": ",".join(
                     side
-                    for side, req in (("me", mine), ("peer", theirs))
-                    if req is None
+                    for side, pillars in (("me", my_pillars), ("peer", their_pillars))
+                    if pillars is None
                 ),
             },
         )
         return None
-
-    my_pillars, _ = four_pillars(mine)
-    their_pillars, _ = four_pillars(theirs)
 
     score, facets, notes = saju_compatibility(my_pillars, their_pillars)
     return CompatibilityOut(

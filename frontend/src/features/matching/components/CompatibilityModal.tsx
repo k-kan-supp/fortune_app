@@ -1,10 +1,7 @@
-import { useEffect, useState } from "react";
 import { Modal, ModalCloseButton } from "@/components/ui/Modal";
 import { axisLabel } from "@/features/fortune/terms";
-import { findMessage, getLang, translate, useI18n } from "@/i18n";
-import { errorMessage } from "@/lib/errors";
-import { getCompatibility } from "../api/matchingApi";
-import type { Compatibility } from "../types";
+import { findMessage, useI18n } from "@/i18n";
+import { useCompatibility } from "../hooks/useCompatibility";
 import { CompareRadar } from "./CompareRadar";
 
 interface Props {
@@ -16,22 +13,8 @@ interface Props {
 
 /** 候補カードをタップしたときに出る、四柱推命の相性ポップアップ。 */
 export function CompatibilityModal({ userId, name, onClose }: Props) {
-  const [result, setResult] = useState<Compatibility | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { result, error } = useCompatibility(userId);
   const { t, lang } = useI18n();
-
-  useEffect(() => {
-    let active = true;
-    getCompatibility(userId)
-      .then((r) => active && setResult(r))
-      .catch(
-        (e) =>
-          active && setError(errorMessage(e, translate(getLang(), "errors.fetch"))),
-      );
-    return () => {
-      active = false;
-    };
-  }, [userId]);
 
   return (
     <Modal onClose={onClose} cardClassName="compat-modal-card" labelledBy="compat-modal-title">

@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import { findMessage, useI18n } from "@/i18n";
-import { getMatchCompatibility } from "../api/matchingApi";
-import type { Compatibility } from "../types";
+import { useMatchCompatibility } from "../hooks/useCompatibility";
 
 interface Props {
   matchId: string;
@@ -17,20 +15,10 @@ interface Props {
  * 生年月日が未登録などで相性を出せないときは、黙って何も出さない。
  */
 export function ChatOpeners({ matchId, onPick }: Props) {
-  const [compat, setCompat] = useState<Compatibility | null>(null);
+  // 相性を出せない相手（生年月日が未登録など）では、このパネル自体を出さない。
+  // 会話のきっかけを添えるだけの要素なので、失敗をユーザーに見せる意味がない。
+  const { result: compat } = useMatchCompatibility(matchId);
   const { t, lang } = useI18n();
-
-  useEffect(() => {
-    let active = true;
-    getMatchCompatibility(matchId)
-      .then((r) => active && setCompat(r))
-      .catch(() => {
-        /* 相性を出せない相手では、このパネル自体を出さない */
-      });
-    return () => {
-      active = false;
-    };
-  }, [matchId]);
 
   if (!compat || compat.facets.length === 0) return null;
 
