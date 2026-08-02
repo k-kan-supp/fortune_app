@@ -61,6 +61,15 @@ class RadarChart(BaseModel):
     )
 
 
+class Species(BaseModel):
+    """命式の「種族」。日主の五行 × 最も強い通変星グループの 25 通り。"""
+
+    code: str = Field(..., description="2文字のコード（五行1文字＋主星グループ1文字）")
+    element: str = Field(..., description="日主の五行")
+    group: str = Field(..., description="最も強い通変星グループ")
+    group_share: float = Field(..., description="そのグループが全体に占める割合（%）")
+
+
 class FortuneResponse(BaseModel):
     """鑑定結果（命式）。"""
 
@@ -69,6 +78,7 @@ class FortuneResponse(BaseModel):
     day_pillar: Pillar
     hour_pillar: Pillar
     day_master: str = Field(..., description="日主（日柱の天干）")
+    species: Species | None = Field(None, description="25 種族の判定")
     charts: list[RadarChart] = Field(
         default_factory=list, description="バランス指標（レーダーチャート用）"
     )

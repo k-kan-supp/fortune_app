@@ -18,6 +18,7 @@ from app.services.saju.constants import (
     HEAVENLY_STEMS,
     STEM_ELEMENT,
 )
+from app.services.saju.species import species
 from app.services.saju.ten_gods import ten_god
 
 logger = logging.getLogger("app.saju")
@@ -66,11 +67,12 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
     """生年月日時から命式とバランス指標を組み立てる。"""
     pillars, day_master = four_pillars(req)
     charts = build_charts(pillars, day_master, req.is_male)
+    kind = species(pillars, day_master)
 
-    # 生年月日は載せない。日主と枚数だけで「計算が通ったか」は追える。
+    # 生年月日は載せない。日主と種族だけで「計算が通ったか」は追える。
     logger.info(
         "chart calculated",
-        extra={"day_master": day_master, "charts": len(charts)},
+        extra={"day_master": day_master, "species": kind.code, "charts": len(charts)},
     )
 
     return FortuneResponse(
@@ -79,5 +81,6 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
         day_pillar=pillars["day"],
         hour_pillar=pillars["hour"],
         day_master=day_master,
+        species=kind,
         charts=charts,
     )

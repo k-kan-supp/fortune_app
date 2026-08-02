@@ -48,12 +48,24 @@ export interface RadarChart {
   weakness_note: NarrativeSegment[];
 }
 
+/** 命式の種族。日主の五行 × 最も強い通変星グループで 25 通り。 */
+export interface Species {
+  /** 2文字のコード。名前と説明はこれを使って i18n から引く。 */
+  code: string;
+  element: string;
+  group: string;
+  /** そのグループが全体に占める割合（%）。 */
+  group_share: number;
+}
+
 export interface FortuneResponse {
   year_pillar: Pillar;
   month_pillar: Pillar;
   day_pillar: Pillar;
   hour_pillar: Pillar;
   day_master: string;
+  /** 古い API は返さないので任意扱い。 */
+  species?: Species;
   /** 古い API は返さないので任意扱い（バックエンドの既定値は空配列）。 */
   charts?: RadarChart[];
 }

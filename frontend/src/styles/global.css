@@ -427,6 +427,145 @@ button {
   }
 }
 
+/* =========================================================
+   鑑定結果の頭のサマリー（25 種族）
+   表やチャートに入る前に、一言で分かる面を先に置く
+   ========================================================= */
+.species-summary {
+  margin: 0 0 1.6rem;
+  padding: 1.5rem 1.6rem 1.3rem;
+  border-radius: 20px;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.species-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* MBTI のコードにあたる 2 文字。種族の識別子として一番大きく置く */
+.species-code {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 66px;
+  height: 66px;
+  border-radius: 18px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--btn-ink);
+  background: var(--btn-grad);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+
+.species-title {
+  min-width: 0;
+}
+
+.species-eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+}
+
+.species-name {
+  margin: 0.1rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  color: var(--violet-deep);
+}
+
+.species-tagline {
+  margin: 0.9rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.85;
+  color: var(--ink);
+}
+
+.species-basis {
+  margin: 0.7rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.7rem;
+}
+
+.species-share {
+  color: var(--ink-faint);
+}
+
+/* 判定の裏付けになる 3 つの山 */
+.species-peaks {
+  margin: 1.1rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.9rem;
+}
+
+.species-peaks > div {
+  min-width: 0;
+}
+
+.species-peaks dt {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+
+.species-peaks dd {
+  margin: 0.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.species-peaks dd b {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.species-peaks dd span {
+  font-size: 0.74rem;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.species-count {
+  margin: 1rem 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+
+@media (max-width: 560px) {
+  .species-peaks {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .species-name {
+    font-size: 1.25rem;
+  }
+
+  .species-code {
+    width: 56px;
+    height: 56px;
+    font-size: 1.25rem;
+  }
+}
+
 /* --- 命式 --- */
 .meishiki {
   background: var(--surface);

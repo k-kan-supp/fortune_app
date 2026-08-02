@@ -4,6 +4,7 @@ import { Modal, ModalCloseButton } from "@/components/ui/Modal";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
 import { AnalysisCharts } from "@/features/fortune/components/AnalysisCharts";
 import { MeishikiTable } from "@/features/fortune/components/MeishikiTable";
+import { ResultSummary } from "@/features/fortune/components/ResultSummary";
 import { useFortune } from "@/features/fortune/hooks/useFortune";
 import { parseFortuneQuery } from "@/features/fortune/query";
 import { useI18n } from "@/i18n";
@@ -41,6 +42,9 @@ export function ResultPage() {
 
         {result && (
           <section className="result-section">
+            {/* 細かい表を読む前に、まず一言で分かるようにしておく */}
+            <ResultSummary result={result} />
+
             <MeishikiTable result={result} />
 
             {/* 古い API はチャートを返さないので、無い場合は命式だけ表示する */}
