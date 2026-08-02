@@ -7,7 +7,7 @@
 from app.schemas.fortune import NarrativeSegment, RadarAxis
 from app.services.saju.analysis import _chart, build_charts
 from app.services.saju.narrative import build_note
-from app.services.saju.tiers import FREE, PAID
+from app.services.saju.tiers import FREE, PAID, hook_strength, preview_length
 from tests.services.test_analysis import DAY_MASTER, PILLARS
 
 
@@ -117,3 +117,32 @@ def test_five_elements_note_stays_free():
 def test_the_rest_of_the_notes_are_paid():
     paid = [c.key for c in build_charts(PILLARS, DAY_MASTER, True) if c.note_tier == PAID]
     assert len(paid) == 9
+
+
+def test_preview_stops_before_the_strongest_sentence():
+    """予告に「あなたにとって何を意味するか」を含めない。
+
+    そこを渡してしまうと続きを読む理由が消える。上限より手前でも必ず切る。
+    """
+    chart = next(c for c in build_charts(PILLARS, DAY_MASTER, True) if c.strength_note)
+    order = [s.key for s in chart.strength_note]
+    hint = next(i for i, key in enumerate(order) if key.startswith("hint."))
+    assert preview_length(order, limit=99) == hint
+
+
+def test_preview_respects_the_limit():
+    """引きが弱い文が続いても、上限を超えて出さない。"""
+    order = ["high.lead", "high.spread", "high.band.clear"]
+    assert preview_length(order, limit=2) == 2
+
+
+def test_preview_can_be_closed_entirely():
+    assert preview_length(["high.lead"], limit=0) == 0
+
+
+def test_hook_strength_reads_every_sentence_kind():
+    """種類を取り違えると、切る位置が黙ってずれる。"""
+    assert hook_strength("high.lead") == 1
+    assert hook_strength("low.band.absent") == 2
+    assert hook_strength("high.counter_flat") == 2
+    assert hook_strength("hint.five_elements.strength") == 3

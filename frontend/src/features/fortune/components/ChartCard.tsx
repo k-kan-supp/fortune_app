@@ -1,5 +1,6 @@
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { findMessage, useI18n, type Lang } from "@/i18n";
+import { track } from "@/lib/analytics";
 import { chartTermNs, glossaryText, type TermRef } from "../glossary";
 import { formatValue } from "../radarGeometry";
 import { axisLabel } from "../terms";
@@ -81,18 +82,28 @@ function ExtremeNote({
 }
 
 /**
- * 未開放の解説文の代わりに出す枠。
+ * 予告の続きに立てる壁。
  *
- * 本文は届いていないので書きようがないが、**何かがある**ことは見せる。
- * 空欄にすると、そこに読むものがあると分からず課金の動機が生まれない。
+ * ぷつりと終わらせず、**何文残っているか**を数で示す。量の提示は強い引きになり、
+ * 空欄で終わると、そこに読むものがあること自体が伝わらない。
  * 突出した軸そのもの（ExtremeList）は無料のまま残す。
  */
-function LockedNote() {
+function LockedNote({ chartKey, hidden, shown }: { chartKey: string; hidden: number; shown: number }) {
   const { t } = useI18n();
+
+  // 壁が出たこと・どこで切ったかを残す。これが無いと壁を動かしても良し悪しが分からない。
+  useEffect(() => {
+    track("paywall_shown", { section: chartKey, preview_blocks: shown });
+  }, [chartKey, shown]);
+
   return (
-    <p className="chart-note chart-note--locked" aria-label={t("fortune.charts.noteLocked")}>
+    <p className="chart-note chart-note--locked">
       <span className="chart-note__veil" aria-hidden="true" />
-      <span className="chart-note__lock">{t("fortune.charts.noteLocked")}</span>
+      <span className="chart-note__lock">
+        {hidden > 0
+          ? t("fortune.charts.noteRemaining", { count: hidden })
+          : t("fortune.charts.noteLocked")}
+      </span>
     </p>
   );
 }
@@ -157,11 +168,7 @@ export const ChartCard = memo(function ChartCard({ chart, onSelectTerm }: Props)
               <dt>{t("fortune.charts.strengths")}</dt>
               <dd>
                 <ExtremeList codes={chart.strengths} lang={lang} ns={ns} />
-                {chart.note_locked ? (
-                  <LockedNote />
-                ) : (
-                  <ExtremeNote segments={chart.strength_note} lang={lang} ns={ns} />
-                )}
+                <ExtremeNote segments={chart.strength_note} lang={lang} ns={ns} />
               </dd>
             </div>
           )}
@@ -170,13 +177,17 @@ export const ChartCard = memo(function ChartCard({ chart, onSelectTerm }: Props)
               <dt>{t("fortune.charts.weaknesses")}</dt>
               <dd>
                 <ExtremeList codes={chart.weaknesses} lang={lang} ns={ns} />
-                {chart.note_locked ? (
-                  <LockedNote />
-                ) : (
-                  <ExtremeNote segments={chart.weakness_note} lang={lang} ns={ns} />
-                )}
+                <ExtremeNote segments={chart.weakness_note} lang={lang} ns={ns} />
               </dd>
             </div>
+          )}
+          {/* 壁はチャートに1つ。予告を両方読ませてから、残りの量を示す */}
+          {chart.note_locked && (
+            <LockedNote
+              chartKey={chart.key}
+              hidden={chart.note_hidden}
+              shown={chart.strength_note.length + chart.weakness_note.length}
+            />
           )}
         </dl>
       )}

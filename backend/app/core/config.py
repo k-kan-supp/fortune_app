@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # 課金。決済がまだ無い間は開けておく（有料の解説文を誰も買えないため）。
     # 決済が入ったらここを true にし、判定を entitlement に移す。
     paywall_enabled: bool = False
+    # 有料の解説文を何文まで予告として見せるか。壁の位置を動かす検証は
+    # デプロイなしで回せる必要があるので、コードに埋めず設定で持つ。
+    paywall_preview_sentences: int = 2
 
     # メール
     email_backend: str = "console"

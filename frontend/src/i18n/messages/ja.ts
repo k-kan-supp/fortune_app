@@ -271,6 +271,7 @@ export const ja = {
       strengths: "強み",
       weaknesses: "弱み",
       noteLocked: "この読み解きは有料です",
+      noteRemaining: "続きはあと {{count}} 文（有料）",
       five_elements: {
         title: "五行バランス",
         note: "木・火・土・金・水の強さ。四柱の天干と蔵干を点数化した合計です。",

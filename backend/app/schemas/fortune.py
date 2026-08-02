@@ -67,6 +67,9 @@ class RadarChart(BaseModel):
             "強み・弱みの軸コードは残す（何が隠れているか分からないと課金動機にならない）"
         ),
     )
+    note_hidden: int = Field(
+        default=0, description="伏せた文の数。読者に「あと何文あるか」を示すために返す"
+    )
 
 
 class Species(BaseModel):

@@ -58,6 +58,8 @@ def test_paid_notes_do_not_leak_when_the_paywall_is_on(monkeypatch):
     「本文が空であること」と「命式側は無傷であること」を両方見る。
     """
     monkeypatch.setattr(settings, "paywall_enabled", True)
+    # 予告の幅は M29 の検証で見る。ここは「漏れないこと」だけを見たいので閉じ切る。
+    monkeypatch.setattr(settings, "paywall_preview_sentences", 0)
     res = client.post(
         "/api/fortune",
         json={"year": 1990, "month": 5, "day": 15, "hour": 10, "is_male": True},
@@ -122,3 +124,46 @@ def test_rate_limit_leaves_authenticated_routes_alone():
     )
     prefixes = limited.kwargs["prefixes"]
     assert not any(p.startswith("/api/matching") or p.startswith("/api/profile") for p in prefixes)
+
+
+@pytest.mark.skipif(
+    __import__("importlib.util", fromlist=["find_spec"]).find_spec("sxtwl") is None,
+    reason="sxtwl 未インストール",
+)
+def test_preview_shows_the_opening_and_counts_the_rest(monkeypatch):
+    """壁は「続きがある」と分かる形で立てる。無言で終わらせない。"""
+    monkeypatch.setattr(settings, "paywall_enabled", True)
+    monkeypatch.setattr(settings, "paywall_preview_sentences", 2)
+    res = client.post(
+        "/api/fortune",
+        json={"year": 1990, "month": 5, "day": 15, "hour": 10, "is_male": True},
+    )
+    locked = [c for c in res.json()["charts"] if c["note_locked"] and c["note_hidden"]]
+    assert locked, "有料側が1枚も無いと、この検証が空回りする"
+    for chart in locked:
+        assert len(chart["strength_note"]) <= 2, chart["key"]
+        # 予告に核心の一文を混ぜない
+        shown = [s["key"] for s in chart["strength_note"] + chart["weakness_note"]]
+        assert not any(key.startswith("hint.") for key in shown), chart["key"]
+        assert chart["note_hidden"] > 0
+
+
+@pytest.mark.skipif(
+    __import__("importlib.util", fromlist=["find_spec"]).find_spec("sxtwl") is None,
+    reason="sxtwl 未インストール",
+)
+def test_preview_width_moves_by_configuration(monkeypatch):
+    """壁の位置はデプロイなしで動かせること。検証のたびに出荷しない。"""
+    payload = {"year": 1990, "month": 5, "day": 15, "hour": 10, "is_male": True}
+    monkeypatch.setattr(settings, "paywall_enabled", True)
+
+    monkeypatch.setattr(settings, "paywall_preview_sentences", 0)
+    none_shown = client.post("/api/fortune", json=payload).json()["charts"]
+    monkeypatch.setattr(settings, "paywall_preview_sentences", 2)
+    some_shown = client.post("/api/fortune", json=payload).json()["charts"]
+
+    def sentences(charts):
+        return sum(len(c["strength_note"]) for c in charts if c["note_locked"])
+
+    assert sentences(none_shown) == 0
+    assert sentences(some_shown) > 0

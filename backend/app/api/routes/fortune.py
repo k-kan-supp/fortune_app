@@ -10,6 +10,7 @@ from app.schemas.fortune import (
     DailyPoint,
     FortuneRequest,
     FortuneResponse,
+    NarrativeSegment,
     RadarAxis,
     SpeciesCompatMap,
 )
@@ -34,13 +35,13 @@ from app.services.saju.species_compat import (
     ROW_MEANS,
     scaled_matrix,
 )
-from app.services.saju.tiers import PAID
+from app.services.saju.tiers import PAID, preview_length
 
 router = APIRouter(tags=["fortune"])
 
 
-def _lock_paid_notes(result: FortuneResponse) -> FortuneResponse:
-    """有料の解説文を落とす。
+def _lock_paid_notes(result: FortuneResponse, *, preview: int) -> FortuneResponse:
+    """有料の解説文を予告のぶんだけ残して伏せる。
 
     落とすのは本文だけで、``strengths`` / ``weaknesses`` の軸コードと
     ``note_locked`` は残す。何が隠れているのかが見えないと課金動機が生まれない。
@@ -50,8 +51,13 @@ def _lock_paid_notes(result: FortuneResponse) -> FortuneResponse:
         if chart.note_tier != PAID:
             continue
         chart.note_locked = True
-        chart.strength_note = []
-        chart.weakness_note = []
+        hidden = 0
+        for field in ("strength_note", "weakness_note"):
+            note: list[NarrativeSegment] = getattr(chart, field)
+            keep = preview_length([segment.key for segment in note], preview)
+            hidden += len(note) - keep
+            setattr(chart, field, note[:keep])
+        chart.note_hidden = hidden
     return result
 
 
@@ -65,7 +71,7 @@ def create_fortune(req: FortuneRequest) -> FortuneResponse:
     result = calculate_four_pillars(req)
     # 決済が入るまでは全員に開放する。以後この条件が entitlement の判定に変わる。
     if settings.paywall_enabled:
-        return _lock_paid_notes(result)
+        return _lock_paid_notes(result, preview=settings.paywall_preview_sentences)
     return result
 
 

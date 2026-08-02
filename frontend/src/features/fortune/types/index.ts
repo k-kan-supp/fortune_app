@@ -48,8 +48,10 @@ export interface RadarChart {
   weakness_note: NarrativeSegment[];
   /** 解説文の区分。命式そのものは常に無料で、有料なのはこの解説だけ。 */
   note_tier: "free" | "paid";
-  /** 有料の解説がまだ開放されていない。true のとき note は空で届く。 */
+  /** 有料の解説がまだ開放されていない。true のとき note は予告のぶんだけ届く。 */
   note_locked: boolean;
+  /** 伏せてある文の数。「あと何文あるか」を出すために使う。 */
+  note_hidden: number;
 }
 
 /** 命式の種族。日主の五行 × 最も強い通変星グループで 25 通り。 */
