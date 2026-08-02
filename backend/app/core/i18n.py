@@ -64,6 +64,11 @@ MESSAGES: dict[str, dict[Lang, str]] = {
         "ja": "画像サイズが大きすぎます。",
         "en": "That image is too large.",
     },
+    # 気象
+    "weather.unavailable": {
+        "ja": "その日の気象を取得できませんでした。時間をおいてお試しください。",
+        "en": "We couldn't fetch today's weather. Please try again shortly.",
+    },
     # マッチング
     "matching.self_not_allowed": {
         "ja": "自分自身は対象にできません。",

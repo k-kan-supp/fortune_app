@@ -122,7 +122,7 @@ def ten_god_group_ratios(pillars: dict[str, Pillar]) -> dict[str, float]:
     return _ratios(_tally(_weighted_stems(pillars), groups), TEN_GOD_GROUPS)
 
 
-def _element_evenness(element_ratios: dict[str, float]) -> float:
+def element_evenness(element_ratios: dict[str, float]) -> float:
     """五行の均衡度を 0〜100 で返す（均等なら100、一行に偏るほど0に近づく）。"""
     # 構成比が均等(0.2)からどれだけ離れているか。最大のずれは一行集中時の 1.6。
     deviation = sum(abs(element_ratios[el] - 1 / len(FIVE_ELEMENTS)) for el in FIVE_ELEMENTS)
@@ -212,7 +212,7 @@ def build_charts(pillars: dict[str, Pillar], day_master: str, is_male: bool) -> 
         "wealth": _blend(LIFE_AREA_WEIGHTS["wealth"], group_ratios),
         "love": _blend(LIFE_AREA_WEIGHTS[love_key], group_ratios),
         # 健康運だけは通変星ではなく五行の偏りの少なさ（均衡度）で測る。
-        "health": _element_evenness(element_ratios),
+        "health": element_evenness(element_ratios),
         "relationships": _blend(LIFE_AREA_WEIGHTS["relationships"], group_ratios),
         "study": _blend(LIFE_AREA_WEIGHTS["study"], group_ratios),
     }

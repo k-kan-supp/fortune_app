@@ -119,6 +119,39 @@ class SpeciesCompatMap(BaseModel):
     mean: float = Field(..., description="表全体の平均。組の位置づけを言う基準")
 
 
+class WeatherReading(BaseModel):
+    """その日の観測値。占術に使う前の素のデータ。"""
+
+    date: str = Field(..., description="現地日付（YYYY-MM-DD）")
+    temperature_c: float
+    humidity_pct: float
+    weather_code: int = Field(..., description="WMO の天気コード")
+    sunrise: str
+    sunset: str
+    daylight_hours: float = Field(..., description="日の出から日の入りまでの時間")
+    latitude: float
+    longitude: float
+
+
+class DailyFortuneRequest(FortuneRequest):
+    """日運のリクエスト。地点を省くと東京で引く。"""
+
+    latitude: float | None = Field(None, ge=-90, le=90)
+    longitude: float | None = Field(None, ge=-180, le=180)
+
+
+class DailyFortune(BaseModel):
+    """その日の運勢。気象を五行に置き換え、命式と重ねて出す。"""
+
+    reading: WeatherReading
+    sky: str = Field(..., description="clear / cloudy / fog / rain / snow / storm")
+    elements: list[RadarAxis] = Field(..., description="今日の空気の五行構成比（%）")
+    score: float = Field(..., description="0〜100。本人が1年で取りうる幅を伸ばした位置")
+    band: str = Field(..., description="high / mid / low")
+    fills: list[str] = Field(default_factory=list, description="今日補われる五行")
+    floods: list[str] = Field(default_factory=list, description="今日さらに増える五行")
+
+
 class FortuneResponse(BaseModel):
     """鑑定結果（命式）。"""
 

@@ -428,6 +428,175 @@ button {
 }
 
 /* =========================================================
+   その日の運勢（気象を五行に置き換えて命式と重ねる）
+   ========================================================= */
+.daily-card {
+  margin: 0 0 1.6rem;
+  padding: 1.3rem 1.4rem 1.2rem;
+  border-radius: 20px;
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.daily-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.daily-eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-faint);
+}
+
+.daily-date {
+  margin: 0.15rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-score {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.daily-score b {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-score span {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+}
+
+/* 帯は相性マップと同じ約束（高い＝暖色、低い＝寒色） */
+.daily-score.is-high b {
+  color: #e8a851;
+}
+
+.daily-score.is-mid b {
+  color: var(--ink);
+}
+
+.daily-score.is-low b {
+  color: #7cc3ea;
+}
+
+/* 観測値そのもの。占いの前に、何を見て出したかを並べる */
+.daily-facts {
+  margin: 1rem 0 0;
+  padding: 0.8rem 0 0;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.7rem 0.9rem;
+}
+
+.daily-facts dt {
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+
+.daily-facts dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-air-title {
+  margin: 1.1rem 0 0.5rem;
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-faint);
+}
+
+.daily-air {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.daily-air li {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr 3rem;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.daily-air i {
+  font-style: normal;
+  color: var(--ink-muted);
+}
+
+.daily-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.daily-bar b {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--violet), var(--gold));
+}
+
+.daily-air u {
+  text-decoration: none;
+  text-align: right;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.daily-note {
+  margin: 1rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.86rem;
+  line-height: 1.95;
+  color: var(--ink-muted);
+  text-align: justify;
+}
+
+.daily-scale {
+  margin: 0.6rem 0 0;
+  font-size: 0.7rem;
+}
+
+.daily-unavailable {
+  margin: 0 0 1.4rem;
+}
+
+@media (max-width: 480px) {
+  .daily-facts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .daily-score b {
+    font-size: 1.7rem;
+  }
+}
+
+/* =========================================================
    鑑定結果の頭のサマリー（25 種族）
    表やチャートに入る前に、一言で分かる面を先に置く
    ========================================================= */

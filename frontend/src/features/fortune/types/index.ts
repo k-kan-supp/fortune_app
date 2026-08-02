@@ -98,6 +98,32 @@ export interface SpeciesCompat {
   mean: number;
 }
 
+/** その日の観測値。 */
+export interface WeatherReading {
+  date: string;
+  temperature_c: number;
+  humidity_pct: number;
+  weather_code: number;
+  sunrise: string;
+  sunset: string;
+  daylight_hours: number;
+  latitude: number;
+  longitude: number;
+}
+
+/** その日の運勢。気象を五行に置き換え、命式と重ねたもの。 */
+export interface DailyFortune {
+  reading: WeatherReading;
+  sky: string;
+  /** 今日の空気の五行構成比（%）。 */
+  elements: RadarAxis[];
+  score: number;
+  band: string;
+  /** 今日補われる五行 / さらに増える五行。 */
+  fills: string[];
+  floods: string[];
+}
+
 export interface FortuneResponse {
   year_pillar: Pillar;
   month_pillar: Pillar;

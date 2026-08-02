@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Modal, ModalCloseButton } from "@/components/ui/Modal";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
 import { AnalysisCharts } from "@/features/fortune/components/AnalysisCharts";
+import { DailyFortune } from "@/features/fortune/components/DailyFortune";
 import { MeishikiTable } from "@/features/fortune/components/MeishikiTable";
 import { ResultSummary } from "@/features/fortune/components/ResultSummary";
 import { SanmeiChart } from "@/features/fortune/components/SanmeiChart";
@@ -46,6 +47,9 @@ export function ResultPage() {
           <section className="result-section">
             {/* 細かい表を読む前に、まず一言で分かるようにしておく */}
             <ResultSummary result={result} />
+
+            {/* 命式は変わらないが、その日の空気は毎日変わる */}
+            {request && <DailyFortune request={request} />}
 
             <MeishikiTable result={result} />
 

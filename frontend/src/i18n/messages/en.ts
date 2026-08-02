@@ -108,6 +108,45 @@ export const en: Messages = {
       },
     },
 
+    daily: {
+      title: "Today's reading",
+      hint: "Today's temperature, humidity, sunrise and sunset, and sky, read as five elements and laid over your chart. Location is Tokyo.",
+      score: "{{value}}",
+      unit: "/ 100",
+      scale: "Where today sits in the range you can reach across a year, stretched to 0–100.",
+      reading: {
+        temperature: "Temperature",
+        humidity: "Humidity",
+        sunrise: "Sunrise",
+        sunset: "Sunset",
+        daylight: "Daylight",
+        sky: "Sky",
+        hours: "{{value}} h",
+      },
+      sky: {
+        clear: "Clear",
+        cloudy: "Cloudy",
+        fog: "Fog",
+        rain: "Rain",
+        snow: "Snow",
+        storm: "Thunderstorm",
+      },
+      airTitle: "The five elements in today's air",
+      note: {
+        lead: "Today's air leans toward {{element}} ({{pct}}%).",
+        fills: "It supplies {{list}}, which your chart runs short of.",
+        fillsNone: "Little in today's air fills what your chart lacks.",
+        floods: "It also thickens {{list}}, which you already carry plenty of.",
+        floodsNone: "Nothing today feeds the elements you already have in excess.",
+      },
+      band: {
+        high: "A day that evens out your chart. Good for moving on something you have been putting off.",
+        mid: "An unremarkable day. Working the way you usually do is the safe call.",
+        low: "A day that pushes your imbalance further. Play to your strong shape rather than stretching into new ground.",
+      },
+      unavailable: "We couldn't fetch today's weather.",
+    },
+
     compatMap: {
       title: "Compatibility with the 25 kinds",
       hint: "How the 25 kinds sit relative to each other, seen from you ({{name}}). The outer ring is 100. Tap an axis for that partner's score.",
