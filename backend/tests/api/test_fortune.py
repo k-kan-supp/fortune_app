@@ -167,3 +167,10 @@ def test_preview_width_moves_by_configuration(monkeypatch):
 
     assert sentences(none_shown) == 0
     assert sentences(some_shown) > 0
+
+
+def test_species_map_is_cacheable():
+    """命式に依存しない固定データ。毎回取り直させると、その分だけ枠を食う。"""
+    res = client.get("/api/species/compatibility")
+    assert res.status_code == 200
+    assert "max-age" in res.headers["Cache-Control"]

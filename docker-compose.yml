@@ -26,6 +26,9 @@ services:
       SECRET_KEY: demo-secret-change-me-in-production
       APP_ENV: production
       EMAIL_BACKEND: console
+      # 前段の nginx が X-Forwarded-For を付ける。ここを空にすると接続元が
+      # nginx になり、利用者全員がレート制限の枠を共有してしまう。
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-172.16.0.0/12}
     depends_on:
       db:
         condition: service_healthy

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from app.api.deps import RequestLang
 from app.core.config import settings
@@ -76,8 +76,13 @@ def create_fortune(req: FortuneRequest) -> FortuneResponse:
 
 
 @router.get("/species/compatibility", response_model=SpeciesCompatMap)
-def species_compatibility() -> SpeciesCompatMap:
-    """25 種族どうしの相性マップ。誰が呼んでも同じ内容が返る。"""
+def species_compatibility(response: Response) -> SpeciesCompatMap:
+    """25 種族どうしの相性マップ。誰が呼んでも同じ内容が返る。
+
+    命式に依存しないので、結果ページを開くたびに取り直す必要が無い。
+    キャッシュさせて、利用者ごとのレート制限の枠を無駄に使わせない。
+    """
+    response.headers["Cache-Control"] = "public, max-age=3600"
     low, high = BANDS
     return SpeciesCompatMap(
         codes=list(CODES),

@@ -48,6 +48,7 @@ app.add_middleware(
     prefixes=("/api/fortune", "/api/species", "/api/analytics"),
     limit=settings.public_rate_limit,
     window_seconds=settings.public_rate_window_seconds,
+    trusted_proxies=settings.trusted_proxies,
 )
 app.add_middleware(
     CORSMiddleware,
