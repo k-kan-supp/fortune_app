@@ -82,14 +82,23 @@ class Species(BaseModel):
 
 
 class SpeciesReach(BaseModel):
-    """相性の高い種族ひとつ分。人数と、関係ごとに向いている人数。"""
+    """ある関係における、相性の高い種族ひとつ分。"""
 
     code: str = Field(..., description="種族コード")
     people: int = Field(..., description="その種族の概算人数")
-    suited: dict[str, int] = Field(
-        default_factory=dict,
-        description="関係コード（lover / colleague / business / spouse）→ 向いている概算人数",
-    )
+    suited: int = Field(..., description="この関係で向いている概算人数")
+    share: float = Field(..., description="その種族のうち向いている割合（％）")
+
+
+class RelationRanking(BaseModel):
+    """関係ひとつぶんの順位表。
+
+    関係ごとに全 25 種族から選び直す。総合点で先に 10 種族に絞ると、その関係で
+    上位のはずの種族が候補から落ちてしまう（実際に落ちる例がある）。
+    """
+
+    relation: str = Field(..., description="lover / colleague / business / spouse")
+    rows: list[SpeciesReach] = Field(default_factory=list, description="相性が高い順")
 
 
 class CompatiblePopulation(BaseModel):
@@ -106,8 +115,9 @@ class CompatiblePopulation(BaseModel):
     species_codes: list[str] = Field(
         default_factory=list, description="相性が高い帯に入る種族コード"
     )
-    reach: list[SpeciesReach] = Field(
-        default_factory=list, description="相性が高い順の種族と、関係ごとに向いている人数"
+    rankings: list[RelationRanking] = Field(
+        default_factory=list,
+        description="関係ごとの順位表（lover / colleague / business / spouse の順）",
     )
 
 

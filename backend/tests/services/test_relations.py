@@ -19,9 +19,9 @@ from app.services.saju.relations import (
     RELATION_WEIGHTS,
     RELATIONS,
     SUITED_PCT,
-    relation_matrix,
+    relation_ranking,
+    relation_rankings,
     suited_share,
-    top_species,
 )
 from app.services.saju.species import species
 from app.services.saju.species_compat import CODES, scaled_matrix
@@ -112,29 +112,63 @@ def test_cells_match_a_fresh_measurement(reps, mine, theirs, relation):
     assert measured == SUITED_PCT[relation][CODES.index(mine)][CODES.index(theirs)]
 
 
-def test_top_species_is_ranked_by_the_overall_score():
-    """行の順は総合点で決める。関係ごとに並べ替えると表として読めなくなる。"""
-    row = scaled_matrix()[CODES.index("MS")]
-    expected = [c for c, _ in sorted(zip(CODES, row, strict=True), key=lambda p: -p[1])][:10]
-    assert top_species("MS", 10) == expected
+def test_each_relation_is_ranked_on_its_own_score():
+    """関係ごとに、その関係の点で並ぶこと。総合点の並びを流用しない。"""
+    for mine in CODES:
+        for relation in RELATIONS:
+            rows = relation_ranking(mine, relation)
+            shares = [row.share for row in rows]
+            assert shares == sorted(shares, reverse=True), (mine, relation)
 
 
-def test_matrix_returns_ten_rows_with_every_relation():
-    rows = relation_matrix("MS", 10)
-    assert len(rows) == 10
-    for entry in rows:
-        assert set(entry.suited) == set(RELATIONS)
+def test_ranking_draws_from_all_twenty_five_species():
+    """総合点で先に絞らない。
+
+    先に 10 種族へ絞ると、その関係で上位のはずの種族が候補から落ちる。
+    実際に落ちる組があることを、ここで固定しておく。
+    """
+    overall = scaled_matrix()[CODES.index("WX")]
+    top_ten = {c for c, _ in sorted(zip(CODES, overall, strict=True), key=lambda p: -p[1])[:10]}
+    business = {row.code for row in relation_ranking("WX", "business")}
+    assert business - top_ten, "総合点の上位10に無い種族が business の上位に入るはず"
+
+
+def test_relations_pick_different_partners():
+    """関係ごとに顔ぶれが変わること。全部同じなら、タブに分ける意味が無い。"""
+    firsts = {
+        relation: relation_ranking("WX", relation)[0].code for relation in RELATIONS
+    }
+    assert len(set(firsts.values())) > 1, firsts
+
+
+def test_ties_fall_to_the_larger_species():
+    """同率なら人数の多い順。並びが実行ごとに揺れないようにする。"""
+    for mine in CODES:
+        for relation in RELATIONS:
+            rows = relation_ranking(mine, relation)
+            for a, b in zip(rows, rows[1:], strict=False):
+                if a.share == b.share:
+                    assert a.people >= b.people, (mine, relation, a.code, b.code)
+
+
+def test_rankings_cover_every_relation_in_order():
+    rankings = relation_rankings("MS", 10)
+    assert [r.relation for r in rankings] == list(RELATIONS)
+    assert all(len(r.rows) == 10 for r in rankings)
 
 
 def test_suited_never_exceeds_the_species_population():
     """向いている人数が、その種族の総数を超えない。"""
     for mine in CODES:
-        for entry in relation_matrix(mine):
-            assert 0 < entry.people < JAPAN_POPULATION
-            assert all(0 <= n <= entry.people for n in entry.suited.values())
+        for ranking in relation_rankings(mine):
+            for row in ranking.rows:
+                assert 0 < row.people < JAPAN_POPULATION
+                assert 0 <= row.suited <= row.people
+                assert 0 <= row.share <= 100
 
 
 def test_unknown_species_yields_nothing():
-    assert relation_matrix("??") == []
+    assert relation_ranking("??", "lover") == []
+    assert all(r.rows == [] for r in relation_rankings("??"))
     assert suited_share("??", "WS", "lover") == 0.0
     assert suited_share("WS", "WS", "friendship") == 0.0

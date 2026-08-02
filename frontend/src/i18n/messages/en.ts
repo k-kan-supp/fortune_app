@@ -91,11 +91,12 @@ export const en: Messages = {
 
     reach: {
       title: "The 10 kinds you match best with",
-      hint: "Clicking as partners and working well together are different things, so each column weights the four facets — body, heart, mind, support — differently. Numbers are people; bars are the share of that kind who suit. ★ marks the highest share, which is not always the largest count. Tap a heading to sort.",
+      hint: "Each relationship is ranked separately across all 25 kinds, and because the facets are weighted differently the line-up changes too. Rank follows the share of that kind who suit, not the headcount — ranking by count would just put the most common kinds on top everywhere. Switch relationship with the tabs; tap a heading to sort.",
       best: "Highest share for this relationship",
       cell: "{{people}} people ({{share}}% of that kind)",
       species: "Kind",
       people: "People",
+      suited: "Well matched",
       relations: {
         lover: "Partner",
         colleague: "Colleague",

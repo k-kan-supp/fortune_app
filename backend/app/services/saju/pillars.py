@@ -28,7 +28,7 @@ from app.services.saju.population import (
     POPULATION_AS_OF,
     compatible_people,
 )
-from app.services.saju.relations import relation_matrix
+from app.services.saju.relations import relation_rankings
 from app.services.saju.sanmei import sanmei
 from app.services.saju.species import species
 from app.services.saju.ten_gods import ten_god
@@ -82,7 +82,7 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
     kind = species(pillars, day_master)
     star_chart = sanmei(pillars, day_master)
     people, share, matched = compatible_people(kind.code)
-    reach = relation_matrix(kind.code)
+    rankings = relation_rankings(kind.code)
 
     # 生年月日は載せない。日主と種族だけで「計算が通ったか」は追える。
     logger.info(
@@ -105,7 +105,7 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
             basis=JAPAN_POPULATION,
             as_of=POPULATION_AS_OF,
             species_codes=matched,
-            reach=reach,
+            rankings=rankings,
         ),
         sanmei=star_chart,
         charts=charts,

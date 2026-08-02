@@ -2,65 +2,54 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { formatPeople } from "../peopleCount";
 import { speciesName } from "../terms";
-import type { SpeciesReach } from "../types";
+import type { RelationRanking } from "../types";
 
-/**
- * 関係ごとの列。バックエンドの RELATIONS と同じ並びにする。
- * 「恋人には向くが仕事では組めない」といった差がこの表の読みどころなので、
- * 関係を並べて見比べられる形にする。
- */
+/** 表示順。バックエンドの RELATIONS と同じ並びにする。 */
 const RELATIONS = ["lover", "colleague", "business", "spouse"] as const;
 type Relation = (typeof RELATIONS)[number];
 
-/** 並べ替えの対象。既定は総合点順（バックエンドが返した並び）。 */
-type SortKey = "rank" | "people" | Relation;
+/** 並べ替えの対象。既定はその関係の相性（割合）順。 */
+type SortKey = "share" | "people";
 
-const rate = (row: SpeciesReach, relation: Relation): number =>
-  row.people > 0 ? (row.suited[relation] ?? 0) / row.people : 0;
+const isRelation = (value: string): value is Relation =>
+  (RELATIONS as readonly string[]).includes(value);
 
 /**
- * 相性が高い種族と、関係ごとに向いている人数のマトリクス。
+ * 関係ごとの相性ランキング。
  *
- * 数字は人数、バーは**割合**。この2つは一致しない ── 人数は種族の大きさに
- * 引きずられるので、構成比 13% の種族はどの列でも人数で勝つ。「相性が良い」の
- * 意味は割合のほうなので、★ は割合の最上位に付ける。実際、100 通りのうち
- * 76 通りで人数最大と割合最大が食い違う。
+ * 関係を列に並べず**タブで切り替える**。同じ10種族に4列を並べると、どの列も
+ * 総合点で選ばれた同じ顔ぶれになり、関係ごとの違いが出ない。関係ごとに全25種族
+ * から選び直すと顔ぶれ自体が変わる ── 総合点の上位10に一度も入らない種族が、
+ * ある関係では上位に来る。
  *
- * 色は列の識別にだけ使う。同じことを見出しの文字が言っているので、色が
- * 読めなくても表は成立する。
+ * 数字は人数、バーと％は**その種族のうち向いている割合**。順位は割合で付ける。
+ * 人数で並べると、構成比の大きい種族がどの関係でも上に来てしまい、
+ * 「相性が良い」を表さない。
  */
-export function SpeciesReachTable({ reach }: { reach: SpeciesReach[] }) {
+export function SpeciesReachTable({ rankings }: { rankings: RelationRanking[] }) {
   const { t, lang } = useI18n();
-  const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: "rank", desc: true });
+  const [active, setActive] = useState<Relation>("lover");
+  const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: "share", desc: true });
 
-  /** 列ごとの最上位（割合）。同率なら先に出てくるほうを採る。 */
-  const best = useMemo(() => {
-    const found: Partial<Record<Relation, string>> = {};
-    for (const relation of RELATIONS) {
-      let top: SpeciesReach | undefined;
-      for (const row of reach) {
-        if (!top || rate(row, relation) > rate(top, relation)) top = row;
-      }
-      if (top) found[relation] = top.code;
-    }
-    return found;
-  }, [reach]);
+  const current = useMemo(
+    () => rankings.find((entry) => entry.relation === active),
+    [rankings, active],
+  );
 
   const rows = useMemo(() => {
-    if (sort.key === "rank") return reach;
-    const scored = reach.map((row, index) => ({
-      row,
-      index,
-      // 並べ替えは、その列が表示している数字（人数）で行う。見えていない値で
-      // 並ぶと、なぜその順になったのかが読み取れない。
-      value: sort.key === "people" ? row.people : (row.suited[sort.key] ?? 0),
-    }));
-    scored.sort((a, b) => (a.value === b.value ? a.index - b.index : b.value - a.value));
+    const source = current?.rows ?? [];
+    const scored = source.map((row, index) => ({ row, index }));
+    scored.sort((a, b) => {
+      const key = sort.key === "people" ? "people" : "share";
+      const gap = b.row[key] - a.row[key];
+      return gap !== 0 ? gap : a.index - b.index;
+    });
     if (!sort.desc) scored.reverse();
     return scored.map((entry) => entry.row);
-  }, [reach, sort]);
+  }, [current, sort]);
 
-  if (reach.length === 0) return null;
+  const tabs = rankings.filter((entry) => isRelation(entry.relation) && entry.rows.length > 0);
+  if (tabs.length === 0) return null;
 
   const toggle = (key: SortKey) =>
     setSort((current) => ({ key, desc: current.key === key ? !current.desc : true }));
@@ -68,77 +57,89 @@ export function SpeciesReachTable({ reach }: { reach: SpeciesReach[] }) {
   const ariaSort = (key: SortKey) =>
     sort.key === key ? (sort.desc ? "descending" : "ascending") : "none";
 
+  // ★ は割合の最上位に付ける。人数で並べ替えても位置がずれないよう、印は割合で決める。
+  const bestCode = [...(current?.rows ?? [])].sort((a, b) => b.share - a.share)[0]?.code;
+
   return (
-    <section className="reach-table">
+    <section className="reach-table" data-rel={active}>
       <h3>{t("fortune.reach.title")}</h3>
       <p className="hint">{t("fortune.reach.hint")}</p>
+
+      {/* 関係ごとに顔ぶれが変わるので、切り替えたら順位表ごと入れ替わる */}
+      <div className="reach-tabs" role="tablist" aria-label={t("fortune.reach.title")}>
+        {tabs.map((entry) => {
+          const relation = entry.relation as Relation;
+          const selected = relation === active;
+          return (
+            <button
+              key={relation}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              data-rel={relation}
+              className={selected ? "is-active" : undefined}
+              onClick={() => setActive(relation)}
+            >
+              <i className="reach-swatch" aria-hidden="true" />
+              {t(`fortune.reach.relations.${relation}`)}
+            </button>
+          );
+        })}
+      </div>
 
       <div className="reach-table__scroll">
         <table>
           <thead>
             <tr>
-              <th scope="col" aria-sort={ariaSort("rank")}>
-                <button type="button" onClick={() => toggle("rank")}>
-                  {t("fortune.reach.species")}
-                </button>
-              </th>
+              <th scope="col">{t("fortune.reach.species")}</th>
               <th scope="col" aria-sort={ariaSort("people")}>
                 <button type="button" onClick={() => toggle("people")}>
                   {t("fortune.reach.people")}
                 </button>
               </th>
-              {RELATIONS.map((relation) => (
-                <th key={relation} scope="col" data-rel={relation} aria-sort={ariaSort(relation)}>
-                  <button type="button" onClick={() => toggle(relation)}>
-                    {/* 見出しの色見本が、そのまま列の凡例になる */}
-                    <i className="reach-swatch" aria-hidden="true" />
-                    {t(`fortune.reach.relations.${relation}`)}
-                  </button>
-                </th>
-              ))}
+              <th scope="col" data-rel={active} aria-sort={ariaSort("share")}>
+                <button type="button" onClick={() => toggle("share")}>
+                  {t("fortune.reach.suited")}
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.code}>
-                <th scope="row">
-                  <b>{speciesName(row.code, lang)}</b>
-                  <span className="reach-table__code">{row.code}</span>
-                </th>
-                <td className="reach-table__total">{formatPeople(row.people, lang)}</td>
-                {RELATIONS.map((relation) => {
-                  const people = row.suited[relation] ?? 0;
-                  const share = rate(row, relation) * 100;
-                  const isBest = best[relation] === row.code;
-                  return (
-                    <td
-                      key={relation}
-                      data-rel={relation}
-                      className={isBest ? "is-best" : undefined}
-                      title={t("fortune.reach.cell", {
-                        people: people.toLocaleString(lang === "ja" ? "ja-JP" : "en-US"),
-                        share: share.toFixed(0),
-                      })}
-                    >
-                      <span className="reach-cell__head">
-                        <span className="reach-cell__value">{formatPeople(people, lang)}</span>
-                        <span className="reach-cell__share">{share.toFixed(0)}%</span>
-                        {/* 色だけに頼らせない。最上位には印を付ける */}
-                        {isBest && (
-                          <span className="reach-cell__mark">
-                            <span aria-hidden="true">★</span>
-                            <span className="sr-only">{t("fortune.reach.best")}</span>
-                          </span>
-                        )}
-                      </span>
-                      <span className="reach-cell__bar">
-                        <i style={{ width: `${share.toFixed(1)}%` }} />
-                      </span>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const isBest = row.code === bestCode;
+              return (
+                <tr key={row.code}>
+                  <th scope="row">
+                    <b>{speciesName(row.code, lang)}</b>
+                    <span className="reach-table__code">{row.code}</span>
+                  </th>
+                  <td className="reach-table__total">{formatPeople(row.people, lang)}</td>
+                  <td
+                    data-rel={active}
+                    className={isBest ? "is-best" : undefined}
+                    title={t("fortune.reach.cell", {
+                      people: row.suited.toLocaleString(lang === "ja" ? "ja-JP" : "en-US"),
+                      share: row.share.toFixed(0),
+                    })}
+                  >
+                    <span className="reach-cell__head">
+                      <span className="reach-cell__value">{formatPeople(row.suited, lang)}</span>
+                      <span className="reach-cell__share">{row.share.toFixed(0)}%</span>
+                      {/* 色だけに頼らせない。最上位には印を付ける */}
+                      {isBest && (
+                        <span className="reach-cell__mark">
+                          <span aria-hidden="true">★</span>
+                          <span className="sr-only">{t("fortune.reach.best")}</span>
+                        </span>
+                      )}
+                    </span>
+                    <span className="reach-cell__bar">
+                      <i style={{ width: `${row.share.toFixed(1)}%` }} />
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

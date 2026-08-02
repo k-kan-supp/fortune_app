@@ -29,9 +29,9 @@
 
 from typing import Final
 
-from app.schemas.fortune import SpeciesReach
+from app.schemas.fortune import RelationRanking, SpeciesReach
 from app.services.saju.population import JAPAN_POPULATION, SPECIES_SHARE
-from app.services.saju.species_compat import CODES, scaled_matrix
+from app.services.saju.species_compat import CODES
 
 # 面の重み（関係ごとに合計 1.0）。
 #
@@ -378,36 +378,39 @@ def suited_share(mine: str, theirs: str, relation: str) -> float:
     return SUITED_PCT[relation][CODES.index(mine)][CODES.index(theirs)] / 100
 
 
-def top_species(mine: str, limit: int = 10) -> list[str]:
-    """自分から見て相性が高い順の種族コード。
+def relation_ranking(mine: str, relation: str, limit: int = 10) -> list[SpeciesReach]:
+    """その関係で相性が高い順に、全 25 種族から選ぶ。
 
-    順位は総合点（相性マップと同じ値）で付ける。関係ごとに並べ替えると
-    行の意味が関係ごとに変わってしまい、マトリクスとして読めなくなる。
+    総合点で先に絞らない。総合点は4面の加重平均なので、ある面に寄った関係
+    ── 補い合いが要の「仕事のパートナー」など ── では順位が入れ替わり、
+    総合点の上位10に入らない種族がその関係の上位に来ることが実際にある。
+
+    同率は人数の多い順に。人数まで同じなら種族コード順で、並びを安定させる。
     """
-    if mine not in CODES:
+    if mine not in CODES or relation not in SUITED_PCT:
         return []
-    scores = scaled_matrix()[CODES.index(mine)]
-    ranked = sorted(zip(CODES, scores, strict=True), key=lambda pair: pair[1], reverse=True)
-    return [code for code, _ in ranked[:limit]]
 
-
-def relation_matrix(mine: str, limit: int = 10) -> list[SpeciesReach]:
-    """相性が高い種族について、関係ごとに何人向いているかを概算する。
-
-    人数 = 日本の人口 × その種族の構成比 × その組で向いている割合。
-    構成比が均等でないので、順位が上でも人数が少ない種族はふつうに出る。
-    """
-    rows: list[SpeciesReach] = []
-    for code in top_species(mine, limit):
+    row = SUITED_PCT[relation][CODES.index(mine)]
+    scored = []
+    for code, pct in zip(CODES, row, strict=True):
         people = round(JAPAN_POPULATION * SPECIES_SHARE.get(code, 0.0))
-        rows.append(
-            SpeciesReach(
-                code=code,
-                people=people,
-                suited={
-                    relation: round(people * suited_share(mine, code, relation))
-                    for relation in RELATIONS
-                },
-            )
+        scored.append((pct, people, code))
+    scored.sort(key=lambda entry: (-entry[0], -entry[1], entry[2]))
+
+    return [
+        SpeciesReach(
+            code=code,
+            people=people,
+            suited=round(people * pct / 100),
+            share=float(pct),
         )
-    return rows
+        for pct, people, code in scored[:limit]
+    ]
+
+
+def relation_rankings(mine: str, limit: int = 10) -> list[RelationRanking]:
+    """4つの関係それぞれの順位表。並びは RELATIONS のとおり。"""
+    return [
+        RelationRanking(relation=relation, rows=relation_ranking(mine, relation, limit))
+        for relation in RELATIONS
+    ]

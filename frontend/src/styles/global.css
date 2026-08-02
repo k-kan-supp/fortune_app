@@ -3221,7 +3221,7 @@ button {
 
 .reach-table table {
   width: 100%;
-  min-width: 560px;
+  min-width: 380px;
   border-collapse: collapse;
   font-size: 0.8rem;
 }
@@ -3352,4 +3352,40 @@ button {
   .reach-cell__bar i {
     transition: width 0.25s ease;
   }
+}
+
+/* 関係の切り替えタブ。選んだ関係の色を表全体に渡す */
+.reach-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.reach-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.78rem;
+  opacity: 0.65;
+  cursor: pointer;
+}
+
+.reach-tabs button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* 選択中は、その関係の色で縁取る。文字でも選択が分かるよう太字にする */
+.reach-tabs button.is-active {
+  opacity: 1;
+  font-weight: 700;
+  border-color: var(--bar);
+  background: rgba(255, 255, 255, 0.06);
 }

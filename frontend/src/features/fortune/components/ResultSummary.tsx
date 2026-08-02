@@ -107,7 +107,7 @@ export function ResultSummary({ result }: { result: FortuneResponse }) {
               kinds: compatible.species_codes.length,
             })}
           </p>
-          <SpeciesReachTable reach={compatible.reach} />
+          <SpeciesReachTable rankings={compatible.rankings} />
         </div>
       )}
 
