@@ -3181,10 +3181,26 @@ button {
   opacity: 0.62;
 }
 
-/* 相性が高い種族 × 関係のマトリクス */
+/* 相性が高い種族 × 関係のマトリクス
+   ------------------------------------------------------------------
+   列の色は識別のためだけ。同じことを見出しの文字が言っているので、
+   色が読めなくても表は成立する（色だけに意味を持たせない）。
+   4色は暗い面（#17161d）に対して検証済み:
+   明度帯 L 0.48–0.67 / 彩度下限 0.10 / CVD 隣接 ΔE 8.5 / コントラスト 3:1 以上。 */
 .reach-table {
   margin-top: 16px;
+  --rel-lover: #e652a3;
+  --rel-colleague: #0094ff;
+  --rel-business: #10ae65;
+  --rel-spouse: #ea6500;
+  /* 列の最上位。4色のどれとも違う明るい中間色にして、★ と併せて示す */
+  --rel-best: #c9b6f0;
 }
+
+.reach-table [data-rel="lover"] { --bar: var(--rel-lover); }
+.reach-table [data-rel="colleague"] { --bar: var(--rel-colleague); }
+.reach-table [data-rel="business"] { --bar: var(--rel-business); }
+.reach-table [data-rel="spouse"] { --bar: var(--rel-spouse); }
 
 .reach-table h3 {
   margin: 0 0 4px;
@@ -3205,7 +3221,7 @@ button {
 
 .reach-table table {
   width: 100%;
-  min-width: 520px;
+  min-width: 560px;
   border-collapse: collapse;
   font-size: 0.8rem;
 }
@@ -3214,14 +3230,54 @@ button {
 .reach-table td {
   padding: 7px 10px;
   text-align: right;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
 .reach-table thead th {
+  padding: 0;
   font-weight: 600;
-  opacity: 0.7;
   font-size: 0.74rem;
+}
+
+/* 見出しは押せる。押せると分かる見た目にしておく */
+.reach-table thead button {
+  width: 100%;
+  padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.reach-table thead button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.reach-table thead th:first-child button {
+  justify-content: flex-start;
+}
+
+/* 並べ替え中の列に向きを出す。aria-sort と同じことを目でも分かるようにする */
+.reach-table thead th[aria-sort="descending"] button::after { content: "▼"; font-size: 0.6em; }
+.reach-table thead th[aria-sort="ascending"] button::after { content: "▲"; font-size: 0.6em; }
+.reach-table thead th[aria-sort]:not([aria-sort="none"]) button { opacity: 1; }
+
+/* 列の色見本。これが実質の凡例になる */
+.reach-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--bar, currentColor);
+  flex: none;
 }
 
 .reach-table tbody th {
@@ -3242,20 +3298,58 @@ button {
   opacity: 0.75;
 }
 
-/* 人数の背後に、その種族の中で向いている割合を敷く */
-.reach-table td {
-  position: relative;
+.reach-cell__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
 }
 
-.reach-table__bar {
-  position: absolute;
-  left: 0;
-  top: 4px;
-  bottom: 4px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.1);
+/* 数字は文字色のまま。系列色を文字に着せない */
+.reach-cell__value {
+  font-variant-numeric: tabular-nums;
 }
 
-.reach-table__value {
-  position: relative;
+.reach-cell__share {
+  font-size: 0.68rem;
+  opacity: 0.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.reach-cell__mark {
+  color: var(--rel-best);
+  font-size: 0.72rem;
+}
+
+/* スケールバー。長さは「その種族のうち向いている割合」を表す */
+.reach-cell__bar {
+  display: block;
+  margin-top: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.reach-cell__bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--bar);
+  min-width: 2px;
+}
+
+/* 列の最上位。色に加えて ★ と縁で示す */
+.reach-table td.is-best .reach-cell__bar i {
+  background: var(--rel-best);
+}
+
+.reach-table td.is-best .reach-cell__value {
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reach-cell__bar i {
+    transition: width 0.25s ease;
+  }
 }
