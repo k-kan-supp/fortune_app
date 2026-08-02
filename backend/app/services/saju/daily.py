@@ -15,7 +15,7 @@
 文言は持たず、フロントが訳せるようコードだけを返す。
 """
 
-import math
+from functools import lru_cache
 
 from app.services.saju.analysis import element_evenness
 from app.services.saju.constants import FIVE_ELEMENTS
@@ -83,49 +83,74 @@ def day_elements(
     return {el: raw[el] / total for el in FIVE_ELEMENTS}
 
 
-def raw_daily_score(chart: dict[str, float], day: dict[str, float]) -> float:
-    """その日の空気が命式の偏りをどれだけ埋めるか（素点 0〜100）。"""
+def balance_gain(chart: dict[str, float], day: dict[str, float]) -> float:
+    """その日の空気が命式の偏りをどれだけ埋めるか（素点）。
+
+    残っていた偏りの何割が埋まったか。埋めれば正、かえって偏りを深めれば負。
+    ここで 0 に刈り取ってしまうと「悪化した日」が全部同じ値に潰れ、
+    偏りの強い命式がいつ見ても 0 点になる。刈り取りは正規化のあとで行う。
+    """
     alone = element_evenness(chart)
     if alone >= 100:
-        return 100.0
+        return 0.0  # もともと均衡している命式は、どの日でも動かしようがない
     merged = element_evenness({el: (chart[el] + day[el]) / 2 for el in FIVE_ELEMENTS})
-    return round(max(0.0, min(100.0, (merged - alone) / (100 - alone) * 100)), 1)
+    return (merged - alone) / (100 - alone) * 100
 
 
 def _reachable_days() -> tuple[dict[str, float], ...]:
-    """1 年で実際に起こりうる空気を並べる（季節 × 空模様）。
+    """起こりうる空気を並べる。正規化の基準になる一覧。
 
-    素点は命式によって取りうる幅が違い、1 年通しても 40 点しか動かない命式もある。
-    そのままだと「いつ見ても低い」人が出るので、この一覧を基準に本人の幅で伸ばす。
+    素点の取りうる幅は命式によって違い、そのままだと「いつ見ても低い」人が出る。
+    そこでこの一覧で本人の下端・上端を測り、0〜100 に伸ばす。
+
+    一覧は ``day_elements`` が受け付ける入力空間の全域を格子で覆う。
+    季節の近似式で作ると実測がその外に出て（真夏の 31℃ など）点数が端に
+    張り付くので、関数が丸める範囲そのものを基準にする。
     """
-    days = []
-    for day_of_year in range(1, 366, 5):
-        # 日本の平年値をならした近似。端（真冬・真夏）に届けば十分。
-        phase = 2 * math.pi * (day_of_year - 20) / 365
-        temperature = 15 - 12 * math.cos(phase)
-        humidity = 62 + 18 * math.sin(2 * math.pi * (day_of_year - 100) / 365)
-        daylight = 12 + 2.4 * math.sin(2 * math.pi * (day_of_year - 80) / 365)
-        for sky in SKY_CODES:
-            days.append(day_elements(temperature, humidity, daylight, sky))
-    return tuple(days)
+    temperatures = [
+        TEMP_RANGE[0] + (TEMP_RANGE[1] - TEMP_RANGE[0]) * i / (_GRID_T - 1) for i in range(_GRID_T)
+    ]
+    humidities = [100 * i / (_GRID_H - 1) for i in range(_GRID_H)]
+    daylights = [
+        DAYLIGHT_RANGE[0] + (DAYLIGHT_RANGE[1] - DAYLIGHT_RANGE[0]) * i / (_GRID_D - 1)
+        for i in range(_GRID_D)
+    ]
+    return tuple(
+        day_elements(temperature, humidity, daylight, sky)
+        for temperature in temperatures
+        for humidity in humidities
+        for daylight in daylights
+        for sky in SKY_CODES
+    )
+
+
+# 格子の粗さ。細かくするほど基準は正確になるが、1 回の鑑定で全点を評価する。
+_GRID_T, _GRID_H, _GRID_D = 9, 9, 5
 
 
 REACHABLE_DAYS = _reachable_days()
 
 
-def personal_span(chart: dict[str, float]) -> tuple[float, float]:
-    """その命式が 1 年で取りうる素点の下端と上端。"""
-    scores = [raw_daily_score(chart, day) for day in REACHABLE_DAYS]
+@lru_cache(maxsize=512)
+def _span_for(ratios: tuple[float, ...]) -> tuple[float, float]:
+    """下端・上端の実測。基準の全点を評価するので、命式ごとに覚えておく。"""
+    chart = dict(zip(FIVE_ELEMENTS, ratios, strict=True))
+    scores = [balance_gain(chart, day) for day in REACHABLE_DAYS]
     return min(scores), max(scores)
 
 
+def personal_span(chart: dict[str, float]) -> tuple[float, float]:
+    """その命式が取りうる素点の下端と上端。"""
+    return _span_for(tuple(chart[el] for el in FIVE_ELEMENTS))
+
+
 def daily_score(chart: dict[str, float], day: dict[str, float]) -> float:
-    """今日の運勢（0〜100）。本人が 1 年で取りうる幅を 0〜100 に伸ばした位置。"""
+    """今日の運勢（0〜100）。本人が取りうる幅の中で今日がどこかを示す。"""
     low, high = personal_span(chart)
-    raw = raw_daily_score(chart, day)
-    if high <= low:
+    if high <= low:  # もともと均衡していて動かない命式
         return 50.0
-    return round(max(0.0, min(100.0, (raw - low) / (high - low) * 100)), 1)
+    gain = balance_gain(chart, day)
+    return round(max(0.0, min(100.0, (gain - low) / (high - low) * 100)), 1)
 
 
 def element_moves(chart: dict[str, float], day: dict[str, float]) -> tuple[list[str], list[str]]:
