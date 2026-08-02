@@ -79,6 +79,35 @@ export const en: Messages = {
       typeCount: "One of 25 kinds",
     },
 
+    sanmei: {
+      title: "Body star chart (Sanmeigaku)",
+      hint: "The same chart read as Sanmeigaku stars. Tap a cell for what that star means.",
+      centerLabel: "Centre star",
+      energyTotal: "Three life-stage stars total {{total}} points",
+      energyUnit: "{{energy}} pts",
+      pick: "Choose a cell.",
+      basis: "from the {{source}}",
+      positions: {
+        head: { label: "Head (north)", role: "Elders, father, work" },
+        chest: { label: "Chest (centre)", role: "Your core — the star at your centre" },
+        belly: { label: "Belly (south)", role: "Juniors, children, subordinates" },
+        left_hand: { label: "Left hand (east)", role: "Spouse and home" },
+        right_hand: { label: "Right hand (west)", role: "Friends, siblings, society" },
+      },
+      periods: {
+        early: { label: "Early", range: "From birth until you enter the world" },
+        middle: { label: "Middle", range: "From entering the world until you step back" },
+        late: { label: "Late", range: "From stepping back onward" },
+      },
+      sources: {
+        year_stem: "year stem",
+        month_stem: "month stem",
+        year_hidden: "hidden stem of the year branch",
+        month_hidden: "hidden stem of the month branch",
+        day_hidden: "hidden stem of the day branch",
+      },
+    },
+
     species: {
       WS: { name: "Pioneer Sapling", tagline: "Grows from ground nobody has walked on yet." },
       WX: { name: "Blossom Bough", tagline: "Reaches out, then insists on flowering where it can be seen." },
@@ -401,6 +430,34 @@ export const en: Messages = {
       health: "Measured by how even your five elements are: the more balanced, the higher.",
       relationships: "How smoothly you deal with people, from the self and output camps.",
       study: "How easily learning sinks in, read mainly from the resource camp.",
+    },
+
+    mainStar: {
+      貫索星: "Same element, same polarity as your day master. The will to hold to a decision, and the stubbornness that comes with it.",
+      石門星: "Same element, opposite polarity. Sociability that gathers people into a circle and keeps the peace.",
+      鳳閣星: "What your day master produces, same polarity. Unforced expression, and an appetite for play and good food.",
+      調舒星: "What your day master produces, opposite polarity. Fine-grained sensitivity and expression honed alone.",
+      禄存星: "What your day master controls, same polarity. Open-handed affection and money that moves quickly.",
+      司禄星: "What your day master controls, opposite polarity. Steady accumulation and the keeping of a household.",
+      車騎星: "What controls your day master, same polarity. Drive that pushes straight ahead, and plain honesty.",
+      牽牛星: "What controls your day master, opposite polarity. Taking on honour and duty, and keeping face.",
+      龍高星: "What produces your day master, same polarity. A reforming streak, and the urge to go abroad and learn.",
+      玉堂星: "What produces your day master, opposite polarity. Scholarship and transmission — knowledge received and taught on.",
+    },
+
+    followerStar: {
+      天報星: "The star of the unborn child (3 pts). Not yet fixed in form, testing possibilities as it shifts.",
+      天印星: "The star of the infant (6 pts). Draws its strength from being helped and loved.",
+      天貴星: "The star of the child (9 pts). Gathers the hopes of those around it through plain openness.",
+      天恍星: "The star of the youth (7 pts). Pulled by dreams and longing, always wanting to be elsewhere.",
+      天南星: "The star of the young adult (10 pts). Momentum and fighting spirit, forward to the point of recklessness.",
+      天禄星: "The star of working prime (11 pts). Delivers steadily on ability built up the slow way.",
+      天将星: "The star of the summit (12 pts). The largest energy of all, and the standing to lead.",
+      天堂星: "The star of the elder (8 pts). Settles matters calmly, on experience rather than force.",
+      天胡星: "The star of the sickbed (4 pts). Sharp sensitivity, turned inward and thought through deeply.",
+      天極星: "The star of death (2 pts). Returns to nothing once, and gains spiritual depth from it.",
+      天庫星: "The star of the tomb (5 pts). Gathers, stores, inherits and researches.",
+      天馳星: "The star of departure (1 pt). Speed and devotion run high; the smallest energy of the twelve.",
     },
   },
 

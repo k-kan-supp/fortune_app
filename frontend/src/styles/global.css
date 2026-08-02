@@ -576,10 +576,170 @@ button {
     font-size: 1.25rem;
   }
 
-  .species-code {
+  .species-art {
     width: 56px;
     height: 56px;
-    font-size: 1.25rem;
+  }
+
+  .species-art svg {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+/* =========================================================
+   算命学の陽占（人体星図）
+   3×3。中列に頭・胸・腹、左右に手、四隅に十二大従星を置く伝統的な並び
+   ========================================================= */
+.sanmei-section {
+  margin-top: 2.2rem;
+}
+
+.sanmei-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  max-width: 460px;
+  margin: 1rem auto 0;
+}
+
+.sanmei-cell {
+  min-height: 84px;
+  padding: 0.55rem 0.4rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-solid);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  text-align: center;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.12s ease;
+}
+
+.sanmei-cell:hover {
+  border-color: color-mix(in srgb, var(--violet) 45%, var(--border));
+  transform: translateY(-1px);
+}
+
+.sanmei-cell.is-picked {
+  border-color: var(--violet);
+  background: var(--violet-soft);
+}
+
+/* 中心星は本質にあたるので、一段強く出す */
+.sanmei-cell.is-center {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--border));
+  background: linear-gradient(160deg, #2a2440, var(--violet-soft));
+}
+
+.sanmei-cell--follower {
+  background: transparent;
+}
+
+.sanmei-cell--empty {
+  border: 1px dashed var(--border);
+  background: none;
+  cursor: default;
+  min-height: 0;
+}
+
+.sanmei-where {
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+
+.sanmei-star {
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  color: var(--violet-deep);
+}
+
+.sanmei-cell--follower .sanmei-star {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.sanmei-energy {
+  font-size: 0.68rem;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.sanmei-total {
+  margin: 0.9rem 0 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+}
+
+.sanmei-total b {
+  color: var(--ink);
+}
+
+.sanmei-total span {
+  font-size: 0.75rem;
+  color: var(--ink-faint);
+}
+
+.sanmei-detail {
+  margin: 1rem auto 0;
+  max-width: 560px;
+  min-height: 96px;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-veil);
+}
+
+.sanmei-detail h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--violet-deep);
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.sanmei-detail h3 span {
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+
+.sanmei-detail p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.9;
+  color: var(--ink-muted);
+  text-align: justify;
+}
+
+.sanmei-role {
+  margin-bottom: 0.5rem !important;
+  color: var(--ink) !important;
+}
+
+@media (max-width: 480px) {
+  .sanmei-cell {
+    min-height: 72px;
+  }
+
+  .sanmei-star {
+    font-size: 0.9rem;
   }
 }
 

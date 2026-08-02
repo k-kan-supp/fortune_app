@@ -5,6 +5,7 @@ import { RegisterForm } from "@/features/auth/components/RegisterForm";
 import { AnalysisCharts } from "@/features/fortune/components/AnalysisCharts";
 import { MeishikiTable } from "@/features/fortune/components/MeishikiTable";
 import { ResultSummary } from "@/features/fortune/components/ResultSummary";
+import { SanmeiChart } from "@/features/fortune/components/SanmeiChart";
 import { useFortune } from "@/features/fortune/hooks/useFortune";
 import { parseFortuneQuery } from "@/features/fortune/query";
 import { useI18n } from "@/i18n";
@@ -46,6 +47,9 @@ export function ResultPage() {
             <ResultSummary result={result} />
 
             <MeishikiTable result={result} />
+
+            {/* 同じ命式を算命学の星に読み替えた面。返さない API のときは出さない */}
+            {result.sanmei && <SanmeiChart sanmei={result.sanmei} />}
 
             {/* 古い API はチャートを返さないので、無い場合は命式だけ表示する */}
             {result.charts?.length ? (

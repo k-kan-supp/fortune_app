@@ -72,6 +72,42 @@ export const hiddenStemsLabel = (stems: string[], lang: Lang): string =>
  * 軸に収まる短さが要るので、`stemLabel` のような「漢字＋訳語」の併記はしない。
  * 十二支・通変星などは既存の訳語辞書をそのまま流用する。
  */
+/**
+ * 算命学の星の訳語。API は漢字（貫索星・天将星…）を返すので、英語表示のときだけ添える。
+ * 十大主星は十神の、十二大従星は十二運星の読み替えなので、意味は対応する語に寄せてある。
+ */
+const SANMEI_STAR_EN: Record<string, string> = {
+  // 十大主星
+  貫索星: "Steadfast Star",
+  石門星: "Gateway Star",
+  鳳閣星: "Phoenix Star",
+  調舒星: "Lyric Star",
+  禄存星: "Bounty Star",
+  司禄星: "Steward Star",
+  車騎星: "Charge Star",
+  牽牛星: "Herdsman Star",
+  龍高星: "Dragon Star",
+  玉堂星: "Scholar Star",
+  // 十二大従星
+  天報星: "Herald Star",
+  天印星: "Seal Star",
+  天貴星: "Noble Star",
+  天恍星: "Reverie Star",
+  天南星: "Southern Star",
+  天禄星: "Stipend Star",
+  天将星: "General Star",
+  天堂星: "Hall Star",
+  天胡星: "Wanderer Star",
+  天極星: "Terminus Star",
+  天庫星: "Vault Star",
+  天馳星: "Courier Star",
+};
+
+/** 算命学の星の表示名。日本語は漢字のまま。 */
+export function starLabel(star: string, lang: Lang): string {
+  return lang === "ja" ? star : (SANMEI_STAR_EN[star] ?? star);
+}
+
 const AXIS_EN: Record<string, string> = {
   // 五行
   木: "Wood",

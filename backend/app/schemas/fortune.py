@@ -70,6 +70,32 @@ class Species(BaseModel):
     group_share: float = Field(..., description="そのグループが全体に占める割合（%）")
 
 
+class SanmeiStar(BaseModel):
+    """人体星図の十大主星（5か所）。"""
+
+    position: str = Field(..., description="head / chest / belly / left_hand / right_hand")
+    star: str = Field(..., description="十大主星（貫索星 など）")
+    source: str = Field(..., description="導出元（year_stem / month_hidden など）")
+
+
+class SanmeiFollower(BaseModel):
+    """人体星図の十二大従星（3か所）。"""
+
+    period: str = Field(..., description="early / middle / late")
+    star: str = Field(..., description="十二大従星（天将星 など）")
+    energy: int = Field(..., description="エネルギー点（1〜12）")
+    branch: str = Field(..., description="導出元の地支")
+
+
+class Sanmei(BaseModel):
+    """算命学の陽占（人体星図）。"""
+
+    stars: list[SanmeiStar]
+    followers: list[SanmeiFollower]
+    center: str = Field(..., description="中心星（胸の主星）")
+    energy_total: int = Field(..., description="三大従星のエネルギー合計（3〜36）")
+
+
 class FortuneResponse(BaseModel):
     """鑑定結果（命式）。"""
 
@@ -79,6 +105,7 @@ class FortuneResponse(BaseModel):
     hour_pillar: Pillar
     day_master: str = Field(..., description="日主（日柱の天干）")
     species: Species | None = Field(None, description="25 種族の判定")
+    sanmei: Sanmei | None = Field(None, description="算命学の陽占（人体星図）")
     charts: list[RadarChart] = Field(
         default_factory=list, description="バランス指標（レーダーチャート用）"
     )

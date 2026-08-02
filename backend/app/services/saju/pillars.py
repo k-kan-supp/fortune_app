@@ -18,6 +18,7 @@ from app.services.saju.constants import (
     HEAVENLY_STEMS,
     STEM_ELEMENT,
 )
+from app.services.saju.sanmei import sanmei
 from app.services.saju.species import species
 from app.services.saju.ten_gods import ten_god
 
@@ -68,6 +69,7 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
     pillars, day_master = four_pillars(req)
     charts = build_charts(pillars, day_master, req.is_male)
     kind = species(pillars, day_master)
+    star_chart = sanmei(pillars, day_master)
 
     # 生年月日は載せない。日主と種族だけで「計算が通ったか」は追える。
     logger.info(
@@ -82,5 +84,6 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
         hour_pillar=pillars["hour"],
         day_master=day_master,
         species=kind,
+        sanmei=star_chart,
         charts=charts,
     )

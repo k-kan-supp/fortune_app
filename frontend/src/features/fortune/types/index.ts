@@ -58,6 +58,32 @@ export interface Species {
   group_share: number;
 }
 
+/** 人体星図の十大主星（5か所）。 */
+export interface SanmeiStar {
+  /** head / chest / belly / left_hand / right_hand */
+  position: string;
+  star: string;
+  /** 導出元（year_stem / month_hidden など）。根拠の表示に使う。 */
+  source: string;
+}
+
+/** 人体星図の十二大従星（3か所）。 */
+export interface SanmeiFollower {
+  /** early / middle / late */
+  period: string;
+  star: string;
+  energy: number;
+  branch: string;
+}
+
+/** 算命学の陽占（人体星図）。 */
+export interface Sanmei {
+  stars: SanmeiStar[];
+  followers: SanmeiFollower[];
+  center: string;
+  energy_total: number;
+}
+
 export interface FortuneResponse {
   year_pillar: Pillar;
   month_pillar: Pillar;
@@ -66,6 +92,7 @@ export interface FortuneResponse {
   day_master: string;
   /** 古い API は返さないので任意扱い。 */
   species?: Species;
+  sanmei?: Sanmei;
   /** 古い API は返さないので任意扱い（バックエンドの既定値は空配列）。 */
   charts?: RadarChart[];
 }
