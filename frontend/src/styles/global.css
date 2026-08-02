@@ -1,47 +1,66 @@
 /* =========================================================
-   テーマ: 薄紫 / ミステリアス & エキゾチック
+   テーマ: 夜のガラス（ダーク）
    色は全てここの変数で管理する（濃淡を変えたいときはここだけ触る）
+
+   すりガラス（--glass-*）は「浮いている要素」だけに使う。
+   モーダル・ポップオーバー・ナビ・ツールチップが対象で、
+   本文を読む面（カード・吹き出し・表）は不透明のまま保つ。
+   全面に敷くと文字のコントラストが落ちて読めなくなる。
    ========================================================= */
 :root {
   /* 背景・面 */
-  --bg-top: #f7f3fd;
-  --bg-mid: #efe7fa;
-  --bg-bottom: #e7dcf6;
-  --surface: rgba(255, 255, 255, 0.78);
-  --surface-solid: #fdfbff;
-  --surface-veil: #f3ecfc;
+  --bg-top: #131118;
+  --bg-mid: #0f0e13;
+  --bg-bottom: #0b0a0f;
+  --surface: rgba(26, 24, 33, 0.78);
+  --surface-solid: #17161d;
+  --surface-veil: #201e29;
 
   /* 罫線 */
-  --border: #e2d7f4;
-  --border-strong: #cbb8e8;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.18);
 
   /* 文字 */
-  --ink: #2b2340;
-  --ink-muted: #6d6289;
-  --ink-faint: #9b8fb8;
+  --ink: #eceaf2;
+  --ink-muted: #a9a5b8;
+  /* 注記や補足に使う。暗い面で 4.5:1 を切らない明度に取ってある（実測 5.15） */
+  --ink-faint: #8b8799;
 
-  /* アクセント */
-  --violet: #6f4fa8;
-  --violet-deep: #4a2f77;
-  --violet-soft: #efe7fb;
-  --orchid: #b8578f;
-  --gold: #c4a24a;
-  --danger: #a63a5b;
-  --ok: #3f8f78;
+  /* アクセント（暗い面に載るので、明度を上げた側を主役にする） */
+  --violet: #a98ce0;
+  --violet-deep: #c9b6f0;
+  --violet-soft: #241f33;
+  --orchid: #d98cb4;
+  --gold: #d3a45c;
+  --danger: #e0809a;
+  --ok: #6cc4a8;
 
   /* 無彩色（線画アイコンの紋章に使う） */
-  --mono-ink: #33313a;
-  --mono-line: #dcdae0;
-  --mono-plate: #eeecf0;
+  --mono-ink: #d8d5e0;
+  --mono-line: rgba(255, 255, 255, 0.14);
+  --mono-plate: #232129;
+
+  /* 主要ボタン。暗い面では白抜き文字より、明るい紫地に濃い文字のほうが締まる */
+  --btn-grad: linear-gradient(140deg, #b79ae8, #8f6fd0);
+  --btn-ink: #171320;
+
+  /* ガラス（浮いている要素専用） */
+  --glass-bg: rgba(30, 28, 38, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.16);
+  --glass-blur: blur(22px) saturate(160%);
+  --glass-shadow: 0 16px 44px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 
   /* 影・光 */
-  --shadow-sm: 0 2px 10px rgba(74, 47, 119, 0.07);
-  --shadow: 0 10px 30px rgba(74, 47, 119, 0.11);
-  --shadow-pop: 0 14px 36px rgba(74, 47, 119, 0.2);
-  --ring: 0 0 0 3px rgba(111, 79, 168, 0.18);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.22);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.38);
+  --shadow-pop: 0 18px 48px rgba(0, 0, 0, 0.55);
+  --ring: 0 0 0 3px rgba(169, 140, 224, 0.28);
 
   /* 書体は 1 ファミリーに統一し、見出しは太さ(700)で差をつける */
   --font-sans: "Noto Sans JP", "Noto Sans", "Hiragino Sans", system-ui, sans-serif;
+
+  /* select のドロップダウンやスクロールバーなど、ブラウザ側の部品も暗くする */
+  color-scheme: dark;
 
   font-family: var(--font-sans);
   color: var(--ink);
@@ -56,16 +75,16 @@
 body {
   margin: 0;
   min-height: 100vh;
-  /* 紫のオーロラを重ねた夜明け前の空 */
+  /* 紫のオーロラを沈めた夜の空 */
   background:
-    radial-gradient(1100px 620px at 12% -12%, rgba(150, 108, 214, 0.3), transparent 62%),
-    radial-gradient(900px 520px at 96% 2%, rgba(200, 133, 190, 0.22), transparent 58%),
-    radial-gradient(860px 640px at 50% 112%, rgba(112, 84, 186, 0.24), transparent 62%),
+    radial-gradient(900px 520px at 15% -8%, rgba(120, 86, 190, 0.3), transparent 60%),
+    radial-gradient(760px 460px at 92% 6%, rgba(190, 120, 90, 0.16), transparent 58%),
+    radial-gradient(700px 520px at 50% 108%, rgba(80, 70, 160, 0.24), transparent 62%),
     linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bottom) 100%);
   background-attachment: fixed;
 }
 
-/* 星屑レイヤー（ゆっくり明滅する） */
+/* 星屑レイヤー。明滅させると本文の邪魔になるので、数を減らして静止させる */
 body::before {
   content: "";
   position: fixed;
@@ -73,22 +92,11 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 72% 62%, rgba(255, 255, 255, 0.75) 0 1px, transparent 1.6px),
-    radial-gradient(circle at 48% 85%, rgba(230, 214, 255, 0.8) 0 1px, transparent 1.8px);
-  background-size: 190px 190px, 270px 270px, 340px 340px;
-  opacity: 0.55;
-  animation: stardust 24s ease-in-out infinite;
-}
-
-@keyframes stardust {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.7;
-  }
+    radial-gradient(1.4px 1.4px at 18% 22%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1.2px 1.2px at 72% 14%, rgba(255, 255, 255, 0.38), transparent),
+    radial-gradient(1.6px 1.6px at 44% 66%, rgba(255, 255, 255, 0.3), transparent),
+    radial-gradient(1.2px 1.2px at 86% 74%, rgba(255, 255, 255, 0.34), transparent);
+  background-size: 300px 300px, 380px 380px, 440px 440px, 520px 520px;
 }
 
 .app-shell {
@@ -98,7 +106,7 @@ body::before {
 }
 
 ::selection {
-  background: rgba(111, 79, 168, 0.22);
+  background: rgba(169, 140, 224, 0.3);
 }
 
 a {
@@ -138,7 +146,7 @@ input,
 select,
 textarea {
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.92);
+  background: #14131a;
   border: 1px solid var(--border-strong);
   border-radius: 8px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -185,9 +193,9 @@ button {
   display: grid;
   place-items: center;
   font-size: 1.9rem;
-  color: #fff;
-  background: linear-gradient(140deg, #8a5fc0, #533a8f);
-  box-shadow: 0 12px 28px rgba(86, 58, 145, 0.32), 0 0 0 10px rgba(255, 255, 255, 0.45);
+  color: var(--btn-ink);
+  background: linear-gradient(140deg, #b79ae8, #7d5fc0);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5), 0 0 0 10px rgba(169, 140, 224, 0.1);
 }
 
 .hero-title {
@@ -206,13 +214,13 @@ button {
   letter-spacing: 0.06em;
 }
 
-/* ヒーローとカード帯の境目のゆるい波 */
+/* ヒーローとカード帯の境目のゆるい波。暗い空に沈む向きなので黒で描く */
 .hero::after {
   content: "";
   display: block;
   height: 68px;
   margin-top: 1.8rem;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 68' preserveAspectRatio='none'%3E%3Cpath fill='%23ffffff' fill-opacity='0.55' d='M0,30 C240,64 480,4 720,18 C960,32 1200,66 1440,38 L1440,68 L0,68 Z'/%3E%3C/svg%3E")
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 68' preserveAspectRatio='none'%3E%3Cpath fill='%23000000' fill-opacity='0.28' d='M0,30 C240,64 480,4 720,18 C960,32 1200,66 1440,38 L1440,68 L0,68 Z'/%3E%3C/svg%3E")
     no-repeat center / 100% 100%;
 }
 
@@ -244,15 +252,15 @@ button {
 }
 
 .step-card--1 {
-  --step-accent: linear-gradient(90deg, #7b57b8, #b489e6);
+  --step-accent: linear-gradient(90deg, #8f6fd0, #c9b6f0);
 }
 
 .step-card--2 {
-  --step-accent: linear-gradient(90deg, #b8578f, #e0a0c6);
+  --step-accent: linear-gradient(90deg, #c46d9c, #e8aecd);
 }
 
 .step-card--3 {
-  --step-accent: linear-gradient(90deg, #c4a24a, #e8d191);
+  --step-accent: linear-gradient(90deg, #c19248, #eacf94);
 }
 
 .step-art {
@@ -263,7 +271,7 @@ button {
   display: grid;
   place-items: center;
   color: var(--mono-ink);
-  background: radial-gradient(circle at 30% 25%, #fff, var(--mono-plate));
+  background: radial-gradient(circle at 30% 25%, #2e2b37, var(--mono-plate));
   border: 1px solid var(--mono-line);
 }
 
@@ -362,14 +370,14 @@ button {
   border: none;
   border-radius: 999px;
   cursor: pointer;
-  background: linear-gradient(135deg, #7b57b8, #563a91);
-  color: #fff;
-  box-shadow: 0 8px 22px rgba(86, 58, 145, 0.3);
+  background: var(--btn-grad);
+  color: var(--btn-ink);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
 }
 
 .q-submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 11px 26px rgba(86, 58, 145, 0.36);
+  box-shadow: 0 11px 26px rgba(0, 0, 0, 0.55);
 }
 
 .q-submit:disabled {
@@ -446,14 +454,14 @@ button {
 
 .meishiki thead th,
 .meishiki tbody th {
-  background: linear-gradient(180deg, var(--violet-soft), #e7dcf6);
+  background: linear-gradient(180deg, #2a2440, var(--violet-soft));
   color: var(--violet-deep);
   font-weight: 600;
   letter-spacing: 0.1em;
 }
 
 .meishiki td {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .day-master {
@@ -546,7 +554,7 @@ button {
 }
 
 .radar-area {
-  fill: rgba(111, 79, 168, 0.12);
+  fill: rgba(169, 140, 224, 0.22);
   stroke: var(--violet);
   stroke-width: 2;
   stroke-linejoin: round;
@@ -596,9 +604,11 @@ button {
   gap: 0.4rem;
   padding: 0.25rem 0.5rem;
   border-radius: 8px;
-  background: var(--surface-solid);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 /* 数値が主役、軸名は添え物 */
@@ -764,15 +774,15 @@ button {
   cursor: pointer;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #7b57b8, #563a91);
-  color: #fff;
+  background: var(--btn-grad);
+  color: var(--btn-ink);
   letter-spacing: 0.08em;
-  box-shadow: 0 6px 18px rgba(86, 58, 145, 0.28);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42);
 }
 
 .auth-card button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 9px 22px rgba(86, 58, 145, 0.34);
+  box-shadow: 0 9px 22px rgba(0, 0, 0, 0.52);
 }
 
 .auth-card button:disabled {
@@ -802,7 +812,7 @@ button {
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--border-strong);
-  box-shadow: 0 0 0 6px rgba(150, 108, 214, 0.1);
+  box-shadow: 0 0 0 6px rgba(169, 140, 224, 0.16);
 }
 
 .avatar-placeholder {
@@ -888,17 +898,17 @@ button {
   cursor: pointer;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #7b57b8, #563a91);
-  color: #fff;
+  background: var(--btn-grad);
+  color: var(--btn-ink);
   font-size: 0.95rem;
   letter-spacing: 0.06em;
-  box-shadow: 0 6px 18px rgba(86, 58, 145, 0.24);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
 }
 
 .profile-form button:hover:not(:disabled),
 .avatar-actions button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 9px 22px rgba(86, 58, 145, 0.3);
+  box-shadow: 0 9px 22px rgba(0, 0, 0, 0.45);
 }
 
 .avatar-actions {
@@ -949,10 +959,12 @@ button {
 
 /* --- 生年月日入力のポップアップ --- */
 .birth-modal-card {
-  background: var(--surface-solid);
-  border: 1px solid var(--border-strong);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: 18px;
-  box-shadow: var(--shadow-pop), 0 0 0 1px rgba(196, 162, 74, 0.25);
+  box-shadow: var(--glass-shadow), 0 0 0 1px rgba(211, 164, 92, 0.22);
   padding: 1.4rem 1.8rem 1.8rem;
   width: min(560px, 100%);
   /* 縦に長い画面・小さい画面では中身だけスクロールさせる */
@@ -1049,10 +1061,12 @@ button {
 }
 
 .term-modal-card {
-  background: var(--surface-solid);
-  border: 1px solid var(--border-strong);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: 18px;
-  box-shadow: var(--shadow-pop), 0 0 0 1px rgba(196, 162, 74, 0.25);
+  box-shadow: var(--glass-shadow), 0 0 0 1px rgba(211, 164, 92, 0.22);
   padding: 1.2rem 1.6rem 1.6rem;
   width: min(420px, 100%);
   max-height: min(80vh, 560px);
@@ -1104,11 +1118,11 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 0.6rem 1rem;
-  background: rgba(253, 251, 255, 0.72);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 4px 18px rgba(74, 47, 119, 0.06);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.4);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -1219,10 +1233,12 @@ button {
 
 /* --- 相性ポップアップ --- */
 .compat-modal-card {
-  background: var(--surface-solid);
-  border: 1px solid var(--border-strong);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: 18px;
-  box-shadow: var(--shadow-pop), 0 0 0 1px rgba(196, 162, 74, 0.25);
+  box-shadow: var(--glass-shadow), 0 0 0 1px rgba(211, 164, 92, 0.22);
   padding: 1.2rem 1.6rem 1.6rem;
   width: min(420px, 100%);
   max-height: min(85vh, 620px);
@@ -1288,12 +1304,14 @@ button {
 /* --- 判断根拠の重ね合わせレーダー --- */
 /*
  * 系列色は 2 色。紫と琥珀の組は色覚特性下でも見分けがつく
- * （OKLab ΔE: 通常視 25.2 / protan 24.5）。加えて相手側は破線にしてあり、
+ * （OKLab ΔE: 通常視 24.0 / protan 24.0）。加えて相手側は破線にしてあり、
  * 色を使わなくても線の形で区別できる。
+ * 暗い面に載せるため、明るい面用の #6f4fa8 / #b06a12 から明度を上げてある
+ * （前者は暗い面とのコントラストが 2.79 で 3:1 を切っていた）。
  */
 :root {
-  --series-you: #6f4fa8;
-  --series-them: #b06a12;
+  --series-you: #8b6fd4;
+  --series-them: #c07a3a;
 }
 
 .compat-charts {
@@ -1334,7 +1352,7 @@ button {
 
 /* 決め手になった軸の区画。系列色(紫・琥珀)と紛れない中間色で、薄く敷く */
 .compare-highlight polygon {
-  fill: rgba(155, 143, 184, 0.22);
+  fill: rgba(255, 255, 255, 0.14);
 }
 
 .compare-area {
@@ -1345,14 +1363,14 @@ button {
 
 .compare-area--you {
   stroke: var(--series-you);
-  fill: rgba(111, 79, 168, 0.1);
+  fill: rgba(169, 140, 224, 0.2);
 }
 
 /* 破線が「色以外の手がかり」になる */
 .compare-area--them {
   stroke: var(--series-them);
   stroke-dasharray: 5 3;
-  fill: rgba(176, 106, 18, 0.08);
+  fill: rgba(211, 164, 92, 0.18);
 }
 
 .compare-legend {
@@ -1399,7 +1417,7 @@ button {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #7b57b8, #b8578f);
+  background: linear-gradient(90deg, var(--violet), var(--gold));
 }
 
 .compat-facet-value {
@@ -1460,7 +1478,7 @@ button {
   display: grid;
   place-items: center;
   border: 1px solid var(--border-strong);
-  background: radial-gradient(circle at 30% 25%, #fff, var(--violet-soft));
+  background: radial-gradient(circle at 30% 25%, #2c2740, var(--violet-soft));
   box-shadow: var(--shadow-sm);
   text-decoration: none;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
@@ -1556,12 +1574,12 @@ button {
   height: 1.25rem;
   padding: 0 0.35rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #c4629b, #8a4fa8);
-  color: #fff;
+  background: var(--btn-grad);
+  color: var(--btn-ink);
   font-size: 0.72rem;
   font-weight: bold;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(138, 79, 168, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 /* 候補フィルタ */
@@ -1581,12 +1599,12 @@ button {
   max-width: 320px;
   margin: 0.8rem auto 0;
   padding: 1rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--glass-border);
   border-radius: 14px;
-  background: var(--surface);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  box-shadow: var(--shadow-sm);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
   text-align: left;
 }
 
@@ -1651,7 +1669,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(160deg, var(--violet-soft), #e2d7f4);
+  background: linear-gradient(160deg, #2a2440, var(--violet-soft));
   color: var(--ink-faint);
 }
 
@@ -1667,10 +1685,10 @@ button {
   gap: 0.15rem;
   padding: 0.45rem 0.7rem 0.55rem;
   border-radius: 14px;
-  border: 1px solid var(--border);
-  background: rgba(253, 251, 255, 0.86);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   box-shadow: var(--shadow-sm);
   color: var(--violet-deep);
 }
@@ -1735,14 +1753,14 @@ button {
 }
 
 .like-btn {
-  background: linear-gradient(135deg, #c4629b, #7b4fb0);
-  color: #fff;
-  box-shadow: 0 6px 20px rgba(140, 74, 160, 0.32);
+  background: var(--btn-grad);
+  color: var(--btn-ink);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
 }
 
 .like-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(140, 74, 160, 0.4);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
 }
 
 .pass-btn {
@@ -1752,7 +1770,7 @@ button {
 }
 
 .pass-btn:hover {
-  background: #e7dcf6;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 /* --- マッチ成立モーダル --- */
@@ -1760,7 +1778,7 @@ button {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(35, 20, 62, 0.55);
+  background: rgba(6, 5, 9, 0.66);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   display: flex;
@@ -1771,8 +1789,10 @@ button {
 }
 
 .match-modal-card {
-  background: var(--surface-solid);
-  border: 1px solid var(--border-strong);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: 18px;
   padding: 2rem;
   text-align: center;
@@ -1780,7 +1800,7 @@ button {
   flex-direction: column;
   gap: 1rem;
   max-width: 320px;
-  box-shadow: var(--shadow-pop), 0 0 0 1px rgba(196, 162, 74, 0.25);
+  box-shadow: var(--shadow-pop), 0 0 0 1px rgba(211, 164, 92, 0.3);
 }
 
 .match-modal-card h2 {
@@ -1810,7 +1830,7 @@ button {
 }
 
 .match-row:hover {
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .match-avatar {
@@ -1824,7 +1844,7 @@ button {
 }
 
 .match-avatar--empty {
-  background: linear-gradient(160deg, var(--violet-soft), #e2d7f4);
+  background: linear-gradient(160deg, #2a2440, var(--violet-soft));
 }
 
 .match-info {
@@ -1887,10 +1907,12 @@ button {
   position: absolute;
   right: 0;
   top: 100%;
-  background: var(--surface-solid);
-  border: 1px solid var(--border);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: 10px;
-  box-shadow: var(--shadow-pop);
+  box-shadow: var(--glass-shadow);
   display: flex;
   flex-direction: column;
   min-width: 9rem;
@@ -2050,15 +2072,15 @@ button {
 
 .bubble--mine {
   align-self: flex-end;
-  background: linear-gradient(135deg, #7b57b8, #563a91);
-  color: #fff;
+  background: var(--btn-grad);
+  color: var(--btn-ink);
   border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 14px rgba(86, 58, 145, 0.24);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
 }
 
 .bubble--theirs {
   align-self: flex-start;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--surface-veil);
   border: 1px solid var(--border);
   color: var(--ink);
   border-bottom-left-radius: 4px;
@@ -2126,7 +2148,7 @@ button {
   height: 2.4rem;
   border: 1px solid var(--border-strong);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--surface-veil);
   color: var(--violet);
   font-size: 1.2rem;
   cursor: pointer;
@@ -2152,11 +2174,11 @@ button {
   padding: 0.6rem 1.2rem;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #7b57b8, #563a91);
-  color: #fff;
+  background: var(--btn-grad);
+  color: var(--btn-ink);
   cursor: pointer;
   letter-spacing: 0.06em;
-  box-shadow: 0 4px 14px rgba(86, 58, 145, 0.26);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.42);
 }
 
 .chat-input button:disabled {
@@ -2167,10 +2189,6 @@ button {
 
 /* 視差に配慮：モーションを抑える設定では装飾アニメを止める */
 @media (prefers-reduced-motion: reduce) {
-  body::before {
-    animation: none;
-  }
-
   .typing-bubble .dot {
     animation: none;
   }
