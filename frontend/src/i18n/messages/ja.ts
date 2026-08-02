@@ -39,6 +39,14 @@ export const ja = {
     generic: "エラーが発生しました。",
   },
 
+  analytics: {
+    consent: {
+      body: "サービス改善のため、画面の利用状況を計測してもよろしいですか。鑑定に使う生年月日は計測に含めません。",
+      accept: "許可する",
+      decline: "許可しない",
+    },
+  },
+
   fortune: {
     heroTitle: "無料 四柱推命 鑑定",
     heroSub: "生年月日から、生まれ持った四つの柱を読み解きます。",

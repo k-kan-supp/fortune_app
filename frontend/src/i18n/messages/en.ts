@@ -40,6 +40,14 @@ export const en: Messages = {
     generic: "Something went wrong.",
   },
 
+  analytics: {
+    consent: {
+      body: "May we measure how this site is used, so we can improve it? Your date of birth is never included.",
+      accept: "Allow",
+      decline: "No thanks",
+    },
+  },
+
   fortune: {
     heroTitle: "Free Four Pillars Reading",
     heroSub: "Read the four pillars you were born with, from your date of birth.",

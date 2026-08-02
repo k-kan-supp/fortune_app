@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import auth, fortune, matching, profile
+from app.api.routes import analytics, auth, fortune, matching, profile
 from app.core.config import settings
 from app.core.i18n import resolve_lang, translate
 from app.core.logging import configure_logging
@@ -54,6 +54,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(fortune.router, prefix="/api")
 app.include_router(profile.router, prefix="/api")
 app.include_router(matching.router, prefix="/api")
+app.include_router(analytics.router, prefix="/api")
 
 # アップロードファイル（アイコン等）の配信。本番でS3等に移す場合はこのマウントを外す。
 if settings.storage_backend == "local":

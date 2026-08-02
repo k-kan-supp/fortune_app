@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import { ConsentBanner } from "@/components/ui/ConsentBanner";
 import { isAuthenticated } from "@/features/auth/authStorage";
 import { LangSwitch } from "./LangSwitch";
 import { NavBar } from "./NavBar";
@@ -16,6 +17,7 @@ export function AppLayout() {
         </div>
       )}
       <Outlet />
+      <ConsentBanner />
     </div>
   );
 }
