@@ -688,39 +688,63 @@ button {
   transform: scale(1.18);
 }
 
-.compat-cell.l0,
-.compat-ramp .l0 {
-  background: #4d4472;
+/* 平均を境に、上は暖色・下は寒色へ 3 段ずつ。中央は無彩色。
+   暗い面に対して各段 2:1 以上、隣接の明度差 0.06 以上、各アームは単一色相 */
+.compat-cell.t-3,
+.compat-ramp .t-3 {
+  background: #7cc3ea;
 }
 
-.compat-cell.l1,
-.compat-ramp .l1 {
-  background: #63558f;
+.compat-cell.t-2,
+.compat-ramp .t-2 {
+  background: #5896bd;
 }
 
-.compat-cell.l2,
-.compat-ramp .l2 {
-  background: #7a68ad;
+.compat-cell.t-1,
+.compat-ramp .t-1 {
+  background: #43728f;
 }
 
-.compat-cell.l3,
-.compat-ramp .l3 {
-  background: #9179c9;
+.compat-cell.t0,
+.compat-ramp .t0 {
+  background: #4d4a56;
 }
 
-.compat-cell.l4,
-.compat-ramp .l4 {
-  background: #a98ce0;
+.compat-cell.t1,
+.compat-ramp .t1 {
+  background: #9c5f38;
+}
+
+.compat-cell.t2,
+.compat-ramp .t2 {
+  background: #c58042;
+}
+
+.compat-cell.t3,
+.compat-ramp .t3 {
+  background: #e8a851;
+}
+
+/* 本人から見て最も相性の良い相手。色だけに頼らず、縁でも示す */
+.compat-cell.is-best {
+  outline-color: #ffffff;
+  outline-width: 2px;
 }
 
 .compat-legend {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
   margin-top: 0.7rem;
   font-size: 0.7rem;
   color: var(--ink-faint);
+}
+
+.compat-legend-mean {
+  flex-basis: 100%;
+  text-align: center;
 }
 
 .compat-ramp {
@@ -843,6 +867,29 @@ button {
 
 .compat-ranking li.is-mine {
   background: var(--violet-soft);
+}
+
+/* 平均より上は暖色、下は寒色。順位一覧でも同じ約束で色を振る */
+.compat-ranking li.tone-warm b {
+  color: #e8a851;
+}
+
+.compat-ranking li.tone-cool b {
+  color: #7cc3ea;
+}
+
+.compat-ranking li.tone-even b {
+  color: var(--ink-muted);
+}
+
+/* 一番いい相性は太字にする */
+.compat-ranking li.is-best span,
+.compat-ranking li.is-best b {
+  font-weight: 700;
+}
+
+.compat-ranking li.is-best {
+  outline: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .compat-ranking li em {
@@ -1159,6 +1206,14 @@ button {
   stroke-width: 2;
 }
 
+.radar-dot--warm {
+  fill: #e8a851;
+}
+
+.radar-dot--cool {
+  fill: #7cc3ea;
+}
+
 .radar-dot.is-active {
   fill: var(--violet-deep);
 }
@@ -1168,6 +1223,12 @@ button {
   font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* 相性レーダーで直接ラベルが付くのは最大の軸＝一番いい相性。暖色で立てる */
+.compat-map-section .radar-peak {
+  fill: #e8a851;
+  font-size: 11px;
 }
 
 /* 字の大きさは軸の本数に応じて RadarChart 側で決める */

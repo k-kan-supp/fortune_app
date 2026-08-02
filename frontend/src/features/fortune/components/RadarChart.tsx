@@ -20,6 +20,8 @@ export interface RadarPoint {
   /** 軸の表示名（言語解決済み） */
   label: string;
   value: number;
+  /** 点の色味。渡すと radar-dot--<tone> が付く（暖色・寒色の出し分けなど）。 */
+  tone?: string;
 }
 
 interface Props {
@@ -107,7 +109,9 @@ export function RadarChart({ points, maxValue, title, onSelectAxis }: Props) {
           return (
             <circle
               key={i}
-              className={`radar-dot${active === i ? " is-active" : ""}`}
+              className={`radar-dot${points[i].tone ? ` radar-dot--${points[i].tone}` : ""}${
+                active === i ? " is-active" : ""
+              }`}
               cx={x}
               cy={y}
               r={active === i ? 5 : 4}

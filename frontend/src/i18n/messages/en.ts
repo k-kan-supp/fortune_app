@@ -117,6 +117,7 @@ export const en: Messages = {
       mapHint: "All 25 kinds on both axes. Darker cells run higher. Tap a cell for that pair's score.",
       low: "Low {{value}}",
       high: "High {{value}}",
+      meanLabel: "Midpoint = mean {{value}}",
       summary: {
         element: {
           same: "Both sit in {{a}}. The same energy makes you quick to understand each other, and just as quick to stall in the same places.",
@@ -135,7 +136,7 @@ export const en: Messages = {
           low: "This is one of the lower pairings among the 25 ({{value}} against an overall mean of {{mean}}).",
         },
       },
-      caveat: "Scores are averages taken by running the compatibility engine across every pair of kinds. Compatibility between two people is decided by their birth dates, so any given pair will sit above or below this.",
+      caveat: "Scores are averages taken by running the compatibility engine across every pair of kinds, then stretched onto 0–100 from their measured span (raw 24–74). Compatibility between two people is decided by their birth dates, so any given pair will sit above or below this.",
       ranking: "All 25 kinds ranked from {{name}}",
       self: "Yourself",
     },

@@ -7,10 +7,14 @@ import { axisLabel } from "../terms";
 import type { SpeciesCompat } from "../types";
 import { RadarChart } from "./RadarChart";
 
-/** 段階は 5 つ。色は単一色相の濃淡で、数値はセルを選べば必ず読める。 */
-const STEPS = 5;
+/**
+ * 平均を境に、上は暖色・下は寒色へ 3 段ずつ。中央は無彩色。
+ * 検証済み（暗い面に対して各段 2:1 以上、隣接の明度差 0.06 以上、
+ * 各アームは単一色相 — 寒色 4°/暖色 20°）。
+ */
+const STEPS_PER_SIDE = 3;
 
-/** 相性は 0〜100 の総合点。外周を 100 に固定し、軸を途中から始めない。 */
+/** 相性は 0〜100。外周を 100 に固定し、軸を途中から始めない。 */
 const MAX_SCORE = 100;
 
 const speciesName = (code: string, lang: Lang): string =>
@@ -75,9 +79,15 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
   if (!data || !range) return <p className="hint result-status">{t("common.loading")}</p>;
 
   const at = (a: string, b: string) => data.matrix[data.codes.indexOf(a)][data.codes.indexOf(b)];
-  /** 値を 0〜STEPS-1 の濃さに割り当てる（実測の最小〜最大を等分）。 */
-  const level = (v: number) =>
-    Math.min(STEPS - 1, Math.floor(((v - range.min) / (range.max - range.min || 1)) * STEPS));
+
+  /** 平均からの隔たりを -3〜+3 に割り当てる。正なら暖色、負なら寒色。 */
+  const tier = (v: number) => {
+    const side = v > data.mean ? range.max - data.mean : data.mean - range.min;
+    if (v === data.mean || side <= 0) return 0;
+    const step = Math.min(STEPS_PER_SIDE, Math.ceil((Math.abs(v - data.mean) / side) * STEPS_PER_SIDE));
+    return v > data.mean ? step : -step;
+  };
+  const toneOf = (v: number) => (v > data.mean ? "warm" : v < data.mean ? "cool" : "even");
 
   const myName = speciesName(mine, lang);
   const pickedScore = at(picked.a, picked.b);
@@ -108,6 +118,7 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
   const ranked = data.codes
     .map((code) => ({ code, score: at(mine, code) }))
     .sort((x, y) => y.score - x.score);
+  const best = ranked[0];
 
   return (
     <section className="compat-map-section">
@@ -118,7 +129,7 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
       </div>
 
       <RadarChart
-        points={myRow}
+        points={myRow.map((p) => ({ ...p, tone: toneOf(p.value) }))}
         maxValue={MAX_SCORE}
         title={t("fortune.compatMap.radarTitle", { name: myName })}
         onSelectAxis={(i) => setPicked({ a: mine, b: myRow[i].code })}
@@ -150,7 +161,12 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
         <summary>{t("fortune.compatMap.ranking", { name: myName })}</summary>
         <ol>
           {ranked.map((entry) => (
-            <li key={entry.code} className={entry.code === mine ? "is-mine" : undefined}>
+            <li
+              key={entry.code}
+              className={`tone-${toneOf(entry.score)}${entry.code === mine ? " is-mine" : ""}${
+                entry.code === best.code ? " is-best" : ""
+              }`}
+            >
               <span>{speciesName(entry.code, lang)}</span>
               <em>{entry.code}</em>
               <b>{formatValue(entry.score)}</b>
@@ -189,9 +205,9 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
                     <td key={colCode}>
                       <button
                         type="button"
-                        className={`compat-cell l${level(value)}${isPicked ? " is-picked" : ""}${
+                        className={`compat-cell t${tier(value)}${isPicked ? " is-picked" : ""}${
                           onAxis ? " is-mine-axis" : ""
-                        }`}
+                        }${rowCode === mine && colCode === best.code ? " is-best" : ""}`}
                         title={`${speciesName(rowCode, lang)} × ${speciesName(colCode, lang)} — ${formatValue(value)}`}
                         onClick={() => setPicked({ a: rowCode, b: colCode })}
                       >
@@ -209,11 +225,14 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
       <div className="compat-legend">
         <span>{t("fortune.compatMap.low", { value: formatValue(range.min) })}</span>
         <span className="compat-ramp" aria-hidden="true">
-          {Array.from({ length: STEPS }, (_, i) => (
-            <i key={i} className={`l${i}`} />
+          {[-3, -2, -1, 0, 1, 2, 3].map((n) => (
+            <i key={n} className={`t${n}`} />
           ))}
         </span>
         <span>{t("fortune.compatMap.high", { value: formatValue(range.max) })}</span>
+        <span className="compat-legend-mean">
+          {t("fortune.compatMap.meanLabel", { value: formatValue(data.mean) })}
+        </span>
       </div>
     </section>
   );

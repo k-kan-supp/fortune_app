@@ -206,14 +206,38 @@ MATRIX: tuple[tuple[float, ...], ...] = (
 )
 
 
-def score(a: str, b: str) -> float:
-    """2 つの種族コードの相性（総合点の平均）。"""
+# 素点が実際に取りうる範囲（上の MATRIX の最小・最大）。
+# 種族は 25 件の平均なので個人ほど端に振れず、素点は 24〜74 の帯に収まる。
+# そのままだと差が読み取りにくいので、相性の総合点と同じやり方で 0〜100 に
+# 引き伸ばす（compatibility.py の TOTAL_RANGE と同じ考え方）。
+# MATRIX を測り直したら、この範囲も入れ直すこと。
+SPAN = (24.0, 74.4)
+
+
+def _rescale(value: float) -> float:
+    """素点を SPAN を基準に 0〜100 へ引き伸ばす。"""
+    low, high = SPAN
+    return round(min(100.0, max(0.0, (value - low) / (high - low) * 100)), 1)
+
+
+def raw_score(a: str, b: str) -> float:
+    """引き伸ばす前の素点（総合点の平均）。測り直しの照合に使う。"""
     return MATRIX[CODES.index(a)][CODES.index(b)]
 
 
+def score(a: str, b: str) -> float:
+    """2 つの種族コードの相性（0〜100）。"""
+    return _rescale(raw_score(a, b))
+
+
+def scaled_matrix() -> list[list[float]]:
+    """0〜100 に引き伸ばした 25×25。"""
+    return [[_rescale(v) for v in r] for r in MATRIX]
+
+
 def row(code: str) -> dict[str, float]:
-    """ある種族から見た、25 種族すべてとの相性。"""
-    return dict(zip(CODES, MATRIX[CODES.index(code)], strict=True))
+    """ある種族から見た、25 種族すべてとの相性（0〜100）。"""
+    return dict(zip(CODES, (_rescale(v) for v in MATRIX[CODES.index(code)]), strict=True))
 
 
 # --- 組ごとのサマリーに使う材料 ------------------------------------------
@@ -244,12 +268,12 @@ ELEMENT_RELATIONS: dict[str, str] = {
 
 
 def bands() -> tuple[float, float]:
-    """点数を高い・普通・低いに分ける境目（表全体の三分位）。"""
-    flat = sorted(v for r in MATRIX for v in r)
+    """点数を高い・普通・低いに分ける境目（引き伸ばし後の三分位）。"""
+    flat = sorted(v for r in scaled_matrix() for v in r)
     return flat[len(flat) // 3], flat[len(flat) * 2 // 3]
 
 
 def mean() -> float:
-    """表全体の平均。個々の組がどのあたりかを言うための基準。"""
-    flat = [v for r in MATRIX for v in r]
+    """表全体の平均（引き伸ばし後）。暖色・寒色を分ける境目にも使う。"""
+    flat = [v for r in scaled_matrix() for v in r]
     return round(sum(flat) / len(flat), 1)
