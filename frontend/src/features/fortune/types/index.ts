@@ -88,6 +88,11 @@ export interface Sanmei {
 export interface SpeciesCompat {
   codes: string[];
   matrix: number[][];
+  /** 五行の頭文字2つ（"MW" ＝ 金から見た木）→ 関係コード。判定はバックエンド。 */
+  element_relations: Record<string, string>;
+  band_low: number;
+  band_high: number;
+  mean: number;
 }
 
 export interface FortuneResponse {

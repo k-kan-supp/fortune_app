@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.schemas.fortune import FortuneRequest, FortuneResponse, SpeciesCompatMap
 from app.services.saju.pillars import calculate_four_pillars
-from app.services.saju.species_compat import CODES, MATRIX
+from app.services.saju.species_compat import CODES, ELEMENT_RELATIONS, MATRIX, bands, mean
 
 router = APIRouter(tags=["fortune"])
 
@@ -16,4 +16,12 @@ def create_fortune(req: FortuneRequest) -> FortuneResponse:
 @router.get("/species/compatibility", response_model=SpeciesCompatMap)
 def species_compatibility() -> SpeciesCompatMap:
     """25 種族どうしの相性マップ。誰が呼んでも同じ内容が返る。"""
-    return SpeciesCompatMap(codes=list(CODES), matrix=[list(r) for r in MATRIX])
+    low, high = bands()
+    return SpeciesCompatMap(
+        codes=list(CODES),
+        matrix=[list(r) for r in MATRIX],
+        element_relations=dict(ELEMENT_RELATIONS),
+        band_low=low,
+        band_high=high,
+        mean=mean(),
+    )

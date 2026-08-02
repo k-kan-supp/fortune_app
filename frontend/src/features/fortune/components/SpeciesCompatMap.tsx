@@ -1,22 +1,50 @@
 import { useEffect, useMemo, useState } from "react";
-import { findMessage, useI18n, type Lang } from "@/i18n";
+import { findMessage, useI18n, type Lang, type MessageKey } from "@/i18n";
 import { fetchSpeciesCompat } from "../api/fortuneApi";
 import { formatValue } from "../radarGeometry";
 import { SpeciesIcon } from "../speciesIcons";
+import { axisLabel } from "../terms";
 import type { SpeciesCompat } from "../types";
+import { RadarChart } from "./RadarChart";
 
 /** 段階は 5 つ。色は単一色相の濃淡で、数値はセルを選べば必ず読める。 */
 const STEPS = 5;
 
+/** 相性は 0〜100 の総合点。外周を 100 に固定し、軸を途中から始めない。 */
+const MAX_SCORE = 100;
+
 const speciesName = (code: string, lang: Lang): string =>
   findMessage(lang, `fortune.species.${code}.name`) ?? code;
 
+/** 種族コードの1文字目＝五行、2文字目＝主星グループ。表示名は既存の訳語辞書で引く。 */
+const elementOf = (code: string, lang: Lang, ns: string): string =>
+  axisLabel(ELEMENT_BY_LETTER[code[0]] ?? code[0], lang, ns);
+const groupOf = (code: string, lang: Lang): string =>
+  axisLabel(GROUP_BY_LETTER[code[1]] ?? code[1], lang, "tenGodGroup");
+
+const ELEMENT_BY_LETTER: Record<string, string> = {
+  W: "木",
+  F: "火",
+  E: "土",
+  M: "金",
+  A: "水",
+};
+const GROUP_BY_LETTER: Record<string, string> = {
+  S: "比劫",
+  X: "食傷",
+  G: "財星",
+  O: "官殺",
+  L: "印星",
+};
+
 /**
- * 25 種族どうしの相性マップ。
+ * 25 種族との相性。
  *
- * 値はバックエンドが相性エンジンを総当たりして測った平均で、ここは
- * 濃淡に置き換えて並べるだけ。色だけに意味を持たせないよう、選んだ組は
- * 数値と名前で読めるようにし、自分の行は一覧としても出す。
+ * 主役は本人から見たレーダーで、25 軸の大小を一目で掴めるようにする。
+ * 軸は五行の族ごとに並ぶので、どの族と噛み合うかが形として出る。
+ * 全体の 25×25 は、その下に濃淡のマップとして添える。
+ *
+ * 値はバックエンドが相性エンジンを総当たりして測った平均で、ここは表示だけ。
  */
 export function SpeciesCompatMap({ mine }: { mine: string }) {
   const { t, lang } = useI18n();
@@ -36,6 +64,13 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
     return { min: Math.min(...flat), max: Math.max(...flat) };
   }, [data]);
 
+  // 本人の行。レーダーの軸はコードだけを出す（25 軸に名前は入らない）
+  const myRow = useMemo(() => {
+    if (!data) return [];
+    const i = data.codes.indexOf(mine);
+    return data.codes.map((code, j) => ({ code, label: code, value: data.matrix[i][j] }));
+  }, [data, mine]);
+
   if (failed) return <p className="error">{t("errors.fetch")}</p>;
   if (!data || !range) return <p className="hint result-status">{t("common.loading")}</p>;
 
@@ -44,9 +79,32 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
   const level = (v: number) =>
     Math.min(STEPS - 1, Math.floor(((v - range.min) / (range.max - range.min || 1)) * STEPS));
 
+  const myName = speciesName(mine, lang);
   const pickedScore = at(picked.a, picked.b);
 
-  // 自分から見た相性順。マップを読まなくても順位が分かるようにしておく
+  // 選んだ組のサマリー。五行の関係はバックエンドの判定を引くだけで、ここでは決めない。
+  const summary = [
+    t(
+      `fortune.compatMap.summary.element.${
+        data.element_relations[picked.a[0] + picked.b[0]] ?? "same"
+      }` as MessageKey,
+      { a: elementOf(picked.a, lang, "element"), b: elementOf(picked.b, lang, "element") },
+    ),
+    picked.a[1] === picked.b[1]
+      ? t("fortune.compatMap.summary.group.same", { a: groupOf(picked.a, lang) })
+      : t("fortune.compatMap.summary.group.different", {
+          a: groupOf(picked.a, lang),
+          b: groupOf(picked.b, lang),
+        }),
+    t(
+      `fortune.compatMap.summary.band.${
+        pickedScore >= data.band_high ? "high" : pickedScore <= data.band_low ? "low" : "mid"
+      }` as MessageKey,
+      { value: formatValue(pickedScore), mean: formatValue(data.mean) },
+    ),
+  ].join(findMessage(lang, "fortune.narrative.sentenceJoin") ?? "");
+
+  // 自分から見た相性順。レーダーの形を数値でも追えるようにしておく
   const ranked = data.codes
     .map((code) => ({ code, score: at(mine, code) }))
     .sort((x, y) => y.score - x.score);
@@ -55,12 +113,58 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
     <section className="compat-map-section">
       <div className="result-head">
         <h2>{t("fortune.compatMap.title")}</h2>
-        <p className="hint">{t("fortune.compatMap.hint")}</p>
+        <p className="hint">{t("fortune.compatMap.hint", { name: myName })}</p>
+        <p className="hint">{t("fortune.compatMap.caveat")}</p>
       </div>
+
+      <RadarChart
+        points={myRow}
+        maxValue={MAX_SCORE}
+        title={t("fortune.compatMap.radarTitle", { name: myName })}
+        onSelectAxis={(i) => setPicked({ a: mine, b: myRow[i].code })}
+      />
+      <p className="hint compat-axis-note">{t("fortune.compatMap.axisGroups")}</p>
+
+      <div className="compat-readout">
+        <div className="compat-pair">
+          <span className="compat-side">
+            <span className="compat-art">
+              <SpeciesIcon code={picked.a} />
+            </span>
+            <b>{speciesName(picked.a, lang)}</b>
+            <em>{picked.a}</em>
+          </span>
+          <span className="compat-value">{formatValue(pickedScore)}</span>
+          <span className="compat-side">
+            <span className="compat-art">
+              <SpeciesIcon code={picked.b} />
+            </span>
+            <b>{speciesName(picked.b, lang)}</b>
+            <em>{picked.b === mine && picked.a === mine ? t("fortune.compatMap.self") : picked.b}</em>
+          </span>
+        </div>
+        <p className="compat-summary">{summary}</p>
+      </div>
+
+      <details className="compat-ranking">
+        <summary>{t("fortune.compatMap.ranking", { name: myName })}</summary>
+        <ol>
+          {ranked.map((entry) => (
+            <li key={entry.code} className={entry.code === mine ? "is-mine" : undefined}>
+              <span>{speciesName(entry.code, lang)}</span>
+              <em>{entry.code}</em>
+              <b>{formatValue(entry.score)}</b>
+            </li>
+          ))}
+        </ol>
+      </details>
+
+      <h3 className="compat-map-title">{t("fortune.compatMap.mapTitle")}</h3>
+      <p className="hint">{t("fortune.compatMap.mapHint")}</p>
 
       <div className="compat-map-scroll">
         <table className="compat-map">
-          <caption className="sr-only">{t("fortune.compatMap.title")}</caption>
+          <caption className="sr-only">{t("fortune.compatMap.mapTitle")}</caption>
           <thead>
             <tr>
               <th />
@@ -111,40 +215,6 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
         </span>
         <span>{t("fortune.compatMap.high", { value: formatValue(range.max) })}</span>
       </div>
-
-      <div className="compat-readout">
-        <div className="compat-pair">
-          <span className="compat-side">
-            <span className="compat-art">
-              <SpeciesIcon code={picked.a} />
-            </span>
-            <b>{speciesName(picked.a, lang)}</b>
-            <em>{picked.a}</em>
-          </span>
-          <span className="compat-value">{formatValue(pickedScore)}</span>
-          <span className="compat-side">
-            <span className="compat-art">
-              <SpeciesIcon code={picked.b} />
-            </span>
-            <b>{speciesName(picked.b, lang)}</b>
-            <em>{picked.b}</em>
-          </span>
-        </div>
-        <p className="hint">{t("fortune.compatMap.note")}</p>
-      </div>
-
-      <details className="compat-ranking">
-        <summary>{t("fortune.compatMap.ranking", { name: speciesName(mine, lang) })}</summary>
-        <ol>
-          {ranked.map((entry) => (
-            <li key={entry.code} className={entry.code === mine ? "is-mine" : undefined}>
-              <span>{speciesName(entry.code, lang)}</span>
-              <em>{entry.code}</em>
-              <b>{formatValue(entry.score)}</b>
-            </li>
-          ))}
-        </ol>
-      </details>
     </section>
   );
 }

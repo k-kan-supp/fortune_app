@@ -101,6 +101,16 @@ class SpeciesCompatMap(BaseModel):
 
     codes: list[str] = Field(..., description="行・列に共通の種族コードの並び")
     matrix: list[list[float]] = Field(..., description="codes 順の 25×25。総合点の平均")
+    element_relations: dict[str, str] = Field(
+        ...,
+        description=(
+            "五行の頭文字2つ（MW＝金から見た木）→ "
+            "same / generates / generated / controls / controlled"
+        ),
+    )
+    band_low: float = Field(..., description="これ以下なら「低いほう」")
+    band_high: float = Field(..., description="これ以上なら「高いほう」")
+    mean: float = Field(..., description="表全体の平均。組の位置づけを言う基準")
 
 
 class FortuneResponse(BaseModel):

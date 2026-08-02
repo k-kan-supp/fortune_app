@@ -21,6 +21,9 @@
 行と列はどちらも ``CODES`` の並び。相性は向きを持たないので表は対称。
 """
 
+from app.services.saju.constants import CONTROLS, GENERATES
+from app.services.saju.species import ELEMENT_LETTER
+
 CODES = [element + group for element in "WFEMA" for group in "SXGOL"]
 
 # 各行が CODES 順の 25 列。値は総合点の平均（0〜100）。
@@ -211,3 +214,42 @@ def score(a: str, b: str) -> float:
 def row(code: str) -> dict[str, float]:
     """ある種族から見た、25 種族すべてとの相性。"""
     return dict(zip(CODES, MATRIX[CODES.index(code)], strict=True))
+
+
+# --- 組ごとのサマリーに使う材料 ------------------------------------------
+# 文言は持たず、フロントが訳せるようコードだけを返す（相性の notes と同じ考え方）。
+
+_ELEMENT_OF = {letter: element for element, letter in ELEMENT_LETTER.items()}
+
+
+def _element_relation(a: str, b: str) -> str:
+    """五行 a から見た b との関係。"""
+    if a == b:
+        return "same"
+    if GENERATES[a] == b:
+        return "generates"
+    if GENERATES[b] == a:
+        return "generated"
+    if CONTROLS[a] == b:
+        return "controls"
+    return "controlled"
+
+
+# 五行の頭文字2つ（"MW" なら金から見た木）→ 関係コード。25 通り。
+ELEMENT_RELATIONS: dict[str, str] = {
+    a + b: _element_relation(_ELEMENT_OF[a], _ELEMENT_OF[b])
+    for a in ELEMENT_LETTER.values()
+    for b in ELEMENT_LETTER.values()
+}
+
+
+def bands() -> tuple[float, float]:
+    """点数を高い・普通・低いに分ける境目（表全体の三分位）。"""
+    flat = sorted(v for r in MATRIX for v in r)
+    return flat[len(flat) // 3], flat[len(flat) * 2 // 3]
+
+
+def mean() -> float:
+    """表全体の平均。個々の組がどのあたりかを言うための基準。"""
+    flat = [v for r in MATRIX for v in r]
+    return round(sum(flat) / len(flat), 1)

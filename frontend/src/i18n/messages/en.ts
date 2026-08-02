@@ -109,12 +109,35 @@ export const en: Messages = {
     },
 
     compatMap: {
-      title: "Compatibility across the 25 kinds",
-      hint: "All 25 kinds on both axes. Darker cells run higher. Tap a cell for that pair's score.",
+      title: "Compatibility with the 25 kinds",
+      hint: "How the 25 kinds sit relative to each other, seen from you ({{name}}). The outer ring is 100. Tap an axis for that partner's score.",
+      radarTitle: "Compatibility with the 25 kinds, seen from {{name}}",
+      axisGroups: "Axes are grouped by element — wood, fire, earth, metal, water, five kinds each.",
+      mapTitle: "The full 25 × 25 map",
+      mapHint: "All 25 kinds on both axes. Darker cells run higher. Tap a cell for that pair's score.",
       low: "Low {{value}}",
       high: "High {{value}}",
-      note: "These scores are averages taken by running the real compatibility engine across every pair of kinds. Compatibility between two people is decided by their birth dates, so any given pair will sit above or below this.",
+      summary: {
+        element: {
+          same: "Both sit in {{a}}. The same energy makes you quick to understand each other, and just as quick to stall in the same places.",
+          generates: "Your {{a}} produces their {{b}}. You tend to end up on the giving, supporting side.",
+          generated: "Their {{b}} produces your {{a}}. You tend to end up on the receiving, supported side.",
+          controls: "Your {{a}} controls their {{b}}. You tend to be the one pushing.",
+          controlled: "Their {{b}} controls your {{a}}. You tend to be the one pushed.",
+        },
+        group: {
+          same: "Both lead with {{a}}, so your force goes to the same place.",
+          different: "You lead with {{a}} and they with {{b}}, so your force goes to different places.",
+        },
+        band: {
+          high: "This is one of the higher pairings among the 25 ({{value}} against an overall mean of {{mean}}).",
+          mid: "This is an average pairing among the 25 ({{value}} against an overall mean of {{mean}}).",
+          low: "This is one of the lower pairings among the 25 ({{value}} against an overall mean of {{mean}}).",
+        },
+      },
+      caveat: "Scores are averages taken by running the compatibility engine across every pair of kinds. Compatibility between two people is decided by their birth dates, so any given pair will sit above or below this.",
       ranking: "All 25 kinds ranked from {{name}}",
+      self: "Yourself",
     },
 
     species: {
