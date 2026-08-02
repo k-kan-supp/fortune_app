@@ -54,6 +54,15 @@ export interface RadarChart {
   note_hidden: number;
 }
 
+/** 相性の高い種族ひとつ分。人数と、関係ごとに向いている人数。 */
+export interface SpeciesReach {
+  code: string;
+  /** その種族の概算人数。 */
+  people: number;
+  /** 関係コード → 向いている概算人数。同じ種族でも関係で大きく変わる。 */
+  suited: Record<string, number>;
+}
+
 /** 相性の良い人が日本におよそ何人いるかの概算。 */
 export interface CompatiblePopulation {
   /** 概算人数。丸めは表示側で行う（元の値のまま届く）。 */
@@ -68,6 +77,8 @@ export interface CompatiblePopulation {
   as_of: string;
   /** 相性が高い帯に入る種族コード。 */
   species_codes: string[];
+  /** 相性が高い順の種族と、関係ごとに向いている人数。 */
+  reach: SpeciesReach[];
 }
 
 /** 命式の種族。日主の五行 × 最も強い通変星グループで 25 通り。 */

@@ -3180,3 +3180,82 @@ button {
   line-height: 1.7;
   opacity: 0.62;
 }
+
+/* 相性が高い種族 × 関係のマトリクス */
+.reach-table {
+  margin-top: 16px;
+}
+
+.reach-table h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+}
+
+.reach-table .hint {
+  margin: 0 0 10px;
+  font-size: 0.74rem;
+  line-height: 1.7;
+  opacity: 0.62;
+}
+
+/* 列が多いので、狭い画面では表だけを横に送る（本文は送らない） */
+.reach-table__scroll {
+  overflow-x: auto;
+}
+
+.reach-table table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.reach-table th,
+.reach-table td {
+  padding: 7px 10px;
+  text-align: right;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.reach-table thead th {
+  font-weight: 600;
+  opacity: 0.7;
+  font-size: 0.74rem;
+}
+
+.reach-table tbody th {
+  text-align: left;
+}
+
+.reach-table tbody th b {
+  font-weight: 600;
+}
+
+.reach-table__code {
+  margin-left: 6px;
+  font-size: 0.68rem;
+  opacity: 0.45;
+}
+
+.reach-table__total {
+  opacity: 0.75;
+}
+
+/* 人数の背後に、その種族の中で向いている割合を敷く */
+.reach-table td {
+  position: relative;
+}
+
+.reach-table__bar {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.reach-table__value {
+  position: relative;
+}

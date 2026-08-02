@@ -81,6 +81,17 @@ class Species(BaseModel):
     group_share: float = Field(..., description="そのグループが全体に占める割合（%）")
 
 
+class SpeciesReach(BaseModel):
+    """相性の高い種族ひとつ分。人数と、関係ごとに向いている人数。"""
+
+    code: str = Field(..., description="種族コード")
+    people: int = Field(..., description="その種族の概算人数")
+    suited: dict[str, int] = Field(
+        default_factory=dict,
+        description="関係コード（lover / colleague / business / spouse）→ 向いている概算人数",
+    )
+
+
 class CompatiblePopulation(BaseModel):
     """相性の良い人が日本にどれくらいいるかの概算。
 
@@ -94,6 +105,9 @@ class CompatiblePopulation(BaseModel):
     as_of: str = Field(..., description="人口統計の時点（YYYY-MM-DD）")
     species_codes: list[str] = Field(
         default_factory=list, description="相性が高い帯に入る種族コード"
+    )
+    reach: list[SpeciesReach] = Field(
+        default_factory=list, description="相性が高い順の種族と、関係ごとに向いている人数"
     )
 
 

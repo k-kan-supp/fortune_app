@@ -2,6 +2,7 @@ import { findMessage, useI18n, type MessageKey } from "@/i18n";
 import { formatPeople } from "../peopleCount";
 import { formatValue } from "../radarGeometry";
 import { SpeciesIcon } from "../speciesIcons";
+import { SpeciesReachTable } from "./SpeciesReachTable";
 import { axisLabel, speciesName } from "../terms";
 import type { FortuneResponse } from "../types";
 
@@ -106,6 +107,7 @@ export function ResultSummary({ result }: { result: FortuneResponse }) {
               kinds: compatible.species_codes.length,
             })}
           </p>
+          <SpeciesReachTable reach={compatible.reach} />
         </div>
       )}
 

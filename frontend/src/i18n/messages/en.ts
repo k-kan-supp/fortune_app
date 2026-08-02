@@ -89,6 +89,19 @@ export const en: Messages = {
       reachBasis: "Estimated from the {{basis}} people counted by the Statistics Bureau of Japan as of {{asOf}}, against the share of the {{kinds}} kinds you match well with. Those shares come from charting every birth date from 1930 to 2010; no age filter is applied.",
     },
 
+    reach: {
+      title: "The 10 kinds you match best with",
+      hint: "Clicking as partners and working well together are different things. These are estimates for each kind of relationship, weighting the four facets — body, heart, mind and support — differently.",
+      species: "Kind",
+      people: "People",
+      relations: {
+        lover: "Partner",
+        colleague: "Colleague",
+        business: "Business partner",
+        spouse: "Spouse",
+      },
+    },
+
     sanmei: {
       title: "Body star chart (Sanmeigaku)",
       hint: "The same chart read as Sanmeigaku stars. Tap a cell for what that star means.",
