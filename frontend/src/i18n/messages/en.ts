@@ -108,6 +108,15 @@ export const en: Messages = {
       },
     },
 
+    compatMap: {
+      title: "Compatibility across the 25 kinds",
+      hint: "All 25 kinds on both axes. Darker cells run higher. Tap a cell for that pair's score.",
+      low: "Low {{value}}",
+      high: "High {{value}}",
+      note: "These scores are averages taken by running the real compatibility engine across every pair of kinds. Compatibility between two people is decided by their birth dates, so any given pair will sit above or below this.",
+      ranking: "All 25 kinds ranked from {{name}}",
+    },
+
     species: {
       WS: { name: "Pioneer Sapling", tagline: "Grows from ground nobody has walked on yet." },
       WX: { name: "Blossom Bough", tagline: "Reaches out, then insists on flowering where it can be seen." },

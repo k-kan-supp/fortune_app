@@ -84,6 +84,12 @@ export interface Sanmei {
   energy_total: number;
 }
 
+/** 25 種族どうしの相性マップ。codes 順の 25×25。 */
+export interface SpeciesCompat {
+  codes: string[];
+  matrix: number[][];
+}
+
 export interface FortuneResponse {
   year_pillar: Pillar;
   month_pillar: Pillar;

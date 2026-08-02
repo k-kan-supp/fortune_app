@@ -96,6 +96,13 @@ class Sanmei(BaseModel):
     energy_total: int = Field(..., description="三大従星のエネルギー合計（3〜36）")
 
 
+class SpeciesCompatMap(BaseModel):
+    """25 種族どうしの相性マップ。命式によらず一定なので、鑑定結果とは別に配る。"""
+
+    codes: list[str] = Field(..., description="行・列に共通の種族コードの並び")
+    matrix: list[list[float]] = Field(..., description="codes 順の 25×25。総合点の平均")
+
+
 class FortuneResponse(BaseModel):
     """鑑定結果（命式）。"""
 
