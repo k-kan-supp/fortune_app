@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.deps import RequestLang
+from app.core.config import settings
 from app.core.i18n import translate
 from app.schemas.fortune import (
     DailyArea,
@@ -33,14 +34,39 @@ from app.services.saju.species_compat import (
     ROW_MEANS,
     scaled_matrix,
 )
+from app.services.saju.tiers import PAID
 
 router = APIRouter(tags=["fortune"])
 
 
+def _lock_paid_notes(result: FortuneResponse) -> FortuneResponse:
+    """有料の解説文を落とす。
+
+    落とすのは本文だけで、``strengths`` / ``weaknesses`` の軸コードと
+    ``note_locked`` は残す。何が隠れているのかが見えないと課金動機が生まれない。
+    命式そのもの（四柱・十神・蔵干・チャートの数値）には触らない。
+    """
+    for chart in result.charts:
+        if chart.note_tier != PAID:
+            continue
+        chart.note_locked = True
+        chart.strength_note = []
+        chart.weakness_note = []
+    return result
+
+
 @router.post("/fortune", response_model=FortuneResponse)
 def create_fortune(req: FortuneRequest) -> FortuneResponse:
-    """生年月日時から四柱推命の命式を算出する。"""
-    return calculate_four_pillars(req)
+    """生年月日時から四柱推命の命式を算出する。
+
+    命式は認証なしで誰でも引ける。有料なのは解説文だけで、開放判定はここで行う
+    ── 占術ロジック側に課金概念を持ち込まない。
+    """
+    result = calculate_four_pillars(req)
+    # 決済が入るまでは全員に開放する。以後この条件が entitlement の判定に変わる。
+    if settings.paywall_enabled:
+        return _lock_paid_notes(result)
+    return result
 
 
 @router.get("/species/compatibility", response_model=SpeciesCompatMap)

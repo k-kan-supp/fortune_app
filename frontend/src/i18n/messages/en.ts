@@ -249,6 +249,7 @@ export const en: Messages = {
       scale: "Outer ring = {{max}}.",
       strengths: "Strongest",
       weaknesses: "Weakest",
+      noteLocked: "This reading is part of the paid plan",
       five_elements: {
         title: "Five elements",
         note: "How strong wood, fire, earth, metal and water are, scored across all four pillars.",

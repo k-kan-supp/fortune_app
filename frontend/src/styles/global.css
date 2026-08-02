@@ -3127,3 +3127,35 @@ button {
   border-color: transparent;
   font-weight: 700;
 }
+
+/* 未開放の解説文。本文は届いていないので、あることだけを示す */
+.chart-note--locked {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.4em;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* 文字が伏せられている雰囲気だけを出す横線。読めるものは置かない */
+.chart-note__veil {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.16) 0 0.55em,
+    transparent 0.55em 1.1em
+  );
+  filter: blur(3px);
+  opacity: 0.6;
+}
+
+.chart-note__lock {
+  position: relative;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}

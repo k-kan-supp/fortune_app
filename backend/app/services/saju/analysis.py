@@ -30,6 +30,7 @@ from app.services.saju.constants import (
 )
 from app.services.saju.narrative import build_note
 from app.services.saju.ten_gods import ten_god
+from app.services.saju.tiers import note_tier
 from app.services.saju.twelve_stages import twelve_stage
 
 # 柱のコード（フロントは既存の年柱・月柱…の訳語を再利用する）
@@ -194,6 +195,7 @@ def _chart(key: str, values: dict[str, float], order: list[str], max_value: floa
         weaknesses=weaknesses,
         strength_note=build_note(key, axes, strengths, weaknesses, max_value, high=True),
         weakness_note=build_note(key, axes, weaknesses, strengths, max_value, high=False),
+        note_tier=note_tier(key),
     )
 
 

@@ -59,6 +59,14 @@ class RadarChart(BaseModel):
     weakness_note: list[NarrativeSegment] = Field(
         default_factory=list, description="弱みの解説文（一文ずつ）。weaknesses が空なら空"
     )
+    note_tier: str = Field(default="free", description="解説文の区分（free / paid）")
+    note_locked: bool = Field(
+        default=False,
+        description=(
+            "有料の解説文がまだ開放されていない。true のとき note は空で返るが、"
+            "強み・弱みの軸コードは残す（何が隠れているか分からないと課金動機にならない）"
+        ),
+    )
 
 
 class Species(BaseModel):

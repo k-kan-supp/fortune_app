@@ -81,6 +81,23 @@ function ExtremeNote({
 }
 
 /**
+ * 未開放の解説文の代わりに出す枠。
+ *
+ * 本文は届いていないので書きようがないが、**何かがある**ことは見せる。
+ * 空欄にすると、そこに読むものがあると分からず課金の動機が生まれない。
+ * 突出した軸そのもの（ExtremeList）は無料のまま残す。
+ */
+function LockedNote() {
+  const { t } = useI18n();
+  return (
+    <p className="chart-note chart-note--locked" aria-label={t("fortune.charts.noteLocked")}>
+      <span className="chart-note__veil" aria-hidden="true" />
+      <span className="chart-note__lock">{t("fortune.charts.noteLocked")}</span>
+    </p>
+  );
+}
+
+/**
  * レーダーチャート1枚分（表題・図・数値表）。
  * 用語ポップアップの開閉で他のカードまで描き直さないよう memo 化する。
  */
@@ -140,7 +157,11 @@ export const ChartCard = memo(function ChartCard({ chart, onSelectTerm }: Props)
               <dt>{t("fortune.charts.strengths")}</dt>
               <dd>
                 <ExtremeList codes={chart.strengths} lang={lang} ns={ns} />
-                <ExtremeNote segments={chart.strength_note} lang={lang} ns={ns} />
+                {chart.note_locked ? (
+                  <LockedNote />
+                ) : (
+                  <ExtremeNote segments={chart.strength_note} lang={lang} ns={ns} />
+                )}
               </dd>
             </div>
           )}
@@ -149,7 +170,11 @@ export const ChartCard = memo(function ChartCard({ chart, onSelectTerm }: Props)
               <dt>{t("fortune.charts.weaknesses")}</dt>
               <dd>
                 <ExtremeList codes={chart.weaknesses} lang={lang} ns={ns} />
-                <ExtremeNote segments={chart.weakness_note} lang={lang} ns={ns} />
+                {chart.note_locked ? (
+                  <LockedNote />
+                ) : (
+                  <ExtremeNote segments={chart.weakness_note} lang={lang} ns={ns} />
+                )}
               </dd>
             </div>
           )}

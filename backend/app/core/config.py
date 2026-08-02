@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     magic_link_expire_minutes: int = 15
     access_token_expire_minutes: int = 60 * 24 * 7
 
+    # 課金。決済がまだ無い間は開けておく（有料の解説文を誰も買えないため）。
+    # 決済が入ったらここを true にし、判定を entitlement に移す。
+    paywall_enabled: bool = False
+
     # メール
     email_backend: str = "console"
     email_from: str = "no-reply@fortune.local"

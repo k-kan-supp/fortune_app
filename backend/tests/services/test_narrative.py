@@ -7,6 +7,7 @@
 from app.schemas.fortune import NarrativeSegment, RadarAxis
 from app.services.saju.analysis import _chart, build_charts
 from app.services.saju.narrative import build_note
+from app.services.saju.tiers import FREE, PAID
 from tests.services.test_analysis import DAY_MASTER, PILLARS
 
 
@@ -99,3 +100,20 @@ def test_last_sentence_falls_back_when_the_other_side_is_tied_out():
 def test_note_is_empty_without_a_focus_axis():
     """解説する軸が無ければ、他が揃っていても組み立てない。"""
     assert build_note("x", axes({"a": 1.0, "b": 2.0}), [], ["b"], 2.0, high=True) == []
+
+
+def test_every_chart_declares_a_tier():
+    """区分の無いチャートがあると、ペイウォールの判定から漏れる。"""
+    for chart in build_charts(PILLARS, DAY_MASTER, True):
+        assert chart.note_tier in {FREE, PAID}, chart.key
+
+
+def test_five_elements_note_stays_free():
+    """無料側にも解説を1枚残す。全部隠すと結果が数字の羅列になる。"""
+    charts = {c.key: c for c in build_charts(PILLARS, DAY_MASTER, True)}
+    assert charts["five_elements"].note_tier == FREE
+
+
+def test_the_rest_of_the_notes_are_paid():
+    paid = [c.key for c in build_charts(PILLARS, DAY_MASTER, True) if c.note_tier == PAID]
+    assert len(paid) == 9
