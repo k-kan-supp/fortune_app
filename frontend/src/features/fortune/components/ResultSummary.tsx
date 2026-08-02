@@ -1,5 +1,6 @@
 import { findMessage, useI18n, type MessageKey } from "@/i18n";
 import { formatValue } from "../radarGeometry";
+import { SpeciesIcon } from "../speciesIcons";
 import { axisLabel } from "../terms";
 import type { FortuneResponse } from "../types";
 
@@ -46,11 +47,14 @@ export function ResultSummary({ result }: { result: FortuneResponse }) {
   return (
     <section className="species-summary">
       <div className="species-head">
-        <span className="species-code" aria-hidden="true">
-          {species.code}
+        <span className="species-art">
+          <SpeciesIcon code={species.code} />
         </span>
         <div className="species-title">
-          <p className="species-eyebrow">{t("fortune.summary.eyebrow")}</p>
+          <p className="species-eyebrow">
+            {t("fortune.summary.eyebrow")}
+            <span className="species-code">{species.code}</span>
+          </p>
           <h2 className="species-name">{name}</h2>
         </div>
       </div>

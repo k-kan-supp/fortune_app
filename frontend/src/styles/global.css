@@ -446,20 +446,22 @@ button {
   gap: 1rem;
 }
 
-/* MBTI のコードにあたる 2 文字。種族の識別子として一番大きく置く */
-.species-code {
+/* 種族の紋章。線画のみの白黒アイコン（step-art と同じ体裁） */
+.species-art {
   flex: none;
   display: grid;
   place-items: center;
   width: 66px;
   height: 66px;
   border-radius: 18px;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--btn-ink);
-  background: var(--btn-grad);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  color: var(--mono-ink);
+  background: radial-gradient(circle at 30% 25%, #2e2b37, var(--mono-plate));
+  border: 1px solid var(--mono-line);
+}
+
+.species-art svg {
+  width: 34px;
+  height: 34px;
 }
 
 .species-title {
@@ -471,6 +473,21 @@ button {
   font-size: 0.68rem;
   letter-spacing: 0.16em;
   color: var(--ink-faint);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* MBTI のコードにあたる 2 文字 */
+.species-code {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-veil);
+  color: var(--ink-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
 }
 
 .species-name {
