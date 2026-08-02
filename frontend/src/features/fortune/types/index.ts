@@ -54,6 +54,22 @@ export interface RadarChart {
   note_hidden: number;
 }
 
+/** 相性の良い人が日本におよそ何人いるかの概算。 */
+export interface CompatiblePopulation {
+  /** 概算人数。丸めは表示側で行う（元の値のまま届く）。 */
+  people: number;
+  /** 人口に占める割合（％）。 */
+  share: number;
+  /** およそ何人に1人か。 */
+  one_in: number;
+  /** 母数に使った総人口。 */
+  basis: number;
+  /** 人口統計の時点（YYYY-MM-DD）。 */
+  as_of: string;
+  /** 相性が高い帯に入る種族コード。 */
+  species_codes: string[];
+}
+
 /** 命式の種族。日主の五行 × 最も強い通変星グループで 25 通り。 */
 export interface Species {
   /** 2文字のコード。名前と説明はこれを使って i18n から引く。 */
@@ -157,6 +173,8 @@ export interface FortuneResponse {
   day_master: string;
   /** 古い API は返さないので任意扱い。 */
   species?: Species;
+  /** 相性の良い人の概算。種族が出せない古い API では返らない。 */
+  compatible?: CompatiblePopulation;
   sanmei?: Sanmei;
   /** 古い API は返さないので任意扱い（バックエンドの既定値は空配列）。 */
   charts?: RadarChart[];

@@ -3159,3 +3159,24 @@ button {
   letter-spacing: 0.04em;
   opacity: 0.85;
 }
+
+/* 相性の良い人の概算。桁を見せる一文と、その根拠 */
+.species-reach {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.species-reach__lead {
+  margin: 0;
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.species-reach__basis {
+  margin: 6px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.7;
+  opacity: 0.62;
+}

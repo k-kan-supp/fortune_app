@@ -1,4 +1,5 @@
 import { findMessage, useI18n, type MessageKey } from "@/i18n";
+import { formatPeople } from "../peopleCount";
 import { formatValue } from "../radarGeometry";
 import { SpeciesIcon } from "../speciesIcons";
 import { axisLabel, speciesName } from "../terms";
@@ -26,6 +27,7 @@ export function ResultSummary({ result }: { result: FortuneResponse }) {
   if (!species) return null;
 
   const name = speciesName(species.code, lang);
+  const compatible = result.compatible;
   const tagline = findMessage(lang, `fortune.species.${species.code}.tagline`);
 
   const peaks = PEAKS.flatMap((peak) => {
@@ -86,6 +88,25 @@ export function ResultSummary({ result }: { result: FortuneResponse }) {
             </div>
           ))}
         </dl>
+      )}
+
+      {compatible && compatible.people > 0 && (
+        <div className="species-reach">
+          <p className="species-reach__lead">
+            {t("fortune.summary.reachLead", {
+              people: formatPeople(compatible.people, lang),
+              oneIn: formatValue(compatible.one_in),
+            })}
+          </p>
+          {/* 母数と時点を必ず添える。桁だけ出して根拠を隠さない */}
+          <p className="species-reach__basis">
+            {t("fortune.summary.reachBasis", {
+              basis: formatPeople(compatible.basis, lang),
+              asOf: compatible.as_of,
+              kinds: compatible.species_codes.length,
+            })}
+          </p>
+        </div>
       )}
 
       <p className="species-count">{t("fortune.summary.typeCount")}</p>

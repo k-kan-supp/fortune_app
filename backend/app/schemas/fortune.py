@@ -81,6 +81,22 @@ class Species(BaseModel):
     group_share: float = Field(..., description="そのグループが全体に占める割合（%）")
 
 
+class CompatiblePopulation(BaseModel):
+    """相性の良い人が日本にどれくらいいるかの概算。
+
+    文言は持たない。母数・時点・割合だけを返し、注記の書き方はフロントに任せる。
+    """
+
+    people: int = Field(..., description="概算人数")
+    share: float = Field(..., description="人口に占める割合（％）")
+    one_in: float = Field(..., description="およそ何人に1人か")
+    basis: int = Field(..., description="母数に使った総人口")
+    as_of: str = Field(..., description="人口統計の時点（YYYY-MM-DD）")
+    species_codes: list[str] = Field(
+        default_factory=list, description="相性が高い帯に入る種族コード"
+    )
+
+
 class SanmeiStar(BaseModel):
     """人体星図の十大主星（5か所）。"""
 
@@ -190,6 +206,9 @@ class FortuneResponse(BaseModel):
     hour_pillar: Pillar
     day_master: str = Field(..., description="日主（日柱の天干）")
     species: Species | None = Field(None, description="25 種族の判定")
+    compatible: CompatiblePopulation | None = Field(
+        None, description="相性の良い人が日本におよそ何人いるかの概算"
+    )
     sanmei: Sanmei | None = Field(None, description="算命学の陽占（人体星図）")
     charts: list[RadarChart] = Field(
         default_factory=list, description="バランス指標（レーダーチャート用）"

@@ -85,6 +85,8 @@ export const en: Messages = {
       traitPeak: "Highest trait",
       areaPeak: "Highest life area",
       typeCount: "One of 25 kinds",
+      reachLead: "Roughly {{people}} people in Japan are a good match for you — about 1 in {{oneIn}}.",
+      reachBasis: "Estimated from the {{basis}} people counted by the Statistics Bureau of Japan as of {{asOf}}, against the share of the {{kinds}} kinds you match well with. Those shares come from charting every birth date from 1930 to 2010; no age filter is applied.",
     },
 
     sanmei: {

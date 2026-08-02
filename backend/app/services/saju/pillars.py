@@ -10,13 +10,23 @@ sxtwl 未インストールでもモジュール自体は import できるよう
 
 import logging
 
-from app.schemas.fortune import FortuneRequest, FortuneResponse, Pillar
+from app.schemas.fortune import (
+    CompatiblePopulation,
+    FortuneRequest,
+    FortuneResponse,
+    Pillar,
+)
 from app.services.saju.analysis import build_charts
 from app.services.saju.constants import (
     BRANCH_HIDDEN_STEMS,
     EARTHLY_BRANCHES,
     HEAVENLY_STEMS,
     STEM_ELEMENT,
+)
+from app.services.saju.population import (
+    JAPAN_POPULATION,
+    POPULATION_AS_OF,
+    compatible_people,
 )
 from app.services.saju.sanmei import sanmei
 from app.services.saju.species import species
@@ -70,6 +80,7 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
     charts = build_charts(pillars, day_master, req.is_male)
     kind = species(pillars, day_master)
     star_chart = sanmei(pillars, day_master)
+    people, share, matched = compatible_people(kind.code)
 
     # 生年月日は載せない。日主と種族だけで「計算が通ったか」は追える。
     logger.info(
@@ -84,6 +95,15 @@ def calculate_four_pillars(req: FortuneRequest) -> FortuneResponse:
         hour_pillar=pillars["hour"],
         day_master=day_master,
         species=kind,
+        compatible=CompatiblePopulation(
+            people=people,
+            share=share,
+            # 「4人に1人」のほうが割合より桁を掴みやすい
+            one_in=round(100 / share, 1) if share > 0 else 0.0,
+            basis=JAPAN_POPULATION,
+            as_of=POPULATION_AS_OF,
+            species_codes=matched,
+        ),
         sanmei=star_chart,
         charts=charts,
     )
