@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { findMessage, useI18n, type Lang, type MessageKey } from "@/i18n";
+import { useI18n, type Lang, type MessageKey } from "@/i18n";
 import { fetchDailyFortune } from "../api/fortuneApi";
 import { formatValue } from "../radarGeometry";
-import { axisLabel } from "../terms";
+import { axisLabel, speciesName } from "../terms";
 import type {
   DailyFortune as DailyFortuneData,
   DailyPoint,
@@ -53,7 +53,7 @@ export function DailyFortune({ request }: { request: FortuneRequest }) {
   if (!data) return null;
 
   const { reading } = data;
-  const speciesName = findMessage(lang, `fortune.species.${data.species}.name`) ?? data.species;
+  const name = speciesName(data.species, lang);
   const top = data.elements.reduce((best, e) => (e.value > best.value ? e : best), data.elements[0]);
 
   const facts: { key: MessageKey; value: string }[] = [
@@ -72,7 +72,7 @@ export function DailyFortune({ request }: { request: FortuneRequest }) {
     t(`fortune.daily.${side}.${point.driver_kind === "element" ? "element" : "group"}` as MessageKey, {
       area: axisLabel(point.area, lang, "lifeArea"),
       driver: driverName(point, lang),
-      name: speciesName,
+      name,
     });
 
   return (
@@ -82,7 +82,7 @@ export function DailyFortune({ request }: { request: FortuneRequest }) {
           <p className="daily-eyebrow">{t("fortune.daily.title")}</p>
           <p className="daily-date">{reading.date}</p>
         </div>
-        <p className="daily-species">{t("fortune.daily.forSpecies", { name: speciesName })}</p>
+        <p className="daily-species">{t("fortune.daily.forSpecies", { name })}</p>
       </div>
 
       <dl className="daily-facts">

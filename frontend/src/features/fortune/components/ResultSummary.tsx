@@ -1,7 +1,7 @@
 import { findMessage, useI18n, type MessageKey } from "@/i18n";
 import { formatValue } from "../radarGeometry";
 import { SpeciesIcon } from "../speciesIcons";
-import { axisLabel } from "../terms";
+import { axisLabel, speciesName } from "../terms";
 import type { FortuneResponse } from "../types";
 
 /**
@@ -25,7 +25,7 @@ export function ResultSummary({ result }: { result: FortuneResponse }) {
   const species = result.species;
   if (!species) return null;
 
-  const name = findMessage(lang, `fortune.species.${species.code}.name`) ?? species.code;
+  const name = speciesName(species.code, lang);
   const tagline = findMessage(lang, `fortune.species.${species.code}.tagline`);
 
   const peaks = PEAKS.flatMap((peak) => {

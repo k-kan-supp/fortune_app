@@ -22,6 +22,7 @@
 """
 
 
+from app.services.saju.analysis import rescale
 from app.services.saju.constants import CONTROLS, GENERATES
 from app.services.saju.species import ELEMENT_LETTER
 
@@ -218,10 +219,7 @@ MATRIX: tuple[tuple[float, ...], ...] = (
 def _normalize(values: tuple[float, ...]) -> tuple[float, ...]:
     """1 行を 0〜100 に伸ばす。"""
     low, high = min(values), max(values)
-    span = high - low
-    if span <= 0:  # 全部同じ値の行は伸ばしようがない
-        return tuple(50.0 for _ in values)
-    return tuple(round((v - low) / span * 100, 1) for v in values)
+    return tuple(round(rescale(v, low, high), 1) for v in values)
 
 
 # 行ごとに 0〜100 へ伸ばした 25×25。画面に出るのは常にこちら。
@@ -251,16 +249,13 @@ def row(code: str) -> dict[str, float]:
     return dict(zip(CODES, SCALED[CODES.index(code)], strict=True))
 
 
-def bands() -> tuple[float, float]:
-    """点数を高い・普通・低いに分ける境目（引き伸ばし後の三分位）。"""
-    flat = sorted(v for r in SCALED for v in r)
-    return flat[len(flat) // 3], flat[len(flat) * 2 // 3]
+_FLAT = sorted(v for r in SCALED for v in r)
 
+# 点数を高い・普通・低いに分ける境目（引き伸ばし後の三分位）。
+BANDS: tuple[float, float] = (_FLAT[len(_FLAT) // 3], _FLAT[len(_FLAT) * 2 // 3])
 
-def mean() -> float:
-    """表全体の平均（引き伸ばし後）。"""
-    flat = [v for r in SCALED for v in r]
-    return round(sum(flat) / len(flat), 1)
+# 表全体の平均（引き伸ばし後）。
+MEAN: float = round(sum(_FLAT) / len(_FLAT), 1)
 
 
 # --- 組ごとのサマリーに使う材料 ------------------------------------------

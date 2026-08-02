@@ -1,4 +1,4 @@
-import type { Lang } from "@/i18n";
+import { findMessage, type Lang } from "@/i18n";
 
 /**
  * 四柱推命の用語の英語表記。
@@ -102,6 +102,11 @@ const SANMEI_STAR_EN: Record<string, string> = {
   天庫星: "Vault Star",
   天馳星: "Courier Star",
 };
+
+/** 種族の名前。未知のコードのときはコードをそのまま返す。 */
+export function speciesName(code: string, lang: Lang): string {
+  return findMessage(lang, `fortune.species.${code}.name`) ?? code;
+}
 
 /** 算命学の星の表示名。日本語は漢字のまま。 */
 export function starLabel(star: string, lang: Lang): string {

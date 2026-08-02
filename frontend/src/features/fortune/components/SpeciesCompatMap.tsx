@@ -3,7 +3,7 @@ import { findMessage, useI18n, type Lang, type MessageKey } from "@/i18n";
 import { fetchSpeciesCompat } from "../api/fortuneApi";
 import { formatValue } from "../radarGeometry";
 import { SpeciesIcon } from "../speciesIcons";
-import { axisLabel } from "../terms";
+import { axisLabel, speciesName } from "../terms";
 import type { SpeciesCompat } from "../types";
 import { RadarChart } from "./RadarChart";
 
@@ -16,9 +16,6 @@ const STEPS_PER_SIDE = 3;
 
 /** 相性は 0〜100。外周を 100 に固定し、軸を途中から始めない。 */
 const MAX_SCORE = 100;
-
-const speciesName = (code: string, lang: Lang): string =>
-  findMessage(lang, `fortune.species.${code}.name`) ?? code;
 
 /** 種族コードの1文字目＝五行、2文字目＝主星グループ。表示名は既存の訳語辞書で引く。 */
 const elementOf = (code: string, lang: Lang, ns: string): string =>
@@ -65,19 +62,25 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
   // 行ごとに伸ばしてあるので、どの行も 0〜100 で固定
   const range = { min: 0, max: 100 };
 
+  const index = useMemo(
+    () => Object.fromEntries((data?.codes ?? []).map((code, i) => [code, i])),
+    [data],
+  );
+
   // 本人の行。レーダーの軸はコードだけを出す（25 軸に名前は入らない）
   const myRow = useMemo(() => {
     if (!data) return [];
-    const i = data.codes.indexOf(mine);
-    return data.codes.map((code, j) => ({ code, label: code, value: data.matrix[i][j] }));
+    const row = data.matrix[data.codes.indexOf(mine)];
+    return data.codes.map((code, j) => ({ code, label: code, value: row[j] }));
   }, [data, mine]);
 
   if (failed) return <p className="error">{t("errors.fetch")}</p>;
   if (!data || !range) return <p className="hint result-status">{t("common.loading")}</p>;
 
-  const at = (a: string, b: string) => data.matrix[data.codes.indexOf(a)][data.codes.indexOf(b)];
+  // 625 マスを描くので、コード→添字は毎回探さず一度だけ作る
+  const at = (a: string, b: string) => data.matrix[index[a]][index[b]];
   /** 暖色・寒色の境目は「その行（＝見ている本人）の平均」。 */
-  const meanOf = (viewer: string) => data.row_means[data.codes.indexOf(viewer)];
+  const meanOf = (viewer: string) => data.row_means[index[viewer]];
 
   /** 行の平均からの隔たりを -3〜+3 に割り当てる。正なら暖色、負なら寒色。 */
   const tier = (v: number, viewer: string) => {

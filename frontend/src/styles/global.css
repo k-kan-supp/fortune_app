@@ -263,16 +263,22 @@ button {
   --step-accent: linear-gradient(90deg, #c19248, #eacf94);
 }
 
-.step-art {
-  width: 76px;
-  height: 76px;
-  margin: 0.4rem auto 1rem;
-  border-radius: 50%;
+/* 紋章の台座。線画アイコンを載せる無彩色の丸／角丸（大きさだけ各所で変える） */
+.step-art,
+.species-art,
+.compat-art {
   display: grid;
   place-items: center;
   color: var(--mono-ink);
   background: radial-gradient(circle at 30% 25%, #2e2b37, var(--mono-plate));
   border: 1px solid var(--mono-line);
+}
+
+.step-art {
+  width: 76px;
+  height: 76px;
+  margin: 0.4rem auto 1rem;
+  border-radius: 50%;
 }
 
 .step-art svg {
@@ -679,14 +685,9 @@ button {
 /* 種族の紋章。線画のみの白黒アイコン（step-art と同じ体裁） */
 .species-art {
   flex: none;
-  display: grid;
-  place-items: center;
   width: 66px;
   height: 66px;
   border-radius: 18px;
-  color: var(--mono-ink);
-  background: radial-gradient(circle at 30% 25%, #2e2b37, var(--mono-plate));
-  border: 1px solid var(--mono-line);
 }
 
 .species-art svg {
@@ -1014,14 +1015,9 @@ button {
 }
 
 .compat-art {
-  display: grid;
-  place-items: center;
   width: 44px;
   height: 44px;
   border-radius: 13px;
-  color: var(--mono-ink);
-  background: radial-gradient(circle at 30% 25%, #2e2b37, var(--mono-plate));
-  border: 1px solid var(--mono-line);
 }
 
 .compat-art svg {

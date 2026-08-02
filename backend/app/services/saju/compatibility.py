@@ -19,11 +19,18 @@ import math
 from typing import NamedTuple
 
 from app.schemas.fortune import Pillar
-from app.services.saju.analysis import element_ratios, ten_god_group_ratios
+from app.services.saju.analysis import (
+    element_evenness_exact,
+    element_ratios,
+    rescale,
+    ten_god_group_ratios,
+)
 from app.services.saju.constants import (
     CLASH,
+    CONTROLLED_BY,
     CONTROLS,
     FIVE_ELEMENTS,
+    GENERATED_BY,
     GENERATES,
     HARM,
     SIX_HARMONY,
@@ -87,10 +94,7 @@ SUPPORT_COMPLEMENT_THRESHOLD = 41.0
 
 def _rescale(value: float, span: tuple[float, float]) -> float:
     """素点を、実測した範囲 ``span`` を基準に 0〜100 へ引き伸ばす。"""
-    low, high = span
-    if high <= low:
-        return value
-    return min(100.0, max(0.0, (value - low) / (high - low) * 100))
+    return rescale(value, *span)
 
 
 def _day_master_relation(a: str, b: str) -> str:
@@ -131,8 +135,8 @@ def _nourishment(day_master: str, other: dict[str, float]) -> float:
     日主を生む五行と日主と同じ五行は力を与え、日主を剋す五行は削る。
     """
     element = STEM_ELEMENT[day_master]
-    generator = next(el for el, made in GENERATES.items() if made == element)
-    controller = next(el for el, ruled in CONTROLS.items() if ruled == element)
+    generator = GENERATED_BY[element]
+    controller = CONTROLLED_BY[element]
     # 与える気から削る気を引く。構成比なので -1〜1 に収まる。
     raw = other[generator] + other[element] - other[controller]
     return (raw + 1) / 2 * 100
@@ -149,12 +153,6 @@ def _tempo(a: dict[str, Pillar], b: dict[str, Pillar]) -> float:
     """生活のテンポの近さ（0〜100）。勢いが揃っているほど高い。"""
     span = max(TWELVE_STAGE_ENERGY.values()) - min(TWELVE_STAGE_ENERGY.values())
     return 100 * (1 - abs(_pace(a) - _pace(b)) / span)
-
-
-def _evenness(ratios: dict[str, float]) -> float:
-    """五行の均衡度（0〜100）。均等なら100、一行に偏るほど0に近づく。"""
-    # 均等(0.2)からのずれの合計。最大は一行に集中したときの 1.6。
-    return (1 - sum(abs(ratios[el] - BALANCED) for el in FIVE_ELEMENTS) / 1.6) * 100
 
 
 def _body_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, str]:
@@ -193,10 +191,10 @@ def _support_facet(a: dict[str, Pillar], b: dict[str, Pillar]) -> tuple[float, s
     ratios_a, ratios_b = element_ratios(a), element_ratios(b)
     merged = {el: (ratios_a[el] + ratios_b[el]) / 2 for el in FIVE_ELEMENTS}
 
-    alone = min(_evenness(ratios_a), _evenness(ratios_b))
+    alone = min(element_evenness_exact(ratios_a), element_evenness_exact(ratios_b))
     if alone >= 100:
         return 100.0, "element.complements"  # もともと二人とも均衡している
-    raw = max(0.0, (_evenness(merged) - alone) / (100 - alone) * 100)
+    raw = max(0.0, (element_evenness_exact(merged) - alone) / (100 - alone) * 100)
     score = _rescale(raw, FACET_RANGE["support"])
     return score, (
         "element.complements" if score >= SUPPORT_COMPLEMENT_THRESHOLD else "element.similar"

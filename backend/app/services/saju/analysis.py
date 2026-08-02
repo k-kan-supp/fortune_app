@@ -9,9 +9,11 @@ import math
 
 from app.schemas.fortune import Pillar, RadarAxis, RadarChart
 from app.services.saju.constants import (
+    CONTROLLED_BY,
     CONTROLS,
     EARTHLY_BRANCHES,
     FIVE_ELEMENTS,
+    GENERATED_BY,
     GENERATES,
     HEAVENLY_STEMS,
     HIDDEN_STEM_WEIGHTS,
@@ -122,18 +124,34 @@ def ten_god_group_ratios(pillars: dict[str, Pillar]) -> dict[str, float]:
     return _ratios(_tally(_weighted_stems(pillars), groups), TEN_GOD_GROUPS)
 
 
-def element_evenness(element_ratios: dict[str, float]) -> float:
-    """五行の均衡度を 0〜100 で返す（均等なら100、一行に偏るほど0に近づく）。"""
+def rescale(value: float, low: float, high: float) -> float:
+    """``low``〜``high`` を 0〜100 に引き伸ばす（外は端で止める）。
+
+    素点をそのまま出すと帯の中央に寄って差が読めない、というのがどの指標でも
+    起きるので、引き伸ばしはここに集約する。丸めは呼び出し側の裁量。
+    """
+    if high <= low:
+        return 50.0
+    return max(0.0, min(100.0, (value - low) / (high - low) * 100))
+
+
+def element_evenness_exact(element_ratios: dict[str, float]) -> float:
+    """五行の均衡度（丸めなし）。均等なら100、一行に偏るほど0に近づく。"""
     # 構成比が均等(0.2)からどれだけ離れているか。最大のずれは一行集中時の 1.6。
     deviation = sum(abs(element_ratios[el] - 1 / len(FIVE_ELEMENTS)) for el in FIVE_ELEMENTS)
-    return round((1 - deviation / 1.6) * 100, 1)
+    return (1 - deviation / 1.6) * 100
+
+
+def element_evenness(element_ratios: dict[str, float]) -> float:
+    """五行の均衡度を 0〜100 で返す（表示用に小数第1位で丸める）。"""
+    return round(element_evenness_exact(element_ratios), 1)
 
 
 def _seasonal_state_elements(month_branch: str) -> dict[str, str]:
     """月支が司る季節から、旺相休囚死それぞれに当たる五行を求める。"""
     ruling = SEASON_ELEMENT[month_branch]
-    generated_by = next(el for el, gen in GENERATES.items() if gen == ruling)
-    controlled_by = next(el for el, con in CONTROLS.items() if con == ruling)
+    generated_by = GENERATED_BY[ruling]
+    controlled_by = CONTROLLED_BY[ruling]
     return {
         "旺": ruling,  # 当令。その季節に最も勢いのある五行
         "相": GENERATES[ruling],  # 当令が生む五行

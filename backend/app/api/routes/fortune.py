@@ -26,11 +26,11 @@ from app.services.saju.daily import (
 from app.services.saju.pillars import calculate_four_pillars, four_pillars
 from app.services.saju.species import species
 from app.services.saju.species_compat import (
+    BANDS,
     CODES,
     ELEMENT_RELATIONS,
+    MEAN,
     ROW_MEANS,
-    bands,
-    mean,
     scaled_matrix,
 )
 
@@ -46,7 +46,7 @@ def create_fortune(req: FortuneRequest) -> FortuneResponse:
 @router.get("/species/compatibility", response_model=SpeciesCompatMap)
 def species_compatibility() -> SpeciesCompatMap:
     """25 種族どうしの相性マップ。誰が呼んでも同じ内容が返る。"""
-    low, high = bands()
+    low, high = BANDS
     return SpeciesCompatMap(
         codes=list(CODES),
         matrix=scaled_matrix(),
@@ -54,7 +54,7 @@ def species_compatibility() -> SpeciesCompatMap:
         element_relations=dict(ELEMENT_RELATIONS),
         band_low=low,
         band_high=high,
-        mean=mean(),
+        mean=MEAN,
     )
 
 

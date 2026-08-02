@@ -49,6 +49,10 @@ BRANCH_HIDDEN_STEMS = {
     "亥": ["壬", "甲"],
 }
 
+# 逆引き。「何に生まれるか」「何に剋されるか」は各所で要るので、毎回探さず持っておく。
+GENERATED_BY = {made: source for source, made in GENERATES.items()}
+CONTROLLED_BY = {ruled: source for source, ruled in CONTROLS.items()}
+
 # 十神（通変星）。日主から見た関係の10分類。
 TEN_GODS = [
     "比肩", "劫財", "食神", "傷官", "偏財",

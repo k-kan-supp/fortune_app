@@ -8,17 +8,24 @@
     金 — 秋・燥・涼。乾いて涼しい晴れ
     水 — 冬・寒・雨雪。降水と低温
 
-点数は「その日の空気が、命式の偏りをどれだけ埋めるか」で測る。
-足りない気が外から補われる日ほど高く、すでに多い気がさらに増える日ほど低い。
-相性の「支え合い」と同じ考え方で、残っていた偏りの何割が埋まったかを見る。
+分野ごとの星は、今日の空気を日主から見た通変星に読み替えて出す。
+同じ天気でも日主の五行が違えば意味が変わるので、種族ごとに出方が変わる。
+健康運だけは五行の均衡度で見る（命式のチャートと同じ扱い）。
 
 文言は持たず、フロントが訳せるようコードだけを返す。
 """
 
 from functools import lru_cache
 
-from app.services.saju.analysis import LIFE_AREA_WEIGHTS, blend, element_evenness
-from app.services.saju.constants import CONTROLS, FIVE_ELEMENTS, GENERATES, TEN_GOD_GROUPS
+from app.services.saju.analysis import LIFE_AREA_WEIGHTS, blend, element_evenness, rescale
+from app.services.saju.constants import (
+    CONTROLLED_BY,
+    CONTROLS,
+    FIVE_ELEMENTS,
+    GENERATED_BY,
+    GENERATES,
+    TEN_GOD_GROUPS,
+)
 
 # WMO の天気コード → 空模様。Open-Meteo が返すコード体系。
 SKY_CODES: dict[str, tuple[int, ...]] = {
@@ -83,28 +90,18 @@ def day_elements(
     return {el: raw[el] / total for el in FIVE_ELEMENTS}
 
 
-def balance_gain(chart: dict[str, float], day: dict[str, float]) -> float:
-    """その日の空気が命式の偏りをどれだけ埋めるか（素点）。
-
-    残っていた偏りの何割が埋まったか。埋めれば正、かえって偏りを深めれば負。
-    ここで 0 に刈り取ってしまうと「悪化した日」が全部同じ値に潰れ、
-    偏りの強い命式がいつ見ても 0 点になる。刈り取りは正規化のあとで行う。
-    """
-    alone = element_evenness(chart)
-    if alone >= 100:
-        return 0.0  # もともと均衡している命式は、どの日でも動かしようがない
-    merged = element_evenness({el: (chart[el] + day[el]) / 2 for el in FIVE_ELEMENTS})
-    return (merged - alone) / (100 - alone) * 100
+# 格子の粗さ。細かくするほど基準は正確になるが、命式ごとに全点を評価する。
+_GRID_T, _GRID_H, _GRID_D = 9, 9, 5
 
 
 def _reachable_days() -> tuple[dict[str, float], ...]:
-    """起こりうる空気を並べる。正規化の基準になる一覧。
+    """起こりうる空気を並べる。星を 0〜5 に割り当てる基準になる一覧。
 
-    素点の取りうる幅は命式によって違い、そのままだと「いつ見ても低い」人が出る。
-    そこでこの一覧で本人の下端・上端を測り、0〜100 に伸ばす。
+    素点の取りうる幅は命式と日主で違い、そのままだと「一年中どの分野にも星が
+    付かない種族」が出る。そこでこの一覧で本人の下端・上端を測り、0〜100 に伸ばす。
 
     一覧は ``day_elements`` が受け付ける入力空間の全域を格子で覆う。
-    季節の近似式で作ると実測がその外に出て（真夏の 31℃ など）点数が端に
+    季節の近似式で作ると実測がその外に出て（真夏の 31℃ など）星が端に
     張り付くので、関数が丸める範囲そのものを基準にする。
     """
     temperatures = [
@@ -124,33 +121,7 @@ def _reachable_days() -> tuple[dict[str, float], ...]:
     )
 
 
-# 格子の粗さ。細かくするほど基準は正確になるが、1 回の鑑定で全点を評価する。
-_GRID_T, _GRID_H, _GRID_D = 9, 9, 5
-
-
 REACHABLE_DAYS = _reachable_days()
-
-
-@lru_cache(maxsize=512)
-def _span_for(ratios: tuple[float, ...]) -> tuple[float, float]:
-    """下端・上端の実測。基準の全点を評価するので、命式ごとに覚えておく。"""
-    chart = dict(zip(FIVE_ELEMENTS, ratios, strict=True))
-    scores = [balance_gain(chart, day) for day in REACHABLE_DAYS]
-    return min(scores), max(scores)
-
-
-def personal_span(chart: dict[str, float]) -> tuple[float, float]:
-    """その命式が取りうる素点の下端と上端。"""
-    return _span_for(tuple(chart[el] for el in FIVE_ELEMENTS))
-
-
-def daily_score(chart: dict[str, float], day: dict[str, float]) -> float:
-    """今日の運勢（0〜100）。本人が取りうる幅の中で今日がどこかを示す。"""
-    low, high = personal_span(chart)
-    if high <= low:  # もともと均衡していて動かない命式
-        return 50.0
-    gain = balance_gain(chart, day)
-    return round(max(0.0, min(100.0, (gain - low) / (high - low) * 100)), 1)
 
 
 def element_moves(chart: dict[str, float], day: dict[str, float]) -> tuple[list[str], list[str]]:
@@ -179,14 +150,12 @@ def air_groups(day: dict[str, float], element: str) -> dict[str, float]:
     自分が生む「食傷」だが、木の人にとっては自分を生む「印星」になる。
     種族ごとに出方が変わるのはここが効くため。
     """
-    generated_by = next(el for el, made in GENERATES.items() if made == element)
-    controlled_by = next(el for el, ruled in CONTROLS.items() if ruled == element)
     return {
         "比劫": day[element],
         "食傷": day[GENERATES[element]],
         "財星": day[CONTROLS[element]],
-        "官殺": day[controlled_by],
-        "印星": day[generated_by],
+        "官殺": day[CONTROLLED_BY[element]],
+        "印星": day[GENERATED_BY[element]],
     }
 
 
@@ -265,9 +234,7 @@ def daily_areas(
 
     result = {}
     for area in DAILY_AREAS:
-        low, high = spans[area]
-        score = 50.0 if high <= low else (today[area] - low) / (high - low) * 100
-        score = max(0.0, min(100.0, score))
+        score = rescale(today[area], *spans[area])
         result[area] = (round(score / 100 * MAX_STARS), round(score, 1))
     return result
 
