@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 十二支の回転盤</title>
+<style>
+:root{--bg:#0e0d12;--ink:#efedf4;--ink-2:#a5a1b4;--ink-3:#6f6b7d;
+  --line:rgba(255,255,255,.09);--accent:#a98ce0;--gold:#d3a45c;--surface:#1a1922;
+  --clash:#c8697f;--harm:#5fb49c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);padding:24px 18px 46px;
+  font:400 15px/1.75 "Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:460px;margin:0 auto}
+h1{margin:0 0 3px;font-size:1.3rem;font-weight:600}
+.sub{margin:0 0 16px;color:var(--ink-3);font-size:.78rem}
+
+.dialbox{position:relative;touch-action:none;user-select:none;cursor:grab}
+.dialbox.drag{cursor:grabbing}
+svg{width:100%;height:auto;display:block;overflow:visible}
+.ring{fill:none;stroke:rgba(255,255,255,.07);stroke-width:1}
+.seg{fill:#1c1b25;stroke:rgba(255,255,255,.06);stroke-width:1;transition:fill .3s}
+.seg.mine{fill:#2b2440}
+.seg.sel{fill:#3d3160}
+.bch{fill:var(--ink-2);font-size:16px;font-weight:600;text-anchor:middle;dominant-baseline:central;
+  transition:fill .3s}
+.bch.mine{fill:var(--ink)}
+.bch.sel{fill:#fff}
+.cnt{fill:var(--gold);font-size:9.5px;text-anchor:middle;dominant-baseline:central}
+.marker{fill:var(--accent)}
+.rel{stroke-width:2;fill:none;opacity:0;transition:opacity .35s}
+.rel.on{opacity:.9}
+.rel.clash{stroke:var(--clash);stroke-dasharray:6 4}
+.rel.harm{stroke:var(--harm)}
+.hub{fill:#16151d;stroke:var(--line)}
+.hubk{fill:var(--ink);font-size:30px;font-weight:600;text-anchor:middle;dominant-baseline:central}
+.hubs{fill:var(--ink-3);font-size:10px;text-anchor:middle}
+
+.legend{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:6px 0 0;font-size:.74rem;color:var(--ink-2)}
+.legend span{display:flex;align-items:center;gap:7px}
+.sw{width:18px;height:0;border-top:2px solid}
+.sw.c{border-color:var(--clash);border-top-style:dashed} .sw.h{border-color:var(--harm)}
+.sw.m{width:11px;height:11px;border:0;border-radius:3px;background:#3d3160}
+
+.card{margin-top:18px;background:var(--surface);border:1px solid var(--line);
+  border-radius:18px;padding:18px}
+.card h2{margin:0 0 2px;font-size:1.15rem;font-weight:600;letter-spacing:.05em}
+.card .tag{font-size:.72rem;color:var(--gold);letter-spacing:.06em}
+.card p{margin:11px 0 0;font-size:.86rem;color:var(--ink-2);text-align:justify}
+.pair{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
+.pair div{flex:1;min-width:130px;border:1px solid var(--line);border-radius:12px;padding:9px 11px;font-size:.76rem;color:var(--ink-2)}
+.pair em{font-style:normal;display:block;font-size:.65rem;letter-spacing:.09em;color:var(--ink-3);margin-bottom:2px}
+.pair b{color:var(--ink)}
+.hint{text-align:center;color:var(--ink-3);font-size:.72rem;margin-top:12px}
+@media (prefers-reduced-motion:reduce){#rot{transition:none!important}.rel{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>十二支の盤</h1>
+  <p class="sub">盤をドラッグして回すと、上に来た支が選ばれます。あなたの支は色が濃くなっています。</p>
+
+  <div class="dialbox" id="box">
+    <svg id="svg" viewBox="0 0 400 400" role="img" aria-label="十二支の回転盤"></svg>
+  </div>
+  <div class="legend">
+    <span><i class="sw m"></i>あなたの支</span>
+    <span><i class="sw h"></i>六合（結びつく）</span>
+    <span><i class="sw c"></i>冲（ぶつかる）</span>
+  </div>
+
+  <div class="card" id="card"></div>
+  <p class="hint">← → キーでも回せます</p>
+</div>
+
+<script>
+const B=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const MINE={辰:1,巳:2,午:1};
+const SIX={子:"丑",丑:"子",寅:"亥",亥:"寅",卯:"戌",戌:"卯",辰:"酉",酉:"辰",巳:"申",申:"巳",午:"未",未:"午"};
+const CLASH={子:"午",午:"子",丑:"未",未:"丑",寅:"申",申:"寅",卯:"酉",酉:"卯",辰:"戌",戌:"辰",巳:"亥",亥:"巳"};
+const INFO={
+  子:"冬の真ん中。芽生える前の静かな時期。",丑:"冬の終わり。春に向けて力を蓄える時期。",
+  寅:"春の始まり。物事が動き出す勢い。",卯:"春の盛り。草木が伸びる穏やかな時期。",
+  辰:"春の終わり。変化と勢いを含んだ時期。",巳:"夏の始まり。熱が高まっていく時期。",
+  午:"夏の盛り。火の勢いが最も強い時期。",未:"夏の終わり。実りに向けて熟していく時期。",
+  申:"秋の始まり。実が固まり始める時期。",酉:"秋の盛り。収穫と仕上げの時期。",
+  戌:"秋の終わり。片づけて守りに入る時期。",亥:"冬の始まり。内にこもって力を蓄える時期。"
+};
+const cx=200,cy=200,RO=180,RI=118,STEP=360/12;
+const svg=document.getElementById('svg'), NS="http://www.w3.org/2000/svg";
+const el=(t,a)=>{const n=document.createElementNS(NS,t);for(const k in a)n.setAttribute(k,a[k]);return n};
+const P=(ang,r)=>{const a=(ang-90)*Math.PI/180;return [cx+Math.cos(a)*r, cy+Math.sin(a)*r]};
+
+// 回る側をグループにまとめる
+const rot=el('g',{id:'rot'});
+svg.appendChild(el('circle',{class:'ring',cx,cy,r:RO}));
+svg.appendChild(rot);
+
+const segs={}, texts={};
+B.forEach((b,i)=>{
+  const a0=i*STEP-STEP/2, a1=i*STEP+STEP/2;
+  const [x0,y0]=P(a0,RO),[x1,y1]=P(a1,RO),[x2,y2]=P(a1,RI),[x3,y3]=P(a0,RI);
+  const p=el('path',{class:'seg'+(MINE[b]?' mine':''),
+    d:`M${x0},${y0} A${RO},${RO} 0 0 1 ${x1},${y1} L${x2},${y2} A${RI},${RI} 0 0 0 ${x3},${y3} Z`});
+  rot.appendChild(p); segs[b]=p;
+  const [tx,ty]=P(i*STEP,(RO+RI)/2+4);
+  const t=el('text',{class:'bch'+(MINE[b]?' mine':''),x:tx,y:ty});t.textContent=b;
+  rot.appendChild(t); texts[b]=t;
+  if(MINE[b]){
+    const [nx,ny]=P(i*STEP,(RO+RI)/2-17);
+    const c=el('text',{class:'cnt',x:nx,y:ny});c.textContent='●'.repeat(MINE[b]);
+    rot.appendChild(c);
+  }
+});
+// 関係線（回る側に乗せる）
+const relLines={};
+['harm','clash'].forEach(type=>{
+  const map=type==='harm'?SIX:CLASH;
+  Object.keys(map).forEach(from=>{
+    const to=map[from];
+    if(B.indexOf(from)>B.indexOf(to))return;
+    const [x1,y1]=P(B.indexOf(from)*STEP,RI-6), [x2,y2]=P(B.indexOf(to)*STEP,RI-6);
+    const l=el('path',{class:`rel ${type}`,d:`M${x1},${y1} Q${cx},${cy} ${x2},${y2}`});
+    rot.appendChild(l);
+    relLines[type+':'+from+'-'+to]=l;
+  });
+});
+// 上部のマーカーと中央のハブ（回らない）
+svg.appendChild(el('path',{class:'marker',d:`M200,${cy-RO-14} l9,15 h-18 z`}));
+// ハブは小さめに。関係線が中央を通っても両側が見えるようにする
+svg.appendChild(el('circle',{class:'hub',cx,cy,r:66}));
+const hubK=el('text',{class:'hubk',x:cx,y:cy-6}); svg.appendChild(hubK);
+const hubS=el('text',{class:'hubs',x:cx,y:cy+20}); svg.appendChild(hubS);
+
+let angle=0, sel=0;
+function apply(animate=true){
+  rot.style.transition=animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 'transform .42s cubic-bezier(.2,.8,.2,1)' : 'none';
+  rot.style.transformOrigin='200px 200px';
+  rot.style.transform=`rotate(${angle}deg)`;
+  // 支の文字は水平に保つ
+  B.forEach((b,i)=>{
+    const [tx,ty]=P(i*STEP,(RO+RI)/2+4);
+    texts[b].setAttribute('transform',`rotate(${-angle} ${tx} ${ty})`);
+  });
+}
+function select(i){
+  sel=((i%12)+12)%12;
+  const b=B[sel];
+  Object.entries(segs).forEach(([k,s])=>s.classList.toggle('sel',k===b));
+  Object.entries(texts).forEach(([k,t])=>t.classList.toggle('sel',k===b));
+  Object.entries(relLines).forEach(([k,l])=>{
+    const [,pair]=k.split(':');
+    l.classList.toggle('on', pair.split('-').includes(b));
+  });
+  hubK.textContent=b; hubS.textContent=MINE[b]?`あなたの命式に ${MINE[b]}`:'この命式には無し';
+  const six=SIX[b], cl=CLASH[b];
+  document.getElementById('card').innerHTML=`
+    <h2>${b}</h2>
+    <div class="tag">${MINE[b]?`あなたの命式に ${MINE[b]} つ`:'あなたの命式には出ていません'}</div>
+    <p>${INFO[b]}</p>
+    <div class="pair">
+      <div><em>六合</em><b>${six}</b> と結びつきます${MINE[six]?'（あなたも持っています）':''}</div>
+      <div><em>冲</em><b>${cl}</b> とぶつかります${MINE[cl]?'（あなたも持っています）':''}</div>
+    </div>`;
+}
+apply(false); select(0);
+
+// ドラッグで回す（離すと 30° にスナップ）
+const box=document.getElementById('box');
+let dragging=false, startAng=0, startRot=0;
+const angOf=e=>{
+  const r=box.getBoundingClientRect();
+  return Math.atan2(e.clientY-(r.top+r.height/2), e.clientX-(r.left+r.width/2))*180/Math.PI;
+};
+box.addEventListener('pointerdown',e=>{
+  dragging=true;startAng=angOf(e);startRot=angle;
+  box.classList.add('drag');box.setPointerCapture(e.pointerId);rot.style.transition='none';
+});
+box.addEventListener('pointermove',e=>{
+  if(!dragging)return;
+  angle=startRot+(angOf(e)-startAng);
+  apply(false);
+});
+const stop=()=>{
+  if(!dragging)return; dragging=false; box.classList.remove('drag');
+  const steps=Math.round(angle/STEP);
+  angle=steps*STEP; apply(true);
+  select(-steps);
+};
+box.addEventListener('pointerup',stop);
+box.addEventListener('pointercancel',stop);
+document.addEventListener('keydown',e=>{
+  if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+  angle+=e.key==='ArrowRight'?-STEP:STEP;
+  apply(true); select(-Math.round(angle/STEP));
+});
+</script>
+</body>
+</html>

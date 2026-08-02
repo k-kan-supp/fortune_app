@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 五行の相生相剋ダイアグラム</title>
+<style>
+:root{--bg:#100f15;--ink:#efedf4;--ink-2:#a5a1b4;--ink-3:#6f6b7d;
+  --line:rgba(255,255,255,.09);--accent:#a98ce0;--gold:#d3a45c;--surface:#1a1922;
+  --gen:#5fb49c;--ctl:#c8697f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);padding:26px 18px 60px;
+  font:400 15px/1.8 "Hiragino Sans","Noto Sans JP",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:760px;margin:0 auto}
+h1{margin:0 0 4px;font-size:1.4rem;font-weight:600}
+.sub{margin:0 0 20px;color:var(--ink-3);font-size:.8rem}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:10px 10px 4px}
+svg{width:100%;height:auto;display:block;overflow:visible;touch-action:manipulation}
+.edge{stroke-width:2;fill:none;opacity:.16;transition:opacity .25s, stroke-width .25s}
+.edge.gen{stroke:var(--gen)} .edge.ctl{stroke:var(--ctl);stroke-dasharray:5 5}
+.edge.lit{opacity:.95;stroke-width:2.6}
+.node{cursor:pointer}
+.node circle{transition:r .3s cubic-bezier(.2,.8,.2,1), fill .25s, stroke .25s}
+.node .halo{fill:rgba(169,140,224,.10);stroke:none}
+.node .body{fill:#262433;stroke:rgba(255,255,255,.14);stroke-width:1.5}
+.node.lit .body{fill:color-mix(in srgb,var(--accent) 34%,#262433);stroke:var(--accent)}
+.node.sel .body{fill:color-mix(in srgb,var(--accent) 60%,#262433);stroke:#e2d6ff;stroke-width:2.5}
+.node text.n{fill:var(--ink);font-size:19px;font-weight:600;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.node text.v{fill:var(--ink-3);font-size:10.5px;text-anchor:middle;pointer-events:none}
+.node:focus-visible .body{stroke:#fff;stroke-width:3}
+
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:14px 2px 0;font-size:.75rem;color:var(--ink-2)}
+.legend span{display:flex;align-items:center;gap:7px}
+.swatch{width:20px;height:0;border-top:2px solid}
+.swatch.gen{border-color:var(--gen)} .swatch.ctl{border-color:var(--ctl);border-top-style:dashed}
+
+.readout{margin-top:16px;background:var(--surface);border:1px solid var(--line);
+  border-radius:18px;padding:18px 18px 16px;min-height:150px}
+.readout h2{margin:0 0 3px;font-size:1.15rem;font-weight:600;letter-spacing:.04em}
+.readout .lv{color:var(--gold);font-size:.75rem;letter-spacing:.06em;margin-bottom:11px}
+.readout p{margin:0 0 12px;color:var(--ink-2);font-size:.87rem;text-align:justify}
+.rels{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.rel{border:1px solid var(--line);border-radius:12px;padding:9px 11px;font-size:.76rem;color:var(--ink-2)}
+.rel em{font-style:normal;display:block;font-size:.66rem;letter-spacing:.09em;color:var(--ink-3);margin-bottom:2px}
+.rel b{color:var(--ink);font-weight:600}
+.empty{color:var(--ink-3);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>五行の巡り</h1>
+  <p class="sub">円の大きさ＝この命式での強さ。丸を押すと、その気が生む先・剋す先が光ります。</p>
+
+  <div class="stage">
+    <svg id="svg" viewBox="0 0 460 380" role="img" aria-label="五行の相生相剋ダイアグラム"></svg>
+  </div>
+  <div class="legend">
+    <span><i class="swatch gen"></i>相生（生む）</span>
+    <span><i class="swatch ctl"></i>相剋（抑える）</span>
+    <span style="color:var(--ink-3)">円の面積は 0.3〜4.8 の実測値に比例</span>
+  </div>
+
+  <div class="readout" id="out"><p class="empty">丸を選んでください。</p></div>
+</div>
+
+<script>
+const EL=[
+  {k:"木",v:0.5,d:"伸びる気。草木が上へ伸びるように、始めること・広げることを担います。"},
+  {k:"火",v:3.5,d:"燃える気。熱・表現・人目に触れることを担います。"},
+  {k:"土",v:2.8,d:"抱える気。受け止めて蓄え、土台を作ることを担います。"},
+  {k:"金",v:4.8,d:"固める気。刃物のように断ち切り、形を決めることを担います。"},
+  {k:"水",v:0.3,d:"流れる気。巡らせ、溜め、深く考えることを担います。"}
+];
+const GEN={木:"火",火:"土",土:"金",金:"水",水:"木"};
+const CTL={木:"土",土:"水",水:"火",火:"金",金:"木"};
+const MAX=5, cx=230, cy=178, R=124;
+const pos={};
+EL.forEach((e,i)=>{
+  const a=-Math.PI/2+i*2*Math.PI/5;
+  pos[e.k]=[cx+Math.cos(a)*R, cy+Math.sin(a)*R];
+});
+const rOf=v=>16+Math.sqrt(v/MAX)*26;
+
+const svg=document.getElementById('svg');
+const NS="http://www.w3.org/2000/svg";
+function el(t,at){const n=document.createElementNS(NS,t);for(const k in at)n.setAttribute(k,at[k]);return n}
+
+// 辺（相生＝外周、相剋＝内側の星）
+const edges=[];
+for(const from in GEN) edges.push([from,GEN[from],'gen']);
+for(const from in CTL) edges.push([from,CTL[from],'ctl']);
+edges.forEach(([a,b,type])=>{
+  const [x1,y1]=pos[a],[x2,y2]=pos[b];
+  const ra=rOf(EL.find(e=>e.k===a).v)+3, rb=rOf(EL.find(e=>e.k===b).v)+10;
+  const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy);
+  const sx=x1+dx/L*ra, sy=y1+dy/L*ra, ex=x2-dx/L*rb, ey=y2-dy/L*rb;
+  const line=el('path',{class:`edge ${type}`,d:`M${sx},${sy} L${ex},${ey}`,
+    'marker-end':`url(#ar-${type})`});
+  line.dataset.from=a; line.dataset.to=b; line.dataset.type=type;
+  svg.appendChild(line);
+});
+// 矢印
+const defs=el('defs',{});
+[['gen','var(--gen)'],['ctl','var(--ctl)']].forEach(([id,c])=>{
+  const m=el('marker',{id:'ar-'+id,viewBox:'0 0 10 10',refX:'8',refY:'5',
+    markerWidth:'5',markerHeight:'5',orient:'auto-start-reverse'});
+  m.appendChild(el('path',{d:'M0,1 L9,5 L0,9 z',fill:c}));
+  defs.appendChild(m);
+});
+svg.insertBefore(defs,svg.firstChild);
+
+// ノード
+EL.forEach(e=>{
+  const [x,y]=pos[e.k], r=rOf(e.v);
+  const g=el('g',{class:'node',tabindex:'0',role:'button','aria-label':`${e.k} ${e.v}`});
+  g.dataset.k=e.k;
+  g.appendChild(el('circle',{class:'halo',cx:x,cy:y,r:r+10}));
+  g.appendChild(el('circle',{class:'body',cx:x,cy:y,r:r}));
+  const t=el('text',{class:'n',x:x,y:y}); t.textContent=e.k; g.appendChild(t);
+  const v=el('text',{class:'v',x:x,y:y+r+15}); v.textContent=e.v; g.appendChild(v);
+  svg.appendChild(g);
+  const act=()=>select(e.k);
+  g.addEventListener('click',act);
+  g.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();act()}});
+});
+
+const out=document.getElementById('out');
+function select(k){
+  const e=EL.find(x=>x.k===k);
+  const gen=GEN[k], ctl=CTL[k];
+  const genBy=Object.keys(GEN).find(f=>GEN[f]===k);
+  const ctlBy=Object.keys(CTL).find(f=>CTL[f]===k);
+
+  document.querySelectorAll('.node').forEach(n=>{
+    n.classList.toggle('sel',n.dataset.k===k);
+    n.classList.toggle('lit',[gen,ctl,genBy,ctlBy].includes(n.dataset.k));
+  });
+  document.querySelectorAll('.edge').forEach(l=>{
+    l.classList.toggle('lit', l.dataset.from===k || l.dataset.to===k);
+  });
+
+  const val=x=>EL.find(y=>y.k===x).v;
+  const strength=e.v>=3.5?'厚い':e.v>=1.5?'ほどほど':'薄い';
+  out.innerHTML=`
+    <h2>${k}</h2>
+    <div class="lv">この命式では ${e.v} ／ 外周 5 — ${strength}</div>
+    <p>${e.d}</p>
+    <div class="rels">
+      <div class="rel"><em>生む</em><b>${gen}</b>（${val(gen)}）へ力を渡します</div>
+      <div class="rel"><em>生まれる</em><b>${genBy}</b>（${val(genBy)}）から力を受けます</div>
+      <div class="rel"><em>剋す</em><b>${ctl}</b>（${val(ctl)}）を抑えます</div>
+      <div class="rel"><em>剋される</em><b>${ctlBy}</b>（${val(ctlBy)}）に抑えられます</div>
+    </div>`;
+}
+select('金');
+</script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 相性スワイプ</title>
+<style>
+:root{--bg:#0f0e13;--ink:#efedf4;--ink-2:#a5a1b4;--ink-3:#6f6b7d;
+  --line:rgba(255,255,255,.09);--accent:#a98ce0;--gold:#d3a45c;--surface:#1b1a23;
+  --ok:#5fb49c;--no:#c8697f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);padding:24px 18px 40px;
+  font:400 15px/1.75 "Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+.wrap{max-width:420px;margin:0 auto}
+h1{margin:0 0 3px;font-size:1.3rem;font-weight:600}
+.sub{margin:0 0 20px;color:var(--ink-3);font-size:.78rem}
+
+/* 背面：カードを持ち上げるほど見えてくる相性の根拠 */
+.stage{position:relative;height:520px;touch-action:none;user-select:none}
+.behind{position:absolute;inset:0;border-radius:26px;background:var(--surface);
+  border:1px solid var(--line);padding:26px 22px;display:flex;flex-direction:column;
+  justify-content:center;gap:16px}
+.behind h2{margin:0;font-size:.72rem;letter-spacing:.12em;color:var(--ink-3);font-weight:700}
+.total{display:flex;align-items:baseline;gap:10px}
+.total b{font-size:3.4rem;font-weight:600;line-height:1;
+  background:linear-gradient(140deg,var(--accent),var(--gold));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.total span{color:var(--ink-3);font-size:.78rem}
+.facets{display:flex;flex-direction:column;gap:11px}
+.f{display:grid;grid-template-columns:64px 1fr 34px;gap:10px;align-items:center;font-size:.78rem}
+.f i{font-style:normal;color:var(--ink-2)}
+.f .tr{height:7px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.f .fl{height:100%;border-radius:99px;background:var(--accent);
+  transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.f u{text-decoration:none;text-align:right;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.why{margin:0;font-size:.76rem;color:var(--ink-3);line-height:1.85}
+
+/* 前面カード */
+.card{position:absolute;inset:0;border-radius:26px;overflow:hidden;cursor:grab;
+  background:linear-gradient(165deg,#2c2740,#1d1a28);border:1px solid var(--line);
+  box-shadow:0 20px 50px rgba(0,0,0,.5);will-change:transform}
+.card.drag{cursor:grabbing}
+.card .photo{height:62%;display:grid;place-items:center;
+  background:radial-gradient(circle at 40% 30%, rgba(169,140,224,.34), transparent 62%),
+             radial-gradient(circle at 75% 78%, rgba(211,164,92,.22), transparent 58%)}
+.card .photo span{font-size:4.6rem;font-weight:600;letter-spacing:.06em;
+  color:rgba(255,255,255,.9);text-shadow:0 4px 24px rgba(0,0,0,.4)}
+.card .info{padding:18px 20px}
+.card .info b{font-size:1.15rem;font-weight:600;display:block}
+.card .info em{font-style:normal;color:var(--ink-3);font-size:.78rem;display:block;margin-top:3px}
+.card .info p{margin:11px 0 0;font-size:.8rem;color:var(--ink-2);line-height:1.8}
+.stamp{position:absolute;top:26px;font-size:1.5rem;font-weight:800;letter-spacing:.1em;
+  padding:6px 16px;border:3px solid;border-radius:12px;opacity:0;transition:opacity .12s}
+.stamp.like{left:22px;color:var(--ok);border-color:var(--ok);transform:rotate(-14deg)}
+.stamp.nope{right:22px;color:var(--no);border-color:var(--no);transform:rotate(14deg)}
+
+.actions{display:flex;justify-content:center;gap:14px;margin-top:20px}
+.actions button{width:58px;height:58px;border-radius:50%;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink-2);font-size:1.3rem;cursor:pointer;
+  transition:transform .15s, border-color .15s, color .15s}
+.actions button:hover{transform:scale(1.07)}
+.actions button.y:hover{color:var(--ok);border-color:var(--ok)}
+.actions button.n:hover{color:var(--no);border-color:var(--no)}
+.hint{text-align:center;color:var(--ink-3);font-size:.72rem;margin-top:14px}
+.done{position:absolute;inset:0;display:none;place-items:center;text-align:center;
+  border-radius:26px;background:var(--surface);border:1px solid var(--line);color:var(--ink-3)}
+.done.on{display:grid}
+@media (prefers-reduced-motion:reduce){.card{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>今日の候補</h1>
+  <p class="sub">カードを左右にドラッグ。持ち上げるほど、背面の相性の根拠が見えます。</p>
+
+  <div class="stage" id="stage">
+    <div class="behind">
+      <h2>四柱推命の相性</h2>
+      <div class="total"><b id="tScore">—</b><span>／ 100</span></div>
+      <div class="facets" id="facets"></div>
+      <p class="why" id="why"></p>
+    </div>
+    <div class="done" id="done"><div>今日の候補は以上です<br><small>また明日</small></div></div>
+  </div>
+
+  <div class="actions">
+    <button class="n" id="bn" aria-label="見送る">✕</button>
+    <button class="y" id="by" aria-label="いいね">♥</button>
+  </div>
+  <p class="hint">← 見送る ／ いいね →</p>
+</div>
+
+<script>
+const PEOPLE=[
+  {name:"ハル",meta:"28歳 ・ 日主 乙（陰の木）",dm:"乙",
+   bio:"植物と本。休みの日は公園で読んでいます。",
+   total:78,f:{体:71,心:92,思考:64,支え合い:80},
+   why:"日主どうしが相生（庚が乙を剋さず合する形）。互いの五行の欠けを埋め合う配分です。"},
+  {name:"ナギ",meta:"31歳 ・ 日主 庚（陽の金）",dm:"庚",
+   bio:"走ること。朝が早いです。",
+   total:52,f:{体:60,心:48,思考:88,支え合い:31},
+   why:"考え方の構成比はよく似ています。ただし同じ金に偏るため、支え合いでは補い合いが起きにくい。"},
+  {name:"ミオ",meta:"26歳 ・ 日主 癸（陰の水）",dm:"癸",
+   bio:"夜更かしと映画。長い話が好きです。",
+   total:69,f:{体:44,心:75,思考:58,支え合い:94},
+   why:"この命式に足りない水を厚く持つ相手。支え合いが突出しています。"}
+];
+
+const stage=document.getElementById('stage');
+const facets=document.getElementById('facets');
+let idx=0, card=null;
+
+function paint(p){
+  document.getElementById('tScore').textContent=p.total;
+  facets.innerHTML=Object.entries(p.f).map(([k,v])=>
+    `<div class="f"><i>${k}</i><div class="tr"><div class="fl" style="width:${v}%"></div></div><u>${v}</u></div>`).join('');
+  document.getElementById('why').textContent=p.why;
+}
+
+function build(){
+  if(idx>=PEOPLE.length){document.getElementById('done').classList.add('on');return}
+  const p=PEOPLE[idx];
+  paint(p);
+  card=document.createElement('div');
+  card.className='card';
+  card.innerHTML=`
+    <div class="stamp like">LIKE</div><div class="stamp nope">NOPE</div>
+    <div class="photo"><span>${p.dm}</span></div>
+    <div class="info"><b>${p.name}</b><em>${p.meta}</em><p>${p.bio}</p></div>`;
+  stage.appendChild(card);
+  drag(card);
+}
+
+function drag(el){
+  let sx=0,sy=0,dx=0,dy=0,active=false;
+  const like=el.querySelector('.like'), nope=el.querySelector('.nope');
+  el.addEventListener('pointerdown',e=>{
+    active=true;sx=e.clientX;sy=e.clientY;el.setPointerCapture(e.pointerId);
+    el.classList.add('drag');el.style.transition='none';
+  });
+  el.addEventListener('pointermove',e=>{
+    if(!active)return;
+    dx=e.clientX-sx; dy=e.clientY-sy;
+    const rot=dx/16, lift=Math.min(Math.abs(dx)/280,1);
+    el.style.transform=`translate(${dx}px,${dy*0.35}px) rotate(${rot}deg)`;
+    // 持ち上げるほど前面が透ける＝背面の根拠が見えてくる
+    el.style.opacity=String(1-lift*0.55);
+    like.style.opacity=String(Math.max(0,dx/110));
+    nope.style.opacity=String(Math.max(0,-dx/110));
+  });
+  const end=()=>{
+    if(!active)return; active=false; el.classList.remove('drag');
+    el.style.transition='transform .38s cubic-bezier(.2,.8,.2,1), opacity .38s';
+    if(Math.abs(dx)>110){
+      const dir=Math.sign(dx);
+      el.style.transform=`translate(${dir*520}px,${dy*0.35+40}px) rotate(${dir*22}deg)`;
+      el.style.opacity='0';
+      setTimeout(()=>{el.remove();idx++;build()},340);
+    }else{
+      el.style.transform='';el.style.opacity='1';
+      like.style.opacity=nope.style.opacity='0';
+    }
+    dx=dy=0;
+  };
+  el.addEventListener('pointerup',end);
+  el.addEventListener('pointercancel',end);
+}
+
+function fling(dir){
+  if(!card||idx>=PEOPLE.length)return;
+  const el=card;
+  el.style.transition='transform .38s cubic-bezier(.2,.8,.2,1), opacity .38s';
+  el.querySelector(dir>0?'.like':'.nope').style.opacity='1';
+  el.style.transform=`translate(${dir*520}px,30px) rotate(${dir*22}deg)`;
+  el.style.opacity='0';
+  setTimeout(()=>{el.remove();idx++;build()},340);
+}
+document.getElementById('by').addEventListener('click',()=>fling(1));
+document.getElementById('bn').addEventListener('click',()=>fling(-1));
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight')fling(1);
+  if(e.key==='ArrowLeft')fling(-1);
+});
+build();
+</script>
+</body>
+</html>

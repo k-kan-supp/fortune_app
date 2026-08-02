@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 スクロールで組み上がる命式</title>
+<style>
+:root{--bg:#0f0e13;--ink:#efedf4;--ink-2:#a5a1b4;--ink-3:#6f6b7d;
+  --line:rgba(255,255,255,.09);--accent:#a98ce0;--gold:#d3a45c;--surface:#191821}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:400 15px/1.85 "Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:660px;margin:0 auto;padding:0 20px 40vh}
+
+/* 上に貼りつく盤：スクロールに合わせて 1 柱ずつ埋まる */
+.board{position:sticky;top:0;z-index:10;padding:18px 0 14px;
+  background:linear-gradient(180deg,var(--bg) 72%,transparent);
+  backdrop-filter:blur(6px)}
+.board .cap{font-size:.68rem;letter-spacing:.12em;color:var(--ink-3);margin-bottom:9px}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.col{border:1px solid var(--line);border-radius:14px;padding:11px 4px;text-align:center;
+  background:var(--surface);transition:border-color .45s, background .45s, transform .45s}
+.col em{display:block;font-style:normal;font-size:.6rem;letter-spacing:.1em;color:var(--ink-3)}
+.col b{display:block;font-size:1.5rem;font-weight:600;letter-spacing:.05em;
+  color:var(--ink-3);opacity:.25;transition:opacity .5s, color .5s, filter .5s;filter:blur(4px)}
+.col.on{border-color:color-mix(in srgb,var(--accent) 55%,transparent);
+  background:linear-gradient(160deg,rgba(169,140,224,.16),rgba(169,140,224,.04))}
+.col.on b{opacity:1;color:var(--ink);filter:none}
+.col.now{transform:translateY(-3px)}
+
+.lead{padding:16vh 0 12vh}
+.lead h1{font-size:1.9rem;font-weight:600;margin:0 0 12px;letter-spacing:.03em;line-height:1.5}
+.lead p{color:var(--ink-2);margin:0}
+.scrollcue{margin-top:34px;color:var(--ink-3);font-size:.75rem;letter-spacing:.1em;
+  animation:bob 2.2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0);opacity:.6}50%{transform:translateY(6px);opacity:1}}
+
+section.step{min-height:78vh;display:flex;flex-direction:column;justify-content:center;
+  opacity:.18;transform:translateY(18px);transition:opacity .6s, transform .6s}
+section.step.seen{opacity:1;transform:none}
+.step .no{font-size:.68rem;letter-spacing:.14em;color:var(--gold);margin-bottom:10px}
+.step h2{margin:0 0 6px;font-size:1.5rem;font-weight:600;letter-spacing:.04em}
+.step .kanji{font-size:3.4rem;line-height:1.1;font-weight:600;letter-spacing:.06em;
+  background:linear-gradient(150deg,var(--accent),var(--gold));
+  -webkit-background-clip:text;background-clip:text;color:transparent;margin:6px 0 14px}
+.step p{margin:0 0 14px;color:var(--ink-2);text-align:justify}
+.meta{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:.72rem;padding:4px 11px;border-radius:99px;border:1px solid var(--line);color:var(--ink-2)}
+.chip b{color:var(--ink);font-weight:600}
+
+/* 最後：五行の合計がカウントアップ */
+.totals{display:flex;flex-direction:column;gap:11px;margin-top:6px}
+.t{display:grid;grid-template-columns:34px 1fr 46px;align-items:center;gap:10px;font-size:.82rem}
+.t i{font-style:normal;color:var(--ink-2)}
+.t .track{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+.t .fill{height:100%;width:0;border-radius:99px;background:var(--accent);
+  transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+.t .fill.top{background:linear-gradient(90deg,var(--accent),var(--gold))}
+.t u{text-decoration:none;text-align:right;color:var(--ink-3);font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+  section.step{opacity:1;transform:none}
+  .col b{opacity:1;filter:none;color:var(--ink)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="board">
+    <div class="cap">組み上がっていく命式</div>
+    <div class="cols">
+      <div class="col" data-p="0"><em>年柱</em><b>庚午</b></div>
+      <div class="col" data-p="1"><em>月柱</em><b>辛巳</b></div>
+      <div class="col" data-p="2"><em>日柱</em><b>庚辰</b></div>
+      <div class="col" data-p="3"><em>時柱</em><b>辛巳</b></div>
+    </div>
+  </div>
+
+  <div class="lead">
+    <h1>1990年5月15日 10:00。<br>ここから四本の柱が立ちます。</h1>
+    <p>生まれた年・月・日・時刻を、それぞれ干支に置き換えたものが命式です。スクロールに合わせて一本ずつ立てていきます。</p>
+    <div class="scrollcue">↓ スクロール</div>
+  </div>
+
+  <section class="step" data-p="0">
+    <div class="no">一本目 ／ 年柱</div>
+    <div class="kanji">庚午</div>
+    <h2>幼少期と、外から見えるあなた</h2>
+    <p>1990年は庚午の年。年柱は生まれ育った環境や家系、そして社会があなたに最初に抱く印象を表します。天干の庚は陽の金、地支の午は夏の盛りの火です。</p>
+    <div class="meta"><span class="chip">十神 <b>比肩</b></span><span class="chip">蔵干 <b>丁・己</b></span><span class="chip">エネルギー <b>7</b></span></div>
+  </section>
+
+  <section class="step" data-p="1">
+    <div class="no">二本目 ／ 月柱</div>
+    <div class="kanji">辛巳</div>
+    <h2>仕事と、社会での立ち位置</h2>
+    <p>月柱は命式の中心です。生まれ月の季節がそのまま、五行のどれが今どの勢いにあるかを決めます。5月生まれのこの命式では火が当令。四柱の中でも月柱は最も勢いが強く出ています。</p>
+    <div class="meta"><span class="chip">十神 <b>劫財</b></span><span class="chip">蔵干 <b>丙・戊・庚</b></span><span class="chip">エネルギー <b>9</b></span></div>
+  </section>
+
+  <section class="step" data-p="2">
+    <div class="no">三本目 ／ 日柱</div>
+    <div class="kanji">庚辰</div>
+    <h2>あなた自身と、伴侶</h2>
+    <p>日柱の天干＝日主が、命式の主人公です。この命式の日主は庚。ほかの干支との関係（十神）はすべて、この庚から見て決まります。地支の辰は春の終わりで、変化と勢いを含んだ気です。</p>
+    <div class="meta"><span class="chip">日主 <b>庚</b></span><span class="chip">蔵干 <b>戊・乙・癸</b></span><span class="chip">エネルギー <b>6</b></span></div>
+  </section>
+
+  <section class="step" data-p="3">
+    <div class="no">四本目 ／ 時柱</div>
+    <div class="kanji">辛巳</div>
+    <h2>晩年と、内に秘めた願い</h2>
+    <p>10時生まれで時柱は辛巳。月柱と同じ干支が並びました。同じ支が重なるのは、その季節の気を濃く持って生まれたということです。これで四本すべてが立ちました。</p>
+    <div class="meta"><span class="chip">十神 <b>劫財</b></span><span class="chip">蔵干 <b>丙・戊・庚</b></span><span class="chip">エネルギー <b>9</b></span></div>
+  </section>
+
+  <section class="step" id="sum">
+    <div class="no">組み上がった命式</div>
+    <h2>五行の配分</h2>
+    <p>四本の天干と、地支に隠れた蔵干に重みをつけて数えると、この命式の偏りが出ます。金に大きく寄り、水がほとんどありません。</p>
+    <div class="totals">
+      <div class="t"><i>木</i><div class="track"><div class="fill" data-w="10"></div></div><u>0.5</u></div>
+      <div class="t"><i>火</i><div class="track"><div class="fill" data-w="70"></div></div><u>3.5</u></div>
+      <div class="t"><i>土</i><div class="track"><div class="fill" data-w="56"></div></div><u>2.8</u></div>
+      <div class="t"><i>金</i><div class="track"><div class="fill top" data-w="96"></div></div><u>4.8</u></div>
+      <div class="t"><i>水</i><div class="track"><div class="fill" data-w="6"></div></div><u>0.3</u></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const cols=[...document.querySelectorAll('.col')];
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting) return;
+    e.target.classList.add('seen');
+    const p=e.target.dataset.p;
+    if(p!==undefined){
+      // その柱までを点灯させ、いま読んでいる柱だけ浮かせる
+      cols.forEach((c,i)=>{
+        c.classList.toggle('on', i<=+p);
+        c.classList.toggle('now', i===+p);
+      });
+    }else{
+      cols.forEach(c=>{c.classList.add('on');c.classList.remove('now')});
+      e.target.querySelectorAll('.fill').forEach((f,i)=>{
+        setTimeout(()=>{f.style.width=f.dataset.w+'%'}, 90*i);
+      });
+    }
+  });
+},{threshold:.55});
+document.querySelectorAll('section.step').forEach(s=>io.observe(s));
+</script>
+</body>
+</html>

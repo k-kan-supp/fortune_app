@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>05 Calm リーディング</title>
+<style>
+:root{--bg:#faf8f5;--ink:#23211e;--ink-2:#57534d;--ink-3:#8f8a82;
+  --line:#e5e0d8;--accent:#5c5346;--rule:#d8d2c8}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#161513;--ink:#eae7e1;--ink-2:#a8a49c;--ink-3:#767269;
+        --line:#2a2825;--accent:#c9bda9;--rule:#332f2b}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);padding:0 22px 22vh;
+  font:400 16px/2.05 "Hiragino Mincho ProN","Yu Mincho",serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:600px;margin:0 auto}
+header{padding:14vh 0 8vh;border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:"Hiragino Sans",system-ui,sans-serif;font-size:.68rem;
+  letter-spacing:.2em;color:var(--ink-3);margin-bottom:20px}
+h1{margin:0;font-size:1.75rem;font-weight:400;line-height:1.75;letter-spacing:.04em}
+.meta{margin:22px 0 0;font-family:"Hiragino Sans",system-ui,sans-serif;
+  font-size:.76rem;color:var(--ink-3);letter-spacing:.06em}
+
+article{padding:8vh 0 0}
+.kicker{font-family:"Hiragino Sans",system-ui,sans-serif;font-size:.68rem;
+  letter-spacing:.18em;color:var(--ink-3);margin-bottom:14px}
+h2{margin:0 0 20px;font-size:1.3rem;font-weight:400;letter-spacing:.05em;line-height:1.7}
+/* 要約 1 行 → 本文 300 字の 2 段構え */
+.summary{margin:0 0 8px;font-size:1.08rem;line-height:2.1;color:var(--ink)}
+.body{margin:0;color:var(--ink-2);font-size:.95rem;text-align:justify;
+  display:grid;grid-template-rows:0fr;opacity:0;
+  transition:grid-template-rows .5s ease, opacity .4s ease}
+.body>span{overflow:hidden}
+.open .body{grid-template-rows:1fr;opacity:1;margin-top:14px}
+.reveal{margin-top:16px;font-family:"Hiragino Sans",system-ui,sans-serif;
+  font-size:.78rem;letter-spacing:.08em;color:var(--accent);background:none;border:0;
+  border-bottom:1px solid var(--rule);padding:0 0 3px;cursor:pointer}
+.reveal:hover{border-color:var(--accent)}
+.reveal:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+
+.figure{margin:6vh 0;padding:26px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.rows{display:flex;flex-direction:column;gap:14px;
+  font-family:"Hiragino Sans",system-ui,sans-serif;font-size:.8rem}
+.row{display:grid;grid-template-columns:44px 1fr 40px;align-items:center;gap:14px}
+.row i{font-style:normal;color:var(--ink-2)}
+.line{height:1px;background:var(--rule);position:relative}
+.line b{position:absolute;left:0;top:-1px;height:3px;background:var(--accent);display:block}
+.row.dim i,.row.dim u{color:var(--ink-3)}
+.row.dim .line b{background:var(--ink-3);opacity:.45}
+.row u{text-decoration:none;text-align:right;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.cap{margin:18px 0 0;font-family:"Hiragino Sans",system-ui,sans-serif;
+  font-size:.72rem;color:var(--ink-3);line-height:1.9}
+
+section+section{margin-top:9vh;padding-top:9vh;border-top:1px solid var(--rule)}
+footer{margin-top:12vh;font-family:"Hiragino Sans",system-ui,sans-serif;
+  font-size:.72rem;color:var(--ink-3);letter-spacing:.06em}
+@media (prefers-reduced-motion:reduce){.body{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">四柱推命 ／ 鑑定</div>
+    <h1>金に寄った、<br>輪郭のはっきりした命式です。</h1>
+    <p class="meta">1990年5月15日 10:00 生 ／ 日主 庚 ／ 10 の観点で読みました</p>
+  </header>
+
+  <article>
+    <section id="s1">
+      <div class="kicker">五行バランス ／ 強み</div>
+      <h2>金 ── 4.8</h2>
+      <p class="summary">五つの気のうち、金だけが外周に届きかけています。</p>
+      <p class="body"><span>全軸の平均が 2.4 ですから、平均より 2.4 高く、外周までの 96％ まで届いている計算になります。ここまで一点に力が集まると、命式の輪郭はこの軸で決まります。初対面でも伝わるほど持ち味がはっきり出る反面、調子の良し悪しがそのまま生活の波になりやすく、この軸が空回りしたときの立て直しには時間がかかります。五行の中でこの気が濃いということは、体の使い方も物の考え方もその色に寄るということです。得意な場面では判断が速い一方、この気で押せない相手や状況に出会うと途端に回り道になります。いちばん低い水（0.3）との開きは 4.5。この落差が、そのままあなたの輪郭になっています。</span></p>
+      <button class="reveal" aria-expanded="false">続きを読む（約 300 字）</button>
+    </section>
+
+    <div class="figure">
+      <div class="rows">
+        <div class="row dim"><i>木</i><div class="line"><b style="width:10%"></b></div><u>0.5</u></div>
+        <div class="row"><i>火</i><div class="line"><b style="width:70%"></b></div><u>3.5</u></div>
+        <div class="row"><i>土</i><div class="line"><b style="width:56%"></b></div><u>2.8</u></div>
+        <div class="row"><i>金</i><div class="line"><b style="width:96%"></b></div><u>4.8</u></div>
+        <div class="row dim"><i>水</i><div class="line"><b style="width:6%"></b></div><u>0.3</u></div>
+      </div>
+      <p class="cap">四柱の天干と、地支に隠れた蔵干に重みをつけて数えた合計。外周は 5。</p>
+    </div>
+
+    <section id="s2">
+      <div class="kicker">五行バランス ／ 弱み</div>
+      <h2>水 ── 0.3</h2>
+      <p class="summary">巡らせる気だけが、ほとんど残っていません。</p>
+      <p class="body"><span>全軸の平均が 2.4 ですから、平均より 2.1 低く、外周に対しては 6％ の高さしかありません。平均から大きく引き離された、はっきりした谷になっています。まったく無いわけではないので意識して手を入れれば形にはなりますが、放っておけば使わないまま眠ります。自覚しているかどうかで差が出るところです。この気が薄い分野は、そもそも関心が向きにくく、必要になってから慌てることが多くなります。自力で厚くしようとするより、その気を持つ人と組む、道具や仕組みで補うといった外からの足し方が効きます。</span></p>
+      <button class="reveal" aria-expanded="false">続きを読む（約 300 字）</button>
+    </section>
+
+    <section id="s3">
+      <div class="kicker">性格特性</div>
+      <h2>実行力 ── 57.1</h2>
+      <p class="summary">押す力は高く、外へ出す力は控えめです。</p>
+      <p class="body"><span>6 軸のうち、いちばん高く出ているのは実行力で、値は 57.1（外周 100）です。突き抜けすぎない範囲で他より一段高い、扱いやすい高さです。意識しなくても自然とこの軸から手をつけているはずで、力を入れる場面と抜く場面を自分で選びやすいのが利点になります。6 つの傾向の中でここが高く出ているのは、通変星の配分がこの性質を後押ししているからです。自分では当たり前にやっていることほど強みは自覚しにくいので、人から褒められる点と照らし合わせてみてください。いちばん低い表現力（11.8）との開きは 45.3。</span></p>
+      <button class="reveal" aria-expanded="false">続きを読む（約 300 字）</button>
+    </section>
+  </article>
+
+  <footer>読み終えるのに約 4 分 ／ 残り 7 つの観点があります</footer>
+</div>
+
+<script>
+document.querySelectorAll('.reveal').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const sec=btn.closest('section');
+    const open=sec.classList.toggle('open');
+    btn.setAttribute('aria-expanded',String(open));
+    btn.textContent=open?'閉じる':'続きを読む（約 300 字）';
+  });
+});
+</script>
+</body>
+</html>

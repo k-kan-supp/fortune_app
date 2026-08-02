@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 二人のレーダー比較</title>
+<style>
+:root{
+  --bg:#1a1a19;--ink:#eeece7;--ink-2:#a6a39c;--ink-3:#726f69;
+  --line:rgba(255,255,255,.10);--surface:#232320;
+  /* CVD 検証済み（protan ΔE 24.0 / normal ΔE 24.0 / コントラスト 3:1 以上） */
+  --you:#8b6fd4; --them:#c07a3a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);padding:24px 18px 50px;
+  font:400 15px/1.75 "Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:620px;margin:0 auto}
+h1{margin:0 0 3px;font-size:1.3rem;font-weight:600}
+.sub{margin:0 0 18px;color:var(--ink-3);font-size:.78rem}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:6px;font-size:.8rem}
+.legend span{display:flex;align-items:center;gap:7px;color:var(--ink-2)}
+.sw{width:12px;height:12px;border-radius:3px;flex:none}
+svg{width:100%;height:auto;display:block;overflow:visible}
+.grid{fill:none;stroke:rgba(255,255,255,.09);stroke-width:1}
+.spoke{stroke:rgba(255,255,255,.07);stroke-width:1}
+.spoke.focus{stroke:rgba(255,255,255,.38);stroke-width:1.5}
+.you-area{fill:color-mix(in srgb,var(--you) 22%,transparent);stroke:var(--you);stroke-width:2;stroke-linejoin:round}
+.them-area{fill:color-mix(in srgb,var(--them) 20%,transparent);stroke:var(--them);stroke-width:2;stroke-linejoin:round}
+.diff{fill:url(#hatch);stroke:none;opacity:0;transition:opacity .3s}
+.diff.on{opacity:1}
+/* 重なるマークには 2px の下地リングを敷いて、どちらの点か分かるようにする */
+.pt{stroke:var(--surface);stroke-width:2}
+.pt.you{fill:var(--you)} .pt.them{fill:var(--them)}
+.alab{fill:var(--ink-2);font-size:11px;text-anchor:middle;dominant-baseline:middle}
+.alab.focus{fill:var(--ink);font-weight:700}
+.dlab{font-size:10.5px;text-anchor:middle;font-weight:700}
+.dlab.you{fill:var(--you)} .dlab.them{fill:var(--them)}
+
+.controls{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+input[type=range]{flex:1;min-width:180px;accent-color:var(--you)}
+.toggle{display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--ink-2);cursor:pointer}
+.readout{margin-top:14px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#1d1d1b}
+.readout .v{text-align:center}
+.readout .v b{display:block;font-size:1.7rem;font-weight:600;line-height:1.2;font-variant-numeric:tabular-nums}
+.readout .v em{font-style:normal;font-size:.7rem;color:var(--ink-3);letter-spacing:.06em}
+.readout .mid{text-align:center;color:var(--ink-3);font-size:.72rem;line-height:1.5}
+.readout .mid b{display:block;color:var(--ink);font-size:1rem;font-variant-numeric:tabular-nums}
+.note{margin:12px 2px 0;font-size:.8rem;color:var(--ink-2);line-height:1.85}
+
+details{margin-top:14px}
+summary{cursor:pointer;font-size:.78rem;color:var(--ink-3)}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.8rem}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left;color:var(--ink-2)}
+thead th{color:var(--ink-3);font-weight:600;font-size:.72rem;letter-spacing:.06em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>考え方をならべる</h1>
+  <p class="sub">あなた（庚）と ハル（乙）の性格特性。スライダーで軸を送ると、その軸の差だけを読めます。</p>
+
+  <div class="panel">
+    <div class="legend">
+      <span><i class="sw" style="background:var(--you)"></i>あなた</span>
+      <span><i class="sw" style="background:var(--them)"></i>ハル</span>
+    </div>
+    <svg id="svg" viewBox="0 0 380 330" role="img" aria-labelledby="cTitle">
+      <title id="cTitle">性格特性 6 軸の比較レーダーチャート</title>
+      <defs>
+        <pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+          <line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,255,255,.28)" stroke-width="1.6"/>
+        </pattern>
+      </defs>
+    </svg>
+
+    <div class="controls">
+      <label class="toggle"><input type="checkbox" id="diffToggle"> 差分を塗る</label>
+      <input type="range" id="scrub" min="0" max="5" value="3" step="1" aria-label="注目する軸">
+    </div>
+
+    <div class="readout">
+      <div class="v"><b id="vYou" style="color:var(--you)">—</b><em>あなた</em></div>
+      <div class="mid"><span id="axisName">—</span><b id="gap">—</b>の差</div>
+      <div class="v"><b id="vThem" style="color:var(--them)">—</b><em>ハル</em></div>
+    </div>
+    <p class="note" id="note"></p>
+
+    <details>
+      <summary>数値で見る</summary>
+      <table>
+        <thead><tr><th>軸</th><th>あなた</th><th>ハル</th><th>差</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </details>
+  </div>
+</div>
+
+<script>
+const AXES=["自立心","表現力","社交性","実行力","規律性","探究心"];
+const YOU=[45.8,11.8,23.9,57.1,42.4,30.4];
+const THEM=[22.4,63.1,58.7,26.5,31.0,54.2];
+const NOTES=[
+  "自分で決めて動く力は、あなたが 23.4 高く出ています。二人で進めるとき、決定はあなたに寄りがちです。",
+  "思いを形にして伝える力は、ハルが 51.3 高い。あなたの命式で最も薄い軸を、相手がいちばん厚く持っています。",
+  "人と交わり縁を広げる力も、ハルが 34.8 高い。外との窓口は相手に任せると回りやすい組み合わせです。",
+  "決めたことを押し通す力は、あなたが 30.6 高い。ここが二人の役割分担の軸になります。",
+  "ルールを守って続ける力は、あなたが 11.4 高い程度。この軸だけは近く、揉めにくいところです。",
+  "学び深めようとする力は、ハルが 23.8 高い。調べ役を相手に置くと噛み合います。"
+];
+const MAX=100, cx=190, cy=155, R=112, N=AXES.length;
+const svg=document.getElementById('svg');
+const NS="http://www.w3.org/2000/svg";
+const el=(t,a)=>{const n=document.createElementNS(NS,t);for(const k in a)n.setAttribute(k,a[k]);return n};
+const pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/N;return [cx+Math.cos(a)*r, cy+Math.sin(a)*r]};
+const poly=v=>v.map((x,i)=>pt(i,R*x/MAX).join(',')).join(' ');
+
+[.25,.5,.75,1].forEach(f=>svg.appendChild(el('polygon',{class:'grid',
+  points:AXES.map((_,i)=>pt(i,R*f).join(',')).join(' ')})));
+const spokes=AXES.map((_,i)=>{
+  const[x,y]=pt(i,R);
+  const l=el('line',{class:'spoke',x1:cx,y1:cy,x2:x,y2:y});svg.appendChild(l);return l;
+});
+// 差分：二人の多角形の間をハッチで塗る（色だけに頼らない副次エンコード）
+const diff=el('path',{class:'diff',d:`M${poly(YOU).replace(/ /g,' L')} Z M${poly(THEM).replace(/ /g,' L')} Z`,
+  'fill-rule':'evenodd'});
+svg.appendChild(diff);
+svg.appendChild(el('polygon',{class:'them-area',points:poly(THEM)}));
+svg.appendChild(el('polygon',{class:'you-area',points:poly(YOU)}));
+const dots={you:[],them:[]};
+THEM.forEach((v,i)=>{const[x,y]=pt(i,R*v/MAX);const c=el('circle',{class:'pt them',cx:x,cy:y,r:4.5});svg.appendChild(c);dots.them.push(c)});
+YOU.forEach((v,i)=>{const[x,y]=pt(i,R*v/MAX);const c=el('circle',{class:'pt you',cx:x,cy:y,r:4.5});svg.appendChild(c);dots.you.push(c)});
+const labs=AXES.map((a,i)=>{
+  const[x,y]=pt(i,R+24);
+  const t=el('text',{class:'alab',x:x,y:y});t.textContent=a;svg.appendChild(t);return t;
+});
+// 注目軸にだけ数値を直接添える（全点に数字は置かない）
+const dYou=el('text',{class:'dlab you'}), dThem=el('text',{class:'dlab them'});
+svg.appendChild(dYou);svg.appendChild(dThem);
+
+document.getElementById('tbody').innerHTML=AXES.map((a,i)=>
+  `<tr><td>${a}</td><td>${YOU[i]}</td><td>${THEM[i]}</td><td>${(YOU[i]-THEM[i]).toFixed(1)}</td></tr>`).join('');
+
+function focus(i){
+  spokes.forEach((s,j)=>s.classList.toggle('focus',j===i));
+  labs.forEach((l,j)=>l.classList.toggle('focus',j===i));
+  const[yx,yy]=pt(i,R*YOU[i]/MAX), [tx,ty]=pt(i,R*THEM[i]/MAX);
+  dYou.setAttribute('x',yx);dYou.setAttribute('y',yy-11);dYou.textContent=YOU[i];
+  dThem.setAttribute('x',tx);dThem.setAttribute('y',ty-11);dThem.textContent=THEM[i];
+  dots.you.forEach((c,j)=>c.setAttribute('r',j===i?6.5:4.5));
+  dots.them.forEach((c,j)=>c.setAttribute('r',j===i?6.5:4.5));
+  document.getElementById('vYou').textContent=YOU[i];
+  document.getElementById('vThem').textContent=THEM[i];
+  document.getElementById('axisName').textContent=AXES[i];
+  document.getElementById('gap').textContent=Math.abs(YOU[i]-THEM[i]).toFixed(1);
+  document.getElementById('note').textContent=NOTES[i];
+}
+document.getElementById('scrub').addEventListener('input',e=>focus(+e.target.value));
+document.getElementById('diffToggle').addEventListener('change',e=>diff.classList.toggle('on',e.target.checked));
+focus(3);
+</script>
+</body>
+</html>

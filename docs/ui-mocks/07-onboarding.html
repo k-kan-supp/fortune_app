@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07 会話型オンボーディング</title>
+<style>
+:root{--bg:#0f0e13;--ink:#efedf4;--ink-2:#a5a1b4;--ink-3:#6f6b7d;
+  --line:rgba(255,255,255,.09);--accent:#a98ce0;--gold:#d3a45c;--surface:#1c1b24;--mine:#3a2f56}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);padding:22px 18px 34px;
+  font:400 15px/1.75 "Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:480px;margin:0 auto}
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.bar .dots{display:flex;gap:5px}
+.dot{width:22px;height:3px;border-radius:99px;background:rgba(255,255,255,.14);transition:background .3s}
+.dot.on{background:var(--accent)}
+.bar span{font-size:.72rem;color:var(--ink-3);letter-spacing:.06em}
+
+.thread{display:flex;flex-direction:column;gap:12px;min-height:56vh}
+.msg{max-width:82%;padding:12px 15px;border-radius:18px;font-size:.9rem;line-height:1.8;
+  animation:in .38s cubic-bezier(.2,.8,.2,1) both}
+.msg.bot{background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:6px;align-self:flex-start}
+.msg.me{background:var(--mine);border-bottom-right-radius:6px;align-self:flex-end;color:#efeaff}
+.msg .why{display:block;margin-top:7px;padding-top:7px;border-top:1px solid var(--line);
+  font-size:.73rem;color:var(--ink-3);line-height:1.75}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.typing{display:flex;gap:4px;padding:14px 16px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--ink-3);animation:bl 1.1s infinite}
+.typing i:nth-child(2){animation-delay:.15s} .typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+
+.answer{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.fields{display:flex;gap:8px;flex-wrap:wrap}
+.fields label{flex:1;min-width:82px}
+.fields em{display:block;font-style:normal;font-size:.68rem;color:var(--ink-3);margin-bottom:4px;letter-spacing:.06em}
+input,select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);
+  background:#15141b;color:var(--ink);font:inherit;font-size:.9rem}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.opts{display:flex;gap:8px;flex-wrap:wrap}
+.opt{padding:11px 16px;border-radius:99px;border:1px solid var(--line);background:var(--surface);
+  color:var(--ink);font:inherit;font-size:.85rem;cursor:pointer;transition:border-color .18s,background .18s}
+.opt:hover{border-color:var(--accent);background:#232030}
+.send{margin-top:12px;width:100%;padding:13px;border-radius:14px;border:0;cursor:pointer;
+  background:linear-gradient(140deg,var(--accent),#c8aef0);color:#1a1720;font:inherit;font-weight:700}
+.send:hover{filter:brightness(1.06)}
+.skip{background:none;border:0;color:var(--ink-3);font:inherit;font-size:.76rem;
+  text-decoration:underline;cursor:pointer;margin-top:10px;padding:0}
+
+/* 入力に合わせて育つ命式プレビュー */
+.preview{margin-top:20px;border:1px solid var(--line);border-radius:18px;background:var(--surface);
+  padding:15px;opacity:.35;transition:opacity .4s}
+.preview.live{opacity:1;border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.preview h3{margin:0 0 10px;font-size:.68rem;letter-spacing:.12em;color:var(--ink-3);font-weight:700}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.c{text-align:center;padding:9px 3px;border-radius:11px;background:#15141b}
+.c em{display:block;font-style:normal;font-size:.58rem;color:var(--ink-3);letter-spacing:.08em}
+.c b{display:block;font-size:1.25rem;font-weight:600;color:var(--ink-3);transition:color .4s}
+.c.on b{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="dots"><i class="dot on"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></div>
+    <span id="stepLabel">1 / 4</span>
+  </div>
+
+  <div class="thread" id="thread"></div>
+
+  <div class="answer" id="answer"></div>
+
+  <div class="preview" id="preview">
+    <h3>いま分かっている命式</h3>
+    <div class="cols">
+      <div class="c" data-i="0"><em>年柱</em><b>—</b></div>
+      <div class="c" data-i="1"><em>月柱</em><b>—</b></div>
+      <div class="c" data-i="2"><em>日柱</em><b>—</b></div>
+      <div class="c" data-i="3"><em>時柱</em><b>—</b></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const thread=document.getElementById('thread');
+const answer=document.getElementById('answer');
+const preview=document.getElementById('preview');
+const cells=[...document.querySelectorAll('.c')];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function bot(text,why){
+  return new Promise(res=>{
+    const t=document.createElement('div');
+    t.className='msg bot typing';t.innerHTML='<i></i><i></i><i></i>';
+    thread.appendChild(t);
+    setTimeout(()=>{
+      t.remove();
+      const m=document.createElement('div');
+      m.className='msg bot';
+      m.innerHTML=text+(why?`<span class="why">${why}</span>`:'');
+      thread.appendChild(m);
+      m.scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'});
+      res();
+    }, reduce?0:620);
+  });
+}
+function me(text){
+  const m=document.createElement('div');m.className='msg me';m.textContent=text;
+  thread.appendChild(m);m.scrollIntoView({block:'nearest',behavior:reduce?'auto':'smooth'});
+}
+function setStep(n){
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i<n));
+  document.getElementById('stepLabel').textContent=`${Math.min(n,4)} / 4`;
+}
+function fill(i,val){
+  cells[i].querySelector('b').textContent=val;
+  cells[i].classList.add('on');
+  preview.classList.add('live');
+}
+
+const state={};
+async function q1(){
+  setStep(1);
+  await bot("はじめまして。まず、生まれた年を教えてください。",
+    "なぜ聞くか：年から「年柱」を立てます。ここだけで、生まれ育った環境と、人から見えるあなたの第一印象が読めます。");
+  answer.innerHTML=`<div class="fields">
+      <label><em>生まれ年</em><input id="y" type="number" value="1990" min="1900" max="2100"></label>
+    </div><button class="send" id="go">次へ</button>`;
+  document.getElementById('go').onclick=()=>{
+    state.y=document.getElementById('y').value;
+    me(`${state.y}年`); fill(0,'庚午'); q2();
+  };
+}
+async function q2(){
+  setStep(2);
+  answer.innerHTML='';
+  await bot("次に、月と日を。",
+    "なぜ聞くか：月柱は命式の中心です。生まれ月の季節が、五行のどれが今いちばん勢いを持つかを決めます。");
+  answer.innerHTML=`<div class="fields">
+      <label><em>月</em><input id="m" type="number" value="5" min="1" max="12"></label>
+      <label><em>日</em><input id="d" type="number" value="15" min="1" max="31"></label>
+    </div><button class="send" id="go">次へ</button>`;
+  document.getElementById('go').onclick=()=>{
+    state.m=document.getElementById('m').value; state.d=document.getElementById('d').value;
+    me(`${state.m}月${state.d}日`); fill(1,'辛巳'); fill(2,'庚辰'); q3();
+  };
+}
+async function q3(){
+  setStep(3);
+  answer.innerHTML='';
+  await bot("生まれた時刻は分かりますか？",
+    "なぜ聞くか：時柱は晩年と、内に秘めた願いを表します。分からなくても鑑定はできます — その場合は時柱を使わずに読みます。");
+  answer.innerHTML=`<div class="opts">
+      <button class="opt" data-h="10">だいたい分かる</button>
+      <button class="opt" data-h="">分からない</button>
+    </div>`;
+  answer.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    if(b.dataset.h){ q3b(); } else { me('分からない'); state.noHour=true; done(); }
+  });
+}
+async function q3b(){
+  me('だいたい分かる');
+  answer.innerHTML='';
+  await bot("何時ごろでしょう。");
+  answer.innerHTML=`<div class="fields">
+      <label><em>時</em><input id="h" type="number" value="10" min="0" max="23"></label>
+      <label><em>分</em><input id="mi" type="number" value="0" min="0" max="59"></label>
+    </div><button class="send" id="go">この内容で鑑定する</button>
+    <button class="skip" id="sk">やっぱり分からない</button>`;
+  document.getElementById('go').onclick=()=>{
+    state.h=document.getElementById('h').value;
+    me(`${state.h}時ごろ`); fill(3,'辛巳'); done();
+  };
+  document.getElementById('sk').onclick=()=>{me('分からない');state.noHour=true;done()};
+}
+async function done(){
+  setStep(4);
+  answer.innerHTML='';
+  if(state.noHour){
+    await bot("承知しました。時柱を除いた三柱で読みます。",
+      "時刻が分かったら、あとからプロフィールで足せます。そのとき鑑定は自動で作り直されます。");
+  }else{
+    await bot("ありがとうございます。四本の柱が立ちました。");
+  }
+  await bot("日主は <b>庚</b> — 陽の金。打たれて形になった金属の気です。<br>10 の観点で読み解いた結果を用意しました。");
+  answer.innerHTML=`<button class="send" id="go">鑑定結果を見る</button>`;
+  document.getElementById('go').onclick=()=>{
+    answer.innerHTML=`<p style="color:var(--ink-3);font-size:.8rem;margin:0">（モックのためここまで）</p>`;
+  };
+}
+q1();
+</script>
+</body>
+</html>

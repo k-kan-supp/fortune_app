@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 Bento ダッシュボード — 命式</title>
+<style>
+:root{
+  --bg:#f4f4f6; --card:#fff; --ink:#1b1a1f; --ink-2:#5c5a66; --ink-3:#8f8c99;
+  --line:#e6e5ea; --accent:#6f4fa8; --accent-soft:#efe9fa; --gold:#b07d2f;
+  --r:22px; --shadow:0 1px 2px rgba(20,18,28,.05), 0 8px 24px rgba(20,18,28,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#121116;--card:#1c1b21;--ink:#f0eff3;--ink-2:#a8a5b3;--ink-3:#787585;
+        --line:#2c2a33;--accent:#a98ce0;--accent-soft:#2a2338;--gold:#d3a45c;
+        --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28);}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:400 15px/1.7 "Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;padding:28px 20px 80px}
+.wrap{max-width:1080px;margin:0 auto}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+h1{margin:0;font-size:1.45rem;letter-spacing:.02em}
+.sub{color:var(--ink-3);font-size:.82rem}
+.hint{margin:0 0 18px;color:var(--ink-3);font-size:.8rem}
+
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.card{grid-column:span 2;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);padding:18px 18px 16px;box-shadow:var(--shadow);
+  cursor:pointer;position:relative;transition:border-color .18s, box-shadow .18s;
+  min-width:0}
+.card:hover{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.card.w3{grid-column:span 3}
+.card.w4{grid-column:span 4}
+.card.w6{grid-column:span 6}
+.card.open{grid-column:span 6;z-index:2;
+  border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+@media (max-width:820px){
+  .bento{grid-template-columns:repeat(2,1fr)}
+  .card,.card.w3,.card.w4,.card.w6,.card.open{grid-column:span 2}
+}
+.k{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px}
+.k h2{margin:0;font-size:.78rem;font-weight:700;letter-spacing:.09em;color:var(--ink-3)}
+.k .more{font-size:.7rem;color:var(--accent);opacity:0;transition:opacity .18s}
+.card:hover .more,.card.open .more{opacity:1}
+
+/* ヒーロー：日主 */
+.dm{display:flex;align-items:center;gap:16px}
+.dm b{font-size:3.2rem;line-height:1;font-weight:600;
+  background:linear-gradient(150deg,var(--accent),var(--gold));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.dm span{color:var(--ink-2);font-size:.85rem}
+
+/* 四柱 */
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.p{background:var(--accent-soft);border-radius:14px;padding:10px 6px;text-align:center}
+.p em{display:block;font-style:normal;font-size:.62rem;color:var(--ink-3);letter-spacing:.08em}
+.p b{display:block;font-size:1.4rem;font-weight:600;letter-spacing:.04em}
+
+/* 横棒 */
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:52px 1fr 38px;align-items:center;gap:9px;font-size:.78rem}
+.bar i{font-style:normal;color:var(--ink-2)}
+.track{height:9px;background:color-mix(in srgb,var(--ink-3) 14%,transparent);border-radius:99px;overflow:hidden}
+.fill{height:100%;border-radius:99px;background:var(--accent);
+  transform-origin:left;animation:grow .6s cubic-bezier(.2,.8,.2,1) both}
+.fill.mut{background:color-mix(in srgb,var(--ink-3) 45%,transparent)}
+.fill.top{background:linear-gradient(90deg,var(--accent),var(--gold))}
+.bar u{text-decoration:none;text-align:right;color:var(--ink-3);font-variant-numeric:tabular-nums}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* 数値タイル */
+.stat b{font-size:2.1rem;font-weight:600;letter-spacing:-.01em;display:block;line-height:1.2}
+.stat span{color:var(--ink-3);font-size:.76rem}
+
+/* 展開部 */
+.detail{display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.card.open .detail{display:block;animation:fade .3s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.detail p{margin:0 0 10px;color:var(--ink-2);font-size:.86rem;line-height:1.9;text-align:justify}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tag{font-size:.7rem;padding:3px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.tag.w{background:color-mix(in srgb,var(--gold) 16%,transparent);color:var(--gold)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>命式ダッシュボード</h1>
+  <span class="sub">1990年5月15日 10:00 生 ／ 日主 庚</span>
+</header>
+<p class="hint">カードを押すとその場で展開します（画面遷移なし）。もう一度押すと畳みます。</p>
+
+<div class="bento" id="bento">
+
+  <article class="card w3" tabindex="0" data-k="dm">
+    <div class="k"><h2>日主</h2><span class="more">詳しく</span></div>
+    <div class="dm"><b>庚</b><span>陽の金。鍛えられた刃物の気。<br>命式の主人公にあたります。</span></div>
+    <div class="detail">
+      <p>日主は生まれた日の天干で、ほかの干支との関係はすべてここから決まります。庚は五行では金、陰陽では陽。加工される前の鉱石ではなく、打たれて形になった金属にたとえられます。</p>
+      <div class="tags"><span class="tag">陽</span><span class="tag">金</span><span class="tag">比肩 2.8</span></div>
+    </div>
+  </article>
+
+  <article class="card w3" tabindex="0" data-k="pillars">
+    <div class="k"><h2>四柱</h2><span class="more">詳しく</span></div>
+    <div class="pillars">
+      <div class="p"><em>年</em><b>庚午</b></div>
+      <div class="p"><em>月</em><b>辛巳</b></div>
+      <div class="p"><em>日</em><b>庚辰</b></div>
+      <div class="p"><em>時</em><b>辛巳</b></div>
+    </div>
+    <div class="detail">
+      <p>年柱は幼少期と対外的な印象、月柱は仕事と社会での立ち位置、日柱は自分と伴侶、時柱は晩年と内心を表します。この命式は月柱と時柱に勢いが集まっています。</p>
+      <div class="bars">
+        <div class="bar"><i>年柱</i><div class="track"><div class="fill mut" style="width:58%"></div></div><u>7</u></div>
+        <div class="bar"><i>月柱</i><div class="track"><div class="fill top" style="width:75%"></div></div><u>9</u></div>
+        <div class="bar"><i>日柱</i><div class="track"><div class="fill mut" style="width:50%"></div></div><u>6</u></div>
+        <div class="bar"><i>時柱</i><div class="track"><div class="fill top" style="width:75%"></div></div><u>9</u></div>
+      </div>
+    </div>
+  </article>
+
+  <article class="card w4" tabindex="0" data-k="elem">
+    <div class="k"><h2>五行バランス</h2><span class="more">詳しく</span></div>
+    <div class="bars">
+      <div class="bar"><i>木</i><div class="track"><div class="fill mut" style="width:10%"></div></div><u>0.5</u></div>
+      <div class="bar"><i>火</i><div class="track"><div class="fill" style="width:70%"></div></div><u>3.5</u></div>
+      <div class="bar"><i>土</i><div class="track"><div class="fill" style="width:56%"></div></div><u>2.8</u></div>
+      <div class="bar"><i>金</i><div class="track"><div class="fill top" style="width:96%"></div></div><u>4.8</u></div>
+      <div class="bar"><i>水</i><div class="track"><div class="fill mut" style="width:6%"></div></div><u>0.3</u></div>
+    </div>
+    <div class="detail">
+      <p>5軸のうち、いちばん高く出ているのは金で、値は4.8（外周5）です。全軸の平均が2.4ですから、平均より2.4高く、外周までの96％まで届いている計算になります。ここまで一点に力が集まると、命式の輪郭はこの軸で決まります。初対面でも伝わるほど持ち味がはっきり出る反面、この軸が空回りしたときの立て直しには時間がかかります。</p>
+      <div class="tags"><span class="tag">強み 金 4.8</span><span class="tag w">弱み 水 0.3</span></div>
+    </div>
+  </article>
+
+  <article class="card" tabindex="0" data-k="health">
+    <div class="k"><h2>最も高い分野</h2><span class="more">詳しく</span></div>
+    <div class="stat"><b>58.4</b><span>健康運（100点満点）</span></div>
+    <div class="detail">
+      <p>健康運だけは通変星ではなく、五行の偏りの少なさで測ります。金に寄った命式のわりに均衡度が残っているため、6分野の中では最も高く出ました。</p>
+    </div>
+  </article>
+
+  <article class="card w3" tabindex="0" data-k="pers">
+    <div class="k"><h2>性格特性</h2><span class="more">詳しく</span></div>
+    <div class="bars">
+      <div class="bar"><i>実行力</i><div class="track"><div class="fill top" style="width:57%"></div></div><u>57.1</u></div>
+      <div class="bar"><i>自立心</i><div class="track"><div class="fill" style="width:46%"></div></div><u>45.8</u></div>
+      <div class="bar"><i>規律性</i><div class="track"><div class="fill" style="width:42%"></div></div><u>42.4</u></div>
+      <div class="bar"><i>探究心</i><div class="track"><div class="fill" style="width:30%"></div></div><u>30.4</u></div>
+      <div class="bar"><i>社交性</i><div class="track"><div class="fill mut" style="width:24%"></div></div><u>23.9</u></div>
+      <div class="bar"><i>表現力</i><div class="track"><div class="fill mut" style="width:12%"></div></div><u>11.8</u></div>
+    </div>
+    <div class="detail">
+      <p>6軸のうち、いちばん高く出ているのは実行力で、値は57.1（外周100）です。突き抜けすぎない範囲で他より一段高い、扱いやすい高さです。いちばん低い表現力（11.8）との開きは45.3。この落差が、そのままあなたの輪郭になっています。</p>
+    </div>
+  </article>
+
+  <article class="card w3" tabindex="0" data-k="groups">
+    <div class="k"><h2>通変星グループ</h2><span class="more">詳しく</span></div>
+    <div class="bars">
+      <div class="bar"><i>比劫</i><div class="track"><div class="fill top" style="width:96%"></div></div><u>4.8</u></div>
+      <div class="bar"><i>官殺</i><div class="track"><div class="fill" style="width:70%"></div></div><u>3.5</u></div>
+      <div class="bar"><i>印星</i><div class="track"><div class="fill" style="width:56%"></div></div><u>2.8</u></div>
+      <div class="bar"><i>財星</i><div class="track"><div class="fill mut" style="width:10%"></div></div><u>0.5</u></div>
+      <div class="bar"><i>食傷</i><div class="track"><div class="fill mut" style="width:6%"></div></div><u>0.3</u></div>
+    </div>
+    <div class="detail">
+      <p>五つの勢力のうち比劫が大きいのは、命式の力の使い道が「自分の強さと仲間との関係」に決まっているということです。人生の選択でも自然とこの勢力に沿った道を選びやすく、逆らった選び方をすると疲れが早く出ます。</p>
+    </div>
+  </article>
+
+  <article class="card w6" tabindex="0" data-k="sum">
+    <div class="k"><h2>この命式のひとこと</h2><span class="more">詳しく</span></div>
+    <p style="margin:0;font-size:1.05rem;line-height:1.9">金と比劫に力が集まった、<b>輪郭のはっきりした命式</b>。押す力は強く、広げる力は控えめ。</p>
+    <div class="detail">
+      <p>金 4.8・比劫 4.8 と、五行と勢力の両方で一点集中の形が出ています。実行力（57.1）が高く表現力（11.8）が低いのは同じ偏りの裏表で、決めて動くことは得意でも、それを外に説明する回路は薄いということです。表現を担う食傷が 0.3 しかない点が、そのまま恋愛運 10.2 の低さにもつながっています。</p>
+      <div class="tags"><span class="tag">金 96%</span><span class="tag">比劫 96%</span><span class="tag w">食傷 6%</span><span class="tag w">水 6%</span></div>
+    </div>
+  </article>
+
+</div>
+</div>
+
+<script>
+// FLIP: 展開前後の矩形を測り、差分を transform で埋めてから戻す
+document.querySelectorAll('.card').forEach(card=>{
+  const toggle=()=>{
+    const first=card.getBoundingClientRect();
+    const wasOpen=card.classList.contains('open');
+    document.querySelectorAll('.card.open').forEach(c=>{if(c!==card)c.classList.remove('open')});
+    card.classList.toggle('open',!wasOpen);
+    const last=card.getBoundingClientRect();
+    const dx=first.left-last.left, dy=first.top-last.top;
+    const sx=first.width/last.width, sy=first.height/last.height;
+    if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
+      card.animate(
+        [{transform:`translate(${dx}px,${dy}px) scale(${sx},${sy})`},{transform:'none'}],
+        {duration:340,easing:'cubic-bezier(.2,.8,.2,1)'});
+    }
+    if(!wasOpen) card.scrollIntoView({block:'nearest',behavior:'smooth'});
+  };
+  card.addEventListener('click',toggle);
+  card.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();toggle()}
+    if(e.key==='Escape')card.classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
