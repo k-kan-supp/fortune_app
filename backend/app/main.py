@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.i18n import resolve_lang, translate
 from app.core.logging import configure_logging
 from app.core.middleware import RequestLoggingMiddleware
+from app.core.ratelimit import RateLimitMiddleware
 from app.services.images import InvalidImageError
 
 configure_logging()
@@ -41,6 +42,13 @@ async def invalid_image_handler(request: Request, exc: InvalidImageError) -> JSO
         content={"detail": translate(exc.key, lang)},
     )
 
+# 認証なしで叩ける計算・計測だけを制限する。認証済みの操作は巻き込まない。
+app.add_middleware(
+    RateLimitMiddleware,
+    prefixes=("/api/fortune", "/api/species", "/api/analytics"),
+    limit=settings.public_rate_limit,
+    window_seconds=settings.public_rate_window_seconds,
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,

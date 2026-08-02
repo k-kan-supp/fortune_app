@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { isAuthenticated } from "@/features/auth/authStorage";
 import { BirthInputModal } from "@/features/fortune/components/BirthInputModal";
 import { profileToFortuneDefaults } from "@/features/fortune/fromProfile";
+import { recallReading } from "@/features/fortune/pendingReading";
 import { toFortuneQuery } from "@/features/fortune/query";
 import type { FortuneRequest } from "@/features/fortune/types";
 import { getProfile } from "@/features/profile/api/profileApi";
@@ -69,6 +70,11 @@ export function FortunePage() {
 
   function openForm() {
     setFormOpen(true);
+
+    // 登録前に一度鑑定していれば、その条件を初期値にする。
+    // 登録を挟んだ人に同じことを二度入力させない。
+    const pending = recallReading();
+    if (pending) setDefaults((current) => current ?? pending);
 
     // 生年月日の初期値は、フォームを開いたときに一度だけ取りに行く
     if (!loggedIn || profileRequested.current) return;

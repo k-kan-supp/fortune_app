@@ -64,6 +64,11 @@ MESSAGES: dict[str, dict[Lang, str]] = {
         "ja": "画像サイズが大きすぎます。",
         "en": "That image is too large.",
     },
+    # レート制限
+    "rate.limited": {
+        "ja": "アクセスが集中しています。少し時間をおいてからお試しください。",
+        "en": "Too many requests. Please wait a moment and try again.",
+    },
     # 気象
     "weather.unavailable": {
         "ja": "その日の気象を取得できませんでした。時間をおいてお試しください。",

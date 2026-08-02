@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     magic_link_expire_minutes: int = 15
     access_token_expire_minutes: int = 60 * 24 * 7
 
+    # 認証不要の計算エンドポイントの上限（1IPあたり / 窓）。
+    # 検索から来た人がその場で条件を変えて何度か試せる余裕を残す。
+    public_rate_limit: int = 60
+    public_rate_window_seconds: float = 60.0
+
     # 課金。決済がまだ無い間は開けておく（有料の解説文を誰も買えないため）。
     # 決済が入ったらここを true にし、判定を entitlement に移す。
     paywall_enabled: bool = False

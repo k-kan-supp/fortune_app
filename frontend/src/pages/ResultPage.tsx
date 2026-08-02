@@ -9,6 +9,7 @@ import { ResultSummary } from "@/features/fortune/components/ResultSummary";
 import { SanmeiChart } from "@/features/fortune/components/SanmeiChart";
 import { SpeciesCompatMap } from "@/features/fortune/components/SpeciesCompatMap";
 import { useFortune } from "@/features/fortune/hooks/useFortune";
+import { rememberReading } from "@/features/fortune/pendingReading";
 import { parseFortuneQuery } from "@/features/fortune/query";
 import { useI18n } from "@/i18n";
 
@@ -26,7 +27,10 @@ export function ResultPage() {
   const request = useMemo(() => parseFortuneQuery(params), [params]);
 
   useEffect(() => {
-    if (request) submit(request);
+    if (!request) return;
+    submit(request);
+    // 登録を挟んでも、さっき見ていた条件を失わせない（サーバには置かない）
+    rememberReading(request);
     // submit は毎レンダー作り直されるため、条件が変わったときだけ実行する
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [request]);

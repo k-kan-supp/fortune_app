@@ -7,6 +7,18 @@ from app.main import app
 client = TestClient(app)
 
 
+def _rate_limit_middleware():
+    """組み立て済みのミドルウェア実体を取り出す（差し替えて上限を下げるため）。"""
+    from app.core.ratelimit import RateLimitMiddleware
+
+    stack = app.middleware_stack
+    while stack is not None:
+        if isinstance(stack, RateLimitMiddleware):
+            return stack
+        stack = getattr(stack, "app", None)
+    raise AssertionError("RateLimitMiddleware が組み込まれていない")
+
+
 def test_health():
     res = client.get("/health")
     assert res.status_code == 200
@@ -82,3 +94,31 @@ def test_notes_are_open_while_there_is_nothing_to_buy():
     charts = res.json()["charts"]
     assert all(not chart["note_locked"] for chart in charts)
     assert any(chart["strength_note"] or chart["weakness_note"] for chart in charts)
+
+
+def test_public_endpoint_is_rate_limited(monkeypatch):
+    """認証なしで叩けるぶん、上限が無いと外から叩き放題になる。"""
+    from app.core.ratelimit import RateLimiter
+
+    limiter = RateLimiter(limit=2, window_seconds=60)
+    monkeypatch.setattr(_rate_limit_middleware(), "limiter", limiter)
+
+    payload = {"year": 1990, "month": 5, "day": 15, "hour": 10, "is_male": True}
+    codes = [client.post("/api/fortune", json=payload).status_code for _ in range(3)]
+    assert codes[-1] == 429
+
+    blocked = client.post("/api/fortune", json=payload)
+    assert blocked.headers["Retry-After"]
+    assert blocked.json()["detail"]
+
+
+def test_rate_limit_leaves_authenticated_routes_alone():
+    """守りたいのは公開の計算だけ。認証済みの操作まで巻き込まない。"""
+    from app.core.ratelimit import RateLimitMiddleware
+    from app.main import app as fastapi_app
+
+    limited = next(
+        m for m in fastapi_app.user_middleware if m.cls is RateLimitMiddleware
+    )
+    prefixes = limited.kwargs["prefixes"]
+    assert not any(p.startswith("/api/matching") or p.startswith("/api/profile") for p in prefixes)
