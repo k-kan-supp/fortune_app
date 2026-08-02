@@ -8,6 +8,7 @@ import { toFortuneQuery } from "@/features/fortune/query";
 import type { FortuneRequest } from "@/features/fortune/types";
 import { getProfile } from "@/features/profile/api/profileApi";
 import { useI18n } from "@/i18n";
+import { track } from "@/lib/analytics";
 
 // 紋章は線画のみの白黒アイコン。色は .step-art の currentColor に従う。
 const ICON = {
@@ -70,6 +71,7 @@ export function FortunePage() {
 
   function openForm() {
     setFormOpen(true);
+    track("fortune_input_started", { source: loggedIn ? "member" : "guest" });
 
     // 登録前に一度鑑定していれば、その条件を初期値にする。
     // 登録を挟んだ人に同じことを二度入力させない。

@@ -60,3 +60,19 @@ def test_transaction_records_do_not_require_consent():
     """取引の記録は分析目的ではないので、同意の対象にしない。"""
     assert ESSENTIAL_EVENTS == SERVER_EVENTS
     assert not requires_consent("purchase_completed")
+
+
+def test_funnel_events_are_all_registered():
+    """主ファネルの各段が送れないと、脱落を測れない。
+
+    フロントの funnel.ts と同じ並び。片方だけ足すと 422 で黙って落ちる。
+    """
+    funnel = [
+        "page_viewed",
+        "fortune_input_started",
+        "fortune_calculated",
+        "result_viewed",
+        "paywall_shown",
+    ]
+    assert set(funnel) <= CLIENT_EVENTS
+    assert "purchase_completed" in SERVER_EVENTS

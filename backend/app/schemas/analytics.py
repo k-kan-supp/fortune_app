@@ -17,6 +17,7 @@ class AnalyticsBatch(BaseModel):
 
     events: list[AnalyticsEvent] = Field(min_length=1, max_length=50)
     consent: bool = False
+    source: str | None = Field(default=None, max_length=64, description="流入元")
 
 
 class AnalyticsAccepted(BaseModel):

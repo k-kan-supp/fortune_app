@@ -42,6 +42,7 @@ CLIENT_EVENTS: Final[frozenset[str]] = frozenset(
         "fortune_input_started",
         "fortune_calculated",
         "result_viewed",
+        "result_scrolled",
         "paywall_shown",
         "paywall_dismissed",
         "signup_started",
@@ -90,10 +91,25 @@ def requires_consent(name: str) -> bool:
     return name not in ESSENTIAL_EVENTS
 
 
-def emit(name: str, props: dict[str, PropValue], *, source: str) -> None:
+def emit(
+    name: str,
+    props: dict[str, PropValue],
+    *,
+    source: str,
+    acquired_from: str | None = None,
+) -> None:
     """イベントを1件記録する。
 
     送信先は当面ログ。収集基盤を入れるときはこの関数の中だけを差し替える
     ── 呼び出し側にベンダーを漏らさないことが、後で移行できる条件になる。
     """
-    logger.info("event", extra={"event": name, "source": source, "props": props})
+    logger.info(
+        "event",
+        extra={
+            "event": name,
+            "source": source,
+            # 流入元。これが最後まで残らないと CPA が計算できない。
+            "acquired_from": acquired_from or "unknown",
+            "props": props,
+        },
+    )

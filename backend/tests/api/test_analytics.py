@@ -49,3 +49,21 @@ def test_rejects_oversized_batch():
 def test_rejects_empty_batch():
     res = post([])
     assert res.status_code == 422
+
+
+def test_records_where_the_visitor_came_from():
+    """流入元が最後まで残らないと CPA が計算できない。"""
+    res = client.post(
+        "/api/analytics/events",
+        json={
+            "events": [{"name": "page_viewed", "props": {"path": "/"}}],
+            "consent": True,
+            "source": "utm-spring",
+        },
+    )
+    assert res.status_code == 202
+
+
+def test_source_is_optional():
+    """直接訪問でも計測そのものは通す。"""
+    assert post([{"name": "page_viewed", "props": {"path": "/"}}]).status_code == 202

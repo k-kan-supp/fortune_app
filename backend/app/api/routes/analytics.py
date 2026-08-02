@@ -41,7 +41,7 @@ def collect_events(batch: AnalyticsBatch) -> AnalyticsAccepted:
         if not batch.consent and requires_consent(event.name):
             dropped += 1
             continue
-        emit(event.name, event.props, source="client")
+        emit(event.name, event.props, source="client", acquired_from=batch.source)
         accepted += 1
 
     return AnalyticsAccepted(accepted=accepted, dropped=dropped)

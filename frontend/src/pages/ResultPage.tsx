@@ -11,7 +11,9 @@ import { SpeciesCompatMap } from "@/features/fortune/components/SpeciesCompatMap
 import { useFortune } from "@/features/fortune/hooks/useFortune";
 import { rememberReading } from "@/features/fortune/pendingReading";
 import { parseFortuneQuery } from "@/features/fortune/query";
+import { useScrollDepth } from "@/hooks/useTracking";
 import { useI18n } from "@/i18n";
+import { track } from "@/lib/analytics";
 
 /**
  * 鑑定結果ページ。条件はクエリ (?year=1990&month=1&day=1...) で受け取り、
@@ -25,6 +27,19 @@ export function ResultPage() {
   const { t } = useI18n();
 
   const request = useMemo(() => parseFortuneQuery(params), [params]);
+
+  // 壁まで届いたかどうかを、結果が出てからの読み進み方で見る
+  useScrollDepth(Boolean(result));
+
+  useEffect(() => {
+    if (!result) return;
+    track("result_viewed", { chart_count: result.charts?.length ?? 0 });
+    track("fortune_calculated", {
+      day_stem: result.day_master,
+      time_known: (request?.hour ?? 12) !== 12,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result]);
 
   useEffect(() => {
     if (!request) return;
@@ -77,7 +92,14 @@ export function ResultPage() {
         )}
 
         <p className="back-link">
-          <button type="button" className="link-btn" onClick={() => setSignupOpen(true)}>
+          <button
+            type="button"
+            className="link-btn"
+            onClick={() => {
+              track("signup_started", { trigger: "result_cta" });
+              setSignupOpen(true);
+            }}
+          >
             {t("fortune.registerCta")}
           </button>
         </p>

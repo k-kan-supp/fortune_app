@@ -41,6 +41,8 @@ export type AnalyticsEventMap = Safe<{
   /** 生年月日は載せない。分析に要るのは日干であって、日付そのものではない。 */
   fortune_calculated: { day_stem: string; time_known: boolean };
   result_viewed: { chart_count: number };
+  /** 結果をどこまで読んだか。壁の位置（M29）を判断する材料になる。 */
+  result_scrolled: { depth: number };
   paywall_shown: { section: string; preview_blocks: number };
   paywall_dismissed: { section: string };
   signup_started: { trigger: string };

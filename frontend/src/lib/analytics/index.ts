@@ -7,8 +7,11 @@
 
 import { hasConsent } from "./consent";
 import type { AnalyticsEventMap, EventName } from "./events";
+import { getSource } from "./source";
 
 export { getConsent, setConsent, hasConsent, type Consent } from "./consent";
+export { captureSource, getSource } from "./source";
+export { FUNNEL, type FunnelStage } from "./funnel";
 export type { AnalyticsEventMap, EventName, PropValue } from "./events";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
@@ -29,7 +32,8 @@ let timer: ReturnType<typeof setTimeout> | null = null;
 
 function send(events: QueuedEvent[]): void {
   if (events.length === 0) return;
-  const body = JSON.stringify({ events, consent: hasConsent() });
+  // 流入元はイベントごとではなくバッチ単位。個々のイベント定義を汚さない。
+  const body = JSON.stringify({ events, consent: hasConsent(), source: getSource() });
 
   // 離脱時にも落とさない。sendBeacon はページが閉じても送り切ってくれる。
   if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
