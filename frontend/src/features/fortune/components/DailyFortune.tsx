@@ -1,18 +1,41 @@
 import { useEffect, useState } from "react";
-import { useI18n, type MessageKey } from "@/i18n";
+import { findMessage, useI18n, type Lang, type MessageKey } from "@/i18n";
 import { fetchDailyFortune } from "../api/fortuneApi";
 import { formatValue } from "../radarGeometry";
 import { axisLabel } from "../terms";
-import type { DailyFortune as DailyFortuneData, FortuneRequest } from "../types";
+import type {
+  DailyFortune as DailyFortuneData,
+  DailyPoint,
+  FortuneRequest,
+} from "../types";
 
 /** "2026-08-02T04:50" から時刻だけを取り出す。 */
 const clockOf = (iso: string): string => iso.slice(11, 16);
 
+const MAX_STARS = 5;
+
+/** 良し悪しの理由になっている要素の名前。五行と通変星グループで引き先が違う。 */
+const driverName = (point: DailyPoint, lang: Lang): string =>
+  axisLabel(point.driver, lang, point.driver_kind === "element" ? "element" : "tenGodGroup");
+
+function Stars({ n }: { n: number }) {
+  return (
+    <span className="daily-stars" role="img" aria-label={String(n)}>
+      {Array.from({ length: MAX_STARS }, (_, i) => (
+        <i key={i} className={i < n ? "on" : undefined} aria-hidden="true">
+          ★
+        </i>
+      ))}
+    </span>
+  );
+}
+
 /**
  * その日の運勢。
  *
- * 気象を五行に置き換えて命式と重ねる判定はバックエンドが済ませていて、
- * ここは観測値と結果を並べるだけ。気象が取れない日は節ごと出さない。
+ * 気象を五行に置き換え、日主から見た通変星に読み替えて分野ごとの星を出す判定は
+ * バックエンドが済ませていて、ここは観測値と結果を並べるだけ。
+ * 同じ天気でも種族によって出方が変わるので、種族名を添える。
  */
 export function DailyFortune({ request }: { request: FortuneRequest }) {
   const { t, lang } = useI18n();
@@ -30,9 +53,8 @@ export function DailyFortune({ request }: { request: FortuneRequest }) {
   if (!data) return null;
 
   const { reading } = data;
+  const speciesName = findMessage(lang, `fortune.species.${data.species}.name`) ?? data.species;
   const top = data.elements.reduce((best, e) => (e.value > best.value ? e : best), data.elements[0]);
-  const join = t("common.metaSeparator");
-  const names = (codes: string[]) => codes.map((c) => axisLabel(c, lang, "element")).join(join);
 
   const facts: { key: MessageKey; value: string }[] = [
     { key: "fortune.daily.reading.temperature", value: `${formatValue(reading.temperature_c)}℃` },
@@ -46,19 +68,12 @@ export function DailyFortune({ request }: { request: FortuneRequest }) {
     },
   ];
 
-  const note = [
-    t("fortune.daily.note.lead", {
-      element: axisLabel(top.code, lang, "element"),
-      pct: formatValue(top.value),
-    }),
-    data.fills.length
-      ? t("fortune.daily.note.fills", { list: names(data.fills) })
-      : t("fortune.daily.note.fillsNone"),
-    data.floods.length
-      ? t("fortune.daily.note.floods", { list: names(data.floods) })
-      : t("fortune.daily.note.floodsNone"),
-    t(`fortune.daily.band.${data.band}` as MessageKey),
-  ].join(t("fortune.narrative.sentenceJoin"));
+  const sentence = (point: DailyPoint, side: "good" | "bad") =>
+    t(`fortune.daily.${side}.${point.driver_kind === "element" ? "element" : "group"}` as MessageKey, {
+      area: axisLabel(point.area, lang, "lifeArea"),
+      driver: driverName(point, lang),
+      name: speciesName,
+    });
 
   return (
     <section className="daily-card">
@@ -67,10 +82,7 @@ export function DailyFortune({ request }: { request: FortuneRequest }) {
           <p className="daily-eyebrow">{t("fortune.daily.title")}</p>
           <p className="daily-date">{reading.date}</p>
         </div>
-        <p className={`daily-score is-${data.band}`}>
-          <b>{formatValue(data.score)}</b>
-          <span>{t("fortune.daily.unit")}</span>
-        </p>
+        <p className="daily-species">{t("fortune.daily.forSpecies", { name: speciesName })}</p>
       </div>
 
       <dl className="daily-facts">
@@ -81,6 +93,27 @@ export function DailyFortune({ request }: { request: FortuneRequest }) {
           </div>
         ))}
       </dl>
+
+      <ul className="daily-areas">
+        {data.areas.map((area) => (
+          <li key={area.code}>
+            <span className="daily-area-name">{axisLabel(area.code, lang, "lifeArea")}</span>
+            <Stars n={area.stars} />
+            <span className="sr-only">{t("fortune.daily.starsLabel", { n: area.stars })}</span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="daily-points">
+        <div className="daily-point daily-point--good">
+          <h3>{t("fortune.daily.goodTitle")}</h3>
+          <p>{sentence(data.good, "good")}</p>
+        </div>
+        <div className="daily-point daily-point--bad">
+          <h3>{t("fortune.daily.badTitle")}</h3>
+          <p>{sentence(data.bad, "bad")}</p>
+        </div>
+      </div>
 
       <p className="daily-air-title">{t("fortune.daily.airTitle")}</p>
       <ul className="daily-air">
@@ -94,9 +127,13 @@ export function DailyFortune({ request }: { request: FortuneRequest }) {
           </li>
         ))}
       </ul>
-
-      <p className="daily-note">{note}</p>
-      <p className="hint daily-scale">{t("fortune.daily.scale")}</p>
+      <p className="hint daily-scale">
+        {t("fortune.daily.airNote", {
+          element: axisLabel(top.code, lang, "element"),
+          pct: formatValue(top.value),
+        })}
+        {t("fortune.daily.scale")}
+      </p>
     </section>
   );
 }

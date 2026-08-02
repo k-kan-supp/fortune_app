@@ -461,37 +461,98 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
-.daily-score {
+.daily-species {
   margin: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: var(--violet-soft);
+  color: var(--violet);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   white-space: nowrap;
 }
 
-.daily-score b {
-  font-size: 2.2rem;
-  font-weight: 700;
+/* 分野ごとの星 */
+.daily-areas {
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem 1.2rem;
+}
+
+.daily-areas li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.daily-area-name {
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
+
+.daily-stars {
+  display: flex;
+  gap: 1px;
+  font-size: 1rem;
   line-height: 1;
-  font-variant-numeric: tabular-nums;
 }
 
-.daily-score span {
-  font-size: 0.72rem;
-  color: var(--ink-faint);
+.daily-stars i {
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.14);
 }
 
-/* 帯は相性マップと同じ約束（高い＝暖色、低い＝寒色） */
-.daily-score.is-high b {
-  color: #e8a851;
+.daily-stars i.on {
+  color: var(--gold);
 }
 
-.daily-score.is-mid b {
-  color: var(--ink);
+/* いいところ・悪いところ */
+.daily-points {
+  margin-top: 1.1rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.7rem;
 }
 
-.daily-score.is-low b {
+.daily-point {
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-veil);
+}
+
+.daily-point h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.daily-point--good h3 {
+  color: var(--gold);
+}
+
+.daily-point--bad h3 {
   color: #7cc3ea;
+}
+
+.daily-point p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.85;
+  color: var(--ink-muted);
+  text-align: justify;
+}
+
+@media (max-width: 560px) {
+  .daily-points {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* 観測値そのもの。占いの前に、何を見て出したかを並べる */
@@ -591,8 +652,8 @@ button {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .daily-score b {
-    font-size: 1.7rem;
+  .daily-areas {
+    grid-template-columns: 1fr;
   }
 }
 

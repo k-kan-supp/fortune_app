@@ -140,14 +140,32 @@ class DailyFortuneRequest(FortuneRequest):
     longitude: float | None = Field(None, ge=-180, le=180)
 
 
+class DailyArea(BaseModel):
+    """日運の分野ひとつ。"""
+
+    code: str = Field(..., description="health / wealth / career / love")
+    stars: int = Field(..., ge=0, le=5, description="星の数")
+    score: float = Field(..., description="0〜100。本人が取りうる幅の中での位置")
+
+
+class DailyPoint(BaseModel):
+    """今日のいいところ／悪いところ。"""
+
+    area: str = Field(..., description="対象の分野")
+    driver_kind: str = Field(..., description="group（通変星グループ）/ element（五行）")
+    driver: str = Field(..., description="その分野を動かしているコード")
+
+
 class DailyFortune(BaseModel):
-    """その日の運勢。気象を五行に置き換え、命式と重ねて出す。"""
+    """その日の運勢。気象を五行に置き換え、命式と重ねて分野ごとに出す。"""
 
     reading: WeatherReading
     sky: str = Field(..., description="clear / cloudy / fog / rain / snow / storm")
     elements: list[RadarAxis] = Field(..., description="今日の空気の五行構成比（%）")
-    score: float = Field(..., description="0〜100。本人が1年で取りうる幅を伸ばした位置")
-    band: str = Field(..., description="high / mid / low")
+    species: str = Field(..., description="種族コード。出方はこれで変わる")
+    areas: list[DailyArea] = Field(..., description="健康・金・仕事・恋愛の4分野")
+    good: DailyPoint = Field(..., description="今日いちばん伸びる分野")
+    bad: DailyPoint = Field(..., description="今日いちばん動きにくい分野")
     fills: list[str] = Field(default_factory=list, description="今日補われる五行")
     floods: list[str] = Field(default_factory=list, description="今日さらに増える五行")
 

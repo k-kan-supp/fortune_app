@@ -17,8 +17,8 @@
 
 from functools import lru_cache
 
-from app.services.saju.analysis import element_evenness
-from app.services.saju.constants import FIVE_ELEMENTS
+from app.services.saju.analysis import LIFE_AREA_WEIGHTS, blend, element_evenness
+from app.services.saju.constants import CONTROLS, FIVE_ELEMENTS, GENERATES, TEN_GOD_GROUPS
 
 # WMO の天気コード → 空模様。Open-Meteo が返すコード体系。
 SKY_CODES: dict[str, tuple[int, ...]] = {
@@ -163,3 +163,135 @@ def element_moves(chart: dict[str, float], day: dict[str, float]) -> tuple[list[
     fills = [el for el in FIVE_ELEMENTS if chart[el] < balanced and day[el] > chart[el]]
     floods = [el for el in FIVE_ELEMENTS if chart[el] > balanced and day[el] > chart[el]]
     return fills, floods
+
+
+# 表示する分野。日運は身近な4つに絞る。
+DAILY_AREAS = ["health", "wealth", "career", "love"]
+
+# 星は 0〜5 の 6 段階。
+MAX_STARS = 5
+
+
+def air_groups(day: dict[str, float], element: str) -> dict[str, float]:
+    """今日の空気を、その日主から見た通変星グループの構成比に置き換える。
+
+    同じ天気でも、日主の五行が違えば意味が変わる。金の人にとっての雨（水）は
+    自分が生む「食傷」だが、木の人にとっては自分を生む「印星」になる。
+    種族ごとに出方が変わるのはここが効くため。
+    """
+    generated_by = next(el for el, made in GENERATES.items() if made == element)
+    controlled_by = next(el for el, ruled in CONTROLS.items() if ruled == element)
+    return {
+        "比劫": day[element],
+        "食傷": day[GENERATES[element]],
+        "財星": day[CONTROLS[element]],
+        "官殺": day[controlled_by],
+        "印星": day[generated_by],
+    }
+
+
+def _effective_groups(
+    day: dict[str, float], chart_groups: dict[str, float], element: str
+) -> dict[str, float]:
+    """今日の空気の通変星グループを、本人にとっての効きに直す。
+
+    足りない勢力が空から届く日はよく効き、もともと厚い勢力が重なる日は効きが鈍る。
+    種族の2文字目（主星グループ）が日運に出るのはここ。
+    """
+    balanced = 1 / len(TEN_GOD_GROUPS)
+    air = air_groups(day, element)
+    return {g: air[g] * (1 + (balanced - chart_groups[g])) for g in TEN_GOD_GROUPS}
+
+
+def area_scores(
+    chart: dict[str, float],
+    chart_groups: dict[str, float],
+    day: dict[str, float],
+    element: str,
+    *,
+    is_male: bool,
+) -> dict[str, float]:
+    """今日の分野別の素点。
+
+    健康運だけは五行の均衡度で見る（命式のチャートと同じ扱い）。
+    残りは今日の空気を通変星グループに置き換え、分野の配分に掛ける。
+    """
+    merged = {el: (chart[el] + day[el]) / 2 for el in FIVE_ELEMENTS}
+    groups = _effective_groups(day, chart_groups, element)
+    love_key = "love_male" if is_male else "love_female"
+    return {
+        "health": element_evenness(merged),
+        "wealth": blend(LIFE_AREA_WEIGHTS["wealth"], groups),
+        "career": blend(LIFE_AREA_WEIGHTS["career"], groups),
+        "love": blend(LIFE_AREA_WEIGHTS[love_key], groups),
+    }
+
+
+@lru_cache(maxsize=512)
+def _area_spans(
+    ratios: tuple[float, ...], group_ratios: tuple[float, ...], element: str, is_male: bool
+) -> dict[str, tuple[float, float]]:
+    """分野ごとの下端・上端。命式と日主で決まるので覚えておく。"""
+    chart = dict(zip(FIVE_ELEMENTS, ratios, strict=True))
+    groups = dict(zip(TEN_GOD_GROUPS, group_ratios, strict=True))
+    per_area: dict[str, list[float]] = {area: [] for area in DAILY_AREAS}
+    for day in REACHABLE_DAYS:
+        scored = area_scores(chart, groups, day, element, is_male=is_male)
+        for area, value in scored.items():
+            per_area[area].append(value)
+    return {area: (min(values), max(values)) for area, values in per_area.items()}
+
+
+def daily_areas(
+    chart: dict[str, float],
+    chart_groups: dict[str, float],
+    day: dict[str, float],
+    element: str,
+    *,
+    is_male: bool,
+) -> dict[str, tuple[int, float]]:
+    """分野ごとの (星の数, 0〜100 の位置)。
+
+    素点の幅は日主と命式で違うので、本人が取りうる幅で 0〜100 に伸ばしてから
+    星に落とす。そうしないと、ある種族はいつ見ても星が付かない。
+    """
+    spans = _area_spans(
+        tuple(chart[el] for el in FIVE_ELEMENTS),
+        tuple(chart_groups[g] for g in TEN_GOD_GROUPS),
+        element,
+        is_male,
+    )
+    today = area_scores(chart, chart_groups, day, element, is_male=is_male)
+
+    result = {}
+    for area in DAILY_AREAS:
+        low, high = spans[area]
+        score = 50.0 if high <= low else (today[area] - low) / (high - low) * 100
+        score = max(0.0, min(100.0, score))
+        result[area] = (round(score / 100 * MAX_STARS), round(score, 1))
+    return result
+
+
+def leading_driver(
+    day: dict[str, float],
+    chart: dict[str, float],
+    chart_groups: dict[str, float],
+    element: str,
+    area: str,
+    *,
+    is_male: bool,
+) -> tuple[str, str]:
+    """その分野を動かしている要素を (種別, コード) で返す。良し悪しの理由に使う。
+
+    健康運だけは通変星ではなく五行の均衡で見るので、返るのは五行のコード。
+    """
+    if area == "health":
+        balanced = 1 / len(FIVE_ELEMENTS)
+        # 足りない気に今日の空気が乗っているほど、均衡に効いている
+        effect = {el: (balanced - chart[el]) * day[el] for el in FIVE_ELEMENTS}
+        return "element", max(effect, key=lambda el: effect[el])
+
+    key = ("love_male" if is_male else "love_female") if area == "love" else area
+    weights = LIFE_AREA_WEIGHTS[key]
+    groups = _effective_groups(day, chart_groups, element)
+    return "group", max(weights, key=lambda g: weights[g] * groups.get(g, 0.0))

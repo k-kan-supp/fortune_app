@@ -104,7 +104,7 @@ def _ratios(totals: dict[str, float], keys: list[str]) -> dict[str, float]:
     return {k: totals.get(k, 0.0) / total for k in keys}
 
 
-def _blend(weights: dict[str, float], ratios: dict[str, float]) -> float:
+def blend(weights: dict[str, float], ratios: dict[str, float]) -> float:
     """構成比に重みを掛けて 0〜100 のスコアにする。"""
     score = sum(weight * ratios.get(group, 0.0) for group, weight in weights.items())
     return round(min(score, 1.0) * 100, 1)
@@ -203,18 +203,18 @@ def build_charts(pillars: dict[str, Pillar], day_master: str, is_male: bool) -> 
     element_ratios = _ratios(element_scores, FIVE_ELEMENTS)
 
     personality = {
-        trait: _blend(weights, group_ratios) for trait, weights in PERSONALITY_WEIGHTS.items()
+        trait: blend(weights, group_ratios) for trait, weights in PERSONALITY_WEIGHTS.items()
     }
 
     love_key = "love_male" if is_male else "love_female"
     life_areas = {
-        "career": _blend(LIFE_AREA_WEIGHTS["career"], group_ratios),
-        "wealth": _blend(LIFE_AREA_WEIGHTS["wealth"], group_ratios),
-        "love": _blend(LIFE_AREA_WEIGHTS[love_key], group_ratios),
+        "career": blend(LIFE_AREA_WEIGHTS["career"], group_ratios),
+        "wealth": blend(LIFE_AREA_WEIGHTS["wealth"], group_ratios),
+        "love": blend(LIFE_AREA_WEIGHTS[love_key], group_ratios),
         # 健康運だけは通変星ではなく五行の偏りの少なさ（均衡度）で測る。
         "health": element_evenness(element_ratios),
-        "relationships": _blend(LIFE_AREA_WEIGHTS["relationships"], group_ratios),
-        "study": _blend(LIFE_AREA_WEIGHTS["study"], group_ratios),
+        "relationships": blend(LIFE_AREA_WEIGHTS["relationships"], group_ratios),
+        "study": blend(LIFE_AREA_WEIGHTS["study"], group_ratios),
     }
 
     max_energy = float(max(TWELVE_STAGE_ENERGY.values()))

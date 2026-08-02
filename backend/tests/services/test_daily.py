@@ -5,17 +5,22 @@
 
 import pytest
 
-from app.services.saju.analysis import element_ratios
-from app.services.saju.constants import FIVE_ELEMENTS
+from app.services.saju.analysis import element_ratios, ten_god_group_ratios
+from app.services.saju.constants import FIVE_ELEMENTS, TEN_GOD_GROUPS
 from app.services.saju.daily import (
+    DAILY_AREAS,
     DAYLIGHT_RANGE,
+    MAX_STARS,
     REACHABLE_DAYS,
     SKY_CODES,
     TEMP_RANGE,
+    air_groups,
     balance_gain,
+    daily_areas,
     daily_score,
     day_elements,
     element_moves,
+    leading_driver,
     personal_span,
     sky_of,
 )
@@ -117,3 +122,52 @@ def test_element_moves_split_by_what_the_chart_already_has():
     assert all(CHART[el] < balanced and day[el] > CHART[el] for el in fills)
     assert all(CHART[el] > balanced and day[el] > CHART[el] for el in floods)
     assert not set(fills) & set(floods)
+
+
+# --- 分野別の星 ---------------------------------------------------------
+
+GROUPS = ten_god_group_ratios(PILLARS)  # 比劫に寄った命式
+
+
+def test_areas_cover_the_four_and_stay_on_the_star_scale():
+    scored = daily_areas(CHART, GROUPS, day_elements(*WET_RAIN), "金", is_male=True)
+    assert set(scored) == set(DAILY_AREAS)
+    for stars, score in scored.values():
+        assert 0 <= stars <= MAX_STARS
+        assert 0.0 <= score <= 100.0
+
+
+def test_every_area_uses_the_whole_star_range_over_the_year():
+    """種族によっては一年中星が付かない、という状態を作らない。"""
+    seen: dict[str, set[int]] = {area: set() for area in DAILY_AREAS}
+    for day in REACHABLE_DAYS:
+        for area, (stars, _) in daily_areas(CHART, GROUPS, day, "金", is_male=True).items():
+            seen[area].add(stars)
+    for area, stars in seen.items():
+        assert min(stars) == 0 and max(stars) == MAX_STARS, area
+
+
+def test_the_same_weather_reads_differently_for_different_day_masters():
+    """同じ天気でも日主の五行が違えば分野の出方が変わる（種族ごとの形）。"""
+    day = day_elements(*WET_RAIN)
+    metal = daily_areas(CHART, GROUPS, day, "金", is_male=True)
+    wood = daily_areas(CHART, GROUPS, day, "木", is_male=True)
+    assert [metal[a][0] for a in DAILY_AREAS] != [wood[a][0] for a in DAILY_AREAS]
+
+
+def test_air_groups_are_relative_to_the_day_master():
+    """金の人にとっての水は食傷、木の人にとっての水は印星。"""
+    day = day_elements(*WET_RAIN)
+    assert air_groups(day, "金")["食傷"] == day["水"]
+    assert air_groups(day, "木")["印星"] == day["水"]
+
+
+def test_leading_driver_names_a_group_except_for_health():
+    """健康運は五行の均衡で見るので、理由に出るのは通変星ではなく五行。"""
+    day = day_elements(*WET_RAIN)
+    for area in DAILY_AREAS:
+        kind, driver = leading_driver(day, CHART, GROUPS, "金", area, is_male=True)
+        if area == "health":
+            assert kind == "element" and driver in FIVE_ELEMENTS
+        else:
+            assert kind == "group" and driver in TEN_GOD_GROUPS

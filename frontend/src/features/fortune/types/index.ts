@@ -111,14 +111,33 @@ export interface WeatherReading {
   longitude: number;
 }
 
+/** 日運の分野ひとつ。 */
+export interface DailyArea {
+  /** health / wealth / career / love */
+  code: string;
+  stars: number;
+  score: number;
+}
+
+/** 今日のいいところ／悪いところ。 */
+export interface DailyPoint {
+  area: string;
+  /** group（通変星グループ）/ element（五行） */
+  driver_kind: string;
+  driver: string;
+}
+
 /** その日の運勢。気象を五行に置き換え、命式と重ねたもの。 */
 export interface DailyFortune {
   reading: WeatherReading;
   sky: string;
   /** 今日の空気の五行構成比（%）。 */
   elements: RadarAxis[];
-  score: number;
-  band: string;
+  /** 種族コード。同じ天気でもこれで出方が変わる。 */
+  species: string;
+  areas: DailyArea[];
+  good: DailyPoint;
+  bad: DailyPoint;
   /** 今日補われる五行 / さらに増える五行。 */
   fills: string[];
   floods: string[];
