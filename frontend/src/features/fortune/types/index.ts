@@ -87,7 +87,10 @@ export interface Sanmei {
 /** 25 種族どうしの相性マップ。codes 順の 25×25。 */
 export interface SpeciesCompat {
   codes: string[];
+  /** 行ごとに 0〜100 へ伸ばしてあるので対称ではない（行＝本人視点）。 */
   matrix: number[][];
+  /** 行ごとの平均。暖色・寒色を分ける境目に使う。 */
+  row_means: number[];
   /** 五行の頭文字2つ（"MW" ＝ 金から見た木）→ 関係コード。判定はバックエンド。 */
   element_relations: Record<string, string>;
   band_low: number;

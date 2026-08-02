@@ -114,10 +114,10 @@ export const en: Messages = {
       radarTitle: "Compatibility with the 25 kinds, seen from {{name}}",
       axisGroups: "Axes are grouped by element — wood, fire, earth, metal, water, five kinds each.",
       mapTitle: "The full 25 × 25 map",
-      mapHint: "All 25 kinds on both axes. Darker cells run higher. Tap a cell for that pair's score.",
+      mapHint: "Rows are the viewer, columns the partner. Each row is stretched to 0–100 on its own, so shades cannot be compared across rows. Tap a cell for that pair's score.",
       low: "Low {{value}}",
       high: "High {{value}}",
-      meanLabel: "Midpoint = mean {{value}}",
+      meanLabel: "Warm/cool splits at your row mean, {{value}}",
       summary: {
         element: {
           same: "Both sit in {{a}}. The same energy makes you quick to understand each other, and just as quick to stall in the same places.",
@@ -136,7 +136,7 @@ export const en: Messages = {
           low: "This is one of the lower pairings among the 25 ({{value}} against an overall mean of {{mean}}).",
         },
       },
-      caveat: "Scores are averages taken by running the compatibility engine across every pair of kinds, then stretched onto 0–100 from their measured span (raw 24–74). Compatibility between two people is decided by their birth dates, so any given pair will sit above or below this.",
+      caveat: "Scores are averages taken by running the compatibility engine across every pair of kinds, then stretched so that the 25 seen from one kind span 0–100. The scale belongs to the row, so the same pair reads differently from the other side. Compatibility between two people is decided by their birth dates, so any given pair will sit above or below this.",
       ranking: "All 25 kinds ranked from {{name}}",
       self: "Yourself",
     },

@@ -100,7 +100,13 @@ class SpeciesCompatMap(BaseModel):
     """25 種族どうしの相性マップ。命式によらず一定なので、鑑定結果とは別に配る。"""
 
     codes: list[str] = Field(..., description="行・列に共通の種族コードの並び")
-    matrix: list[list[float]] = Field(..., description="codes 順の 25×25。総合点の平均")
+    matrix: list[list[float]] = Field(
+        ...,
+        description="codes 順の 25×25。行ごとに 0〜100 へ伸ばしてあるため対称ではない",
+    )
+    row_means: list[float] = Field(
+        ..., description="行ごとの平均。暖色・寒色を分ける境目（本人の行の平均）"
+    )
     element_relations: dict[str, str] = Field(
         ...,
         description=(

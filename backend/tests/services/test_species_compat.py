@@ -18,7 +18,7 @@ from app.services.saju.species import species
 from app.services.saju.species_compat import (
     CODES,
     MATRIX,
-    SPAN,
+    ROW_MEANS,
     raw_score,
     row,
     scaled_matrix,
@@ -64,26 +64,34 @@ def test_scores_stay_on_the_hundred_point_scale():
     assert max(flat) - min(flat) > 20
 
 
-def test_span_matches_the_measured_extremes():
-    """SPAN は素点の実測レンジ。測り直して入れ忘れると引き伸ばしがずれる。"""
-    flat = [v for r in MATRIX for v in r]
-    assert SPAN == (min(flat), max(flat))
+def test_every_row_uses_the_whole_zero_to_hundred_scale():
+    """どの種族から見ても、最良が 100・最低が 0 になる。"""
+    for code, r in zip(CODES, scaled_matrix(), strict=True):
+        assert min(r) == 0.0, code
+        assert max(r) == 100.0, code
 
 
-def test_rescaled_matrix_uses_the_whole_zero_to_hundred_scale():
-    """素点は 24〜74 の帯に収まるので、そのままでは差が読み取りにくい。"""
-    flat = [v for r in scaled_matrix() for v in r]
-    assert min(flat) == 0.0
-    assert max(flat) == 100.0
+def test_rescale_keeps_the_order_within_a_row():
+    """引き伸ばしは行の中で単調。素点の大小関係は入れ替わらない。"""
+    for a in CODES:
+        by_raw = sorted(CODES, key=lambda b: raw_score(a, b))
+        assert all(
+            score(a, x) <= score(a, y) for x, y in zip(by_raw, by_raw[1:], strict=False)
+        ), a
 
 
-def test_rescale_keeps_the_order_of_the_raw_scores():
-    """引き伸ばしは単調。素点の大小関係は入れ替わらない。"""
-    pairs = [(a, b) for a in CODES for b in CODES]
-    by_raw = sorted(pairs, key=lambda p: raw_score(*p))
-    assert all(
-        score(*x) <= score(*y) for x, y in zip(by_raw, by_raw[1:], strict=False)
-    )
+def test_scaled_matrix_is_not_symmetric_by_design():
+    """行＝本人視点なので、行ごとに伸ばした表は対称にならない。
+
+    素点のほうは対称のままで、そちらが測り直しの照合対象になる。
+    """
+    assert score("MS", "EO") != score("EO", "MS")
+    assert raw_score("MS", "EO") == raw_score("EO", "MS")
+
+
+def test_row_means_line_up_with_the_rows():
+    for code, r in zip(CODES, scaled_matrix(), strict=True):
+        assert ROW_MEANS[CODES.index(code)] == round(sum(r) / len(r), 1)
 
 
 def test_row_returns_all_twenty_five_partners():

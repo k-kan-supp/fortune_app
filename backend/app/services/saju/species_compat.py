@@ -21,6 +21,7 @@
 行と列はどちらも ``CODES`` の並び。相性は向きを持たないので表は対称。
 """
 
+
 from app.services.saju.constants import CONTROLS, GENERATES
 from app.services.saju.species import ELEMENT_LETTER
 
@@ -206,18 +207,28 @@ MATRIX: tuple[tuple[float, ...], ...] = (
 )
 
 
-# 素点が実際に取りうる範囲（上の MATRIX の最小・最大）。
-# 種族は 25 件の平均なので個人ほど端に振れず、素点は 24〜74 の帯に収まる。
-# そのままだと差が読み取りにくいので、相性の総合点と同じやり方で 0〜100 に
-# 引き伸ばす（compatibility.py の TOTAL_RANGE と同じ考え方）。
-# MATRIX を測り直したら、この範囲も入れ直すこと。
-SPAN = (24.0, 74.4)
+# 素点は 24〜74 の帯に収まり、しかも 1 行の中ではさらに狭い（実測で幅 74〜94）。
+# そのままだと「本人から見た画面」が 0〜100 を使い切らないので、行ごとに
+# その行の最小・最大を 0・100 に合わせて伸ばす。
+#
+# 行＝本人視点なので、この表は対称ではない（MS から見た EO と、EO から見た MS は
+# 別の値になる）。素点 MATRIX のほうは対称なままで、測り直しの照合はそちらで行う。
 
 
-def _rescale(value: float) -> float:
-    """素点を SPAN を基準に 0〜100 へ引き伸ばす。"""
-    low, high = SPAN
-    return round(min(100.0, max(0.0, (value - low) / (high - low) * 100)), 1)
+def _normalize(values: tuple[float, ...]) -> tuple[float, ...]:
+    """1 行を 0〜100 に伸ばす。"""
+    low, high = min(values), max(values)
+    span = high - low
+    if span <= 0:  # 全部同じ値の行は伸ばしようがない
+        return tuple(50.0 for _ in values)
+    return tuple(round((v - low) / span * 100, 1) for v in values)
+
+
+# 行ごとに 0〜100 へ伸ばした 25×25。画面に出るのは常にこちら。
+SCALED: tuple[tuple[float, ...], ...] = tuple(_normalize(r) for r in MATRIX)
+
+# 行ごとの平均。暖色・寒色を分ける境目に使う（本人の行の平均が基準）。
+ROW_MEANS: tuple[float, ...] = tuple(round(sum(r) / len(r), 1) for r in SCALED)
 
 
 def raw_score(a: str, b: str) -> float:
@@ -226,18 +237,30 @@ def raw_score(a: str, b: str) -> float:
 
 
 def score(a: str, b: str) -> float:
-    """2 つの種族コードの相性（0〜100）。"""
-    return _rescale(raw_score(a, b))
+    """a から見た b との相性（a の行で 0〜100 に伸ばした値）。"""
+    return SCALED[CODES.index(a)][CODES.index(b)]
 
 
 def scaled_matrix() -> list[list[float]]:
-    """0〜100 に引き伸ばした 25×25。"""
-    return [[_rescale(v) for v in r] for r in MATRIX]
+    """行ごとに 0〜100 へ伸ばした 25×25。"""
+    return [list(r) for r in SCALED]
 
 
 def row(code: str) -> dict[str, float]:
     """ある種族から見た、25 種族すべてとの相性（0〜100）。"""
-    return dict(zip(CODES, (_rescale(v) for v in MATRIX[CODES.index(code)]), strict=True))
+    return dict(zip(CODES, SCALED[CODES.index(code)], strict=True))
+
+
+def bands() -> tuple[float, float]:
+    """点数を高い・普通・低いに分ける境目（引き伸ばし後の三分位）。"""
+    flat = sorted(v for r in SCALED for v in r)
+    return flat[len(flat) // 3], flat[len(flat) * 2 // 3]
+
+
+def mean() -> float:
+    """表全体の平均（引き伸ばし後）。"""
+    flat = [v for r in SCALED for v in r]
+    return round(sum(flat) / len(flat), 1)
 
 
 # --- 組ごとのサマリーに使う材料 ------------------------------------------
@@ -265,15 +288,3 @@ ELEMENT_RELATIONS: dict[str, str] = {
     for a in ELEMENT_LETTER.values()
     for b in ELEMENT_LETTER.values()
 }
-
-
-def bands() -> tuple[float, float]:
-    """点数を高い・普通・低いに分ける境目（引き伸ばし後の三分位）。"""
-    flat = sorted(v for r in scaled_matrix() for v in r)
-    return flat[len(flat) // 3], flat[len(flat) * 2 // 3]
-
-
-def mean() -> float:
-    """表全体の平均（引き伸ばし後）。暖色・寒色を分ける境目にも使う。"""
-    flat = [v for r in scaled_matrix() for v in r]
-    return round(sum(flat) / len(flat), 1)

@@ -62,11 +62,8 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
       .catch(() => setFailed(true));
   }, []);
 
-  const range = useMemo(() => {
-    if (!data) return null;
-    const flat = data.matrix.flat();
-    return { min: Math.min(...flat), max: Math.max(...flat) };
-  }, [data]);
+  // 行ごとに伸ばしてあるので、どの行も 0〜100 で固定
+  const range = { min: 0, max: 100 };
 
   // 本人の行。レーダーの軸はコードだけを出す（25 軸に名前は入らない）
   const myRow = useMemo(() => {
@@ -79,15 +76,19 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
   if (!data || !range) return <p className="hint result-status">{t("common.loading")}</p>;
 
   const at = (a: string, b: string) => data.matrix[data.codes.indexOf(a)][data.codes.indexOf(b)];
+  /** 暖色・寒色の境目は「その行（＝見ている本人）の平均」。 */
+  const meanOf = (viewer: string) => data.row_means[data.codes.indexOf(viewer)];
 
-  /** 平均からの隔たりを -3〜+3 に割り当てる。正なら暖色、負なら寒色。 */
-  const tier = (v: number) => {
-    const side = v > data.mean ? range.max - data.mean : data.mean - range.min;
-    if (v === data.mean || side <= 0) return 0;
-    const step = Math.min(STEPS_PER_SIDE, Math.ceil((Math.abs(v - data.mean) / side) * STEPS_PER_SIDE));
-    return v > data.mean ? step : -step;
+  /** 行の平均からの隔たりを -3〜+3 に割り当てる。正なら暖色、負なら寒色。 */
+  const tier = (v: number, viewer: string) => {
+    const m = meanOf(viewer);
+    const side = v > m ? range.max - m : m - range.min;
+    if (v === m || side <= 0) return 0;
+    const step = Math.min(STEPS_PER_SIDE, Math.ceil((Math.abs(v - m) / side) * STEPS_PER_SIDE));
+    return v > m ? step : -step;
   };
-  const toneOf = (v: number) => (v > data.mean ? "warm" : v < data.mean ? "cool" : "even");
+  const toneOf = (v: number, viewer: string) =>
+    v > meanOf(viewer) ? "warm" : v < meanOf(viewer) ? "cool" : "even";
 
   const myName = speciesName(mine, lang);
   const pickedScore = at(picked.a, picked.b);
@@ -110,7 +111,7 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
       `fortune.compatMap.summary.band.${
         pickedScore >= data.band_high ? "high" : pickedScore <= data.band_low ? "low" : "mid"
       }` as MessageKey,
-      { value: formatValue(pickedScore), mean: formatValue(data.mean) },
+      { value: formatValue(pickedScore), mean: formatValue(meanOf(picked.a)) },
     ),
   ].join(findMessage(lang, "fortune.narrative.sentenceJoin") ?? "");
 
@@ -129,7 +130,7 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
       </div>
 
       <RadarChart
-        points={myRow.map((p) => ({ ...p, tone: toneOf(p.value) }))}
+        points={myRow.map((p) => ({ ...p, tone: toneOf(p.value, mine) }))}
         maxValue={MAX_SCORE}
         title={t("fortune.compatMap.radarTitle", { name: myName })}
         onSelectAxis={(i) => setPicked({ a: mine, b: myRow[i].code })}
@@ -163,7 +164,7 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
           {ranked.map((entry) => (
             <li
               key={entry.code}
-              className={`tone-${toneOf(entry.score)}${entry.code === mine ? " is-mine" : ""}${
+              className={`tone-${toneOf(entry.score, mine)}${entry.code === mine ? " is-mine" : ""}${
                 entry.code === best.code ? " is-best" : ""
               }`}
             >
@@ -205,7 +206,7 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
                     <td key={colCode}>
                       <button
                         type="button"
-                        className={`compat-cell t${tier(value)}${isPicked ? " is-picked" : ""}${
+                        className={`compat-cell t${tier(value, rowCode)}${isPicked ? " is-picked" : ""}${
                           onAxis ? " is-mine-axis" : ""
                         }${rowCode === mine && colCode === best.code ? " is-best" : ""}`}
                         title={`${speciesName(rowCode, lang)} × ${speciesName(colCode, lang)} — ${formatValue(value)}`}
@@ -231,7 +232,7 @@ export function SpeciesCompatMap({ mine }: { mine: string }) {
         </span>
         <span>{t("fortune.compatMap.high", { value: formatValue(range.max) })}</span>
         <span className="compat-legend-mean">
-          {t("fortune.compatMap.meanLabel", { value: formatValue(data.mean) })}
+          {t("fortune.compatMap.meanLabel", { value: formatValue(meanOf(mine)) })}
         </span>
       </div>
     </section>
